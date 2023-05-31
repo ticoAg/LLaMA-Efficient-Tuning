@@ -47,7 +47,7 @@ python convert_llama_weights_to_hf.py \
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python src/train_pt.py \
-    --model_name_or_path path_to_llama_model \
+    --model_name_or_path bigscience/bloomz-560m \
     --do_train \
     --dataset wiki_demo \
     --finetuning_type lora \
