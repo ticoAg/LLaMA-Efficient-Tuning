@@ -174,6 +174,13 @@ python src/export_model.py \
     --checkpoint_dir path_to_checkpoint \
     --output_dir path_to_export
 ```
+### Merge vocab model
+```bash
+python src/utils/merge_tokenizer.py \
+    --llama_tokenizer_dir model/tokenizer.model \
+    --chinese_sp_model_file model/chinese_sp.model
+```
+> [sentencepiece 根据文本文件训练词表sp_model](https://github.com/google/sentencepiece/blob/master/python/README.md#model-training)
 
 ## License
 
