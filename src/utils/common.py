@@ -10,6 +10,9 @@ from transformers import (
     LlamaConfig,
     LlamaForCausalLM,
     LlamaTokenizer,
+    BloomConfig,
+    BloomForCausalLM,
+    BloomTokenizerFast,
     HfArgumentParser,
     Seq2SeqTrainingArguments
 )
@@ -110,6 +113,11 @@ def init_adapter(
                 model = PeftModel.from_pretrained(model, lastest_checkpoint, is_trainable=True)
 
         if is_trainable and lastest_checkpoint is None: # create new lora weights while training
+            # this code can show what named module the model have
+            # for name, param in model.named_parameters():
+            #     print(name, param.shape)
+            if "bloom" in model_args.model_name_or_path.lower():
+                finetuning_args.lora_target = ['query_key_value']
             lora_config = LoraConfig(
                 task_type=TaskType.CAUSAL_LM,
                 inference_mode=False,
@@ -150,12 +158,18 @@ def load_pretrained(
 
     assert stage in ["pt", "sft"] or finetuning_args.finetuning_type == "lora", \
         "RM and PPO training can only be performed with LoRA method."
-
-    tokenizer = LlamaTokenizer.from_pretrained(
-        model_args.model_name_or_path,
-        use_fast=model_args.use_fast_tokenizer,
-        padding_side="left"
-    )
+    if "llama" in model_args.model_name_or_path.lower():
+        tokenizer = LlamaTokenizer.from_pretrained(
+            model_args.model_name_or_path,
+            use_fast=model_args.use_fast_tokenizer,
+            padding_side="left"
+        )
+    elif "bloom" in model_args.model_name_or_path.lower():
+        tokenizer = BloomTokenizerFast.from_pretrained(
+            model_args.model_name_or_path,
+            use_fast=model_args.use_fast_tokenizer,
+            padding_side="left"
+        )
     tokenizer.pad_token_id = 0 if tokenizer.pad_token_id is None else tokenizer.pad_token_id # set as the <unk> token
 
     # Quantization configurations (using bitsandbytes library).
@@ -173,15 +187,25 @@ def load_pretrained(
         config_kwargs["device_map"] = "auto" # it should not be specified outside of load_in_8bit
         logger.info("Quantized model to {} bit.".format(model_args.quantization_bit))
 
-    config = LlamaConfig.from_pretrained(model_args.model_name_or_path)
+    if "llama" in model_args.model_name_or_path.lower():
+        config = LlamaConfig.from_pretrained(model_args.model_name_or_path)
+        # Load and prepare pretrained models (without valuehead).
+        model = LlamaForCausalLM.from_pretrained(
+            model_args.model_name_or_path,
+            config=config,
+            torch_dtype=torch.float16, # the llama weights are float16 type
+            **config_kwargs
+        )
+    elif "bloom" in model_args.model_name_or_path.lower():
+        config = BloomConfig.from_pretrained(model_args.model_name_or_path)
+        # Load and prepare pretrained models (without valuehead).
+        model = BloomForCausalLM.from_pretrained(
+            model_args.model_name_or_path,
+            config=config,
+            torch_dtype=torch.float16, # the llama weights are float16 type
+            **config_kwargs
+        )
 
-    # Load and prepare pretrained models (without valuehead).
-    model = LlamaForCausalLM.from_pretrained(
-        model_args.model_name_or_path,
-        config=config,
-        torch_dtype=torch.float16, # the llama weights are float16 type
-        **config_kwargs
-    )
     model = prepare_model_for_training(model) if is_trainable else model
     model = init_adapter(model, model_args, finetuning_args, is_trainable)
 
