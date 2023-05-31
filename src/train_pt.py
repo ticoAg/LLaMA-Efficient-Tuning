@@ -15,10 +15,8 @@ from utils import (
     LogCallback,
     plot_loss
 )
-
-import os
-os.environ['CUDA_VISIBLE_DEVICES'] = "1"
-
+import wandb
+wandb.init(project="finetune-bloom")
 
 def main():
 

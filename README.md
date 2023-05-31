@@ -233,10 +233,19 @@ python src/export_model.py \
 ### Merge vocab model
 ```bash
 python src/utils/merge_tokenizer.py \
-    --llama_tokenizer_dir model/tokenizer.model \
-    --chinese_sp_model_file model/chinese_sp.model
+    --llama_tokenizer_dir model/vocab_model/tokenizer.model \
+    --chinese_sp_model_file model/vocab_model/chinese_sp.model \
+    --save_path model/merged_vocab_model
 ```
 > [sentencepiece 根据文本文件训练词表sp_model](https://github.com/google/sentencepiece/blob/master/python/README.md#model-training)
+
+### 裁剪模型
+
+refer: [LLMPruner：大语言模型裁剪工具](https://github.com/yangjianxin1/LLMPruner)
+注意: 仅当新词表为原词表子集时生效，获得新词表中每个token_id到原词表的token_id的映射，对于新词表中的每个token，取出其对应的权重，复制到新模型中
+```sh
+sh scripts/prune_llm.sh
+```
 
 ## License
 

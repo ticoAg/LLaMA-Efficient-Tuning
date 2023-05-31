@@ -4,9 +4,11 @@ from transformers import LlamaTokenizer
 from sentencepiece import sentencepiece_model_pb2 as sp_pb2_model
 import sentencepiece as spm
 import argparse
+from pathlib import Path
 parser = argparse.ArgumentParser()
 parser.add_argument('--llama_tokenizer_dir', default=None, type=str, required=True)
-parser.add_argument('--chinese_sp_model_file', default='model/chinese_sp.model', type=str)
+parser.add_argument('--chinese_sp_model_file', default='model/vocab_model/chinese_sp.model', type=str)
+parser.add_argument('--save_path', default='model/merged_vocab_model')
 args = parser.parse_args()
 
 # 训练sp_model_file
@@ -45,12 +47,12 @@ for p in chinese_spm.pieces:
 print(f"New model pieces: {len(llama_spm.pieces)}")
 
 ## Save
-output_sp_dir = 'merged_tokenizer_sp'
-output_hf_dir = 'merged_tokenizer_hf' # the path to save Chinese-LLaMA tokenizer
+output_sp_dir = Path(args.save_path).joinpath('merged_tokenizer_sp')
+output_hf_dir = Path(args.save_path).joinpath('merged_tokenizer_hf') # the path to save Chinese-LLaMA tokenizer
 os.makedirs(output_sp_dir,exist_ok=True)
-with open(output_sp_dir+'/chinese_llama.model', 'wb') as f:
+with open(output_sp_dir.joinpath('chinese_llama.model'), 'wb') as f:
     f.write(llama_spm.SerializeToString())
-tokenizer = LlamaTokenizer(vocab_file=output_sp_dir+'/chinese_llama.model')
+tokenizer = LlamaTokenizer(vocab_file=output_sp_dir.joinpath('chinese_llama.model').__str__())
 
 tokenizer.save_pretrained(output_hf_dir)
 print(f"Chinese-LLaMA tokenizer has been saved to {output_hf_dir}")

@@ -12,3 +12,4 @@ rouge_chinese
 nltk
 gradio
 mdtex2html
+protobuf==3.19.0

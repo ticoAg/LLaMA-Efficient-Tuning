@@ -1,2 +1,7 @@
 *.pyc
 .vscode
+
+# model/
+model/merged_vocab_model
+wandb
+ckpt/

@@ -103,5 +103,14 @@
             "response": "",
             "history": ""
         }
+    },
+    "pt_corpus": {
+        "file_name": "pt_corpus.txt",
+        "columns": {
+            "prompt": "text",
+            "query": "",
+            "response": "",
+            "history": ""
+        }
     }
 }

@@ -113,7 +113,7 @@ def init_adapter(
             # this code can show what named module the model have
             # for name, param in model.named_parameters():
             #     print(name, param.shape)
-            if "bloom" in model_args.model_name_or_path.lower():
+            if "bloom" in model_args.model_name_or_path.lower() or "firefly" in model_args.model_name_or_path.lower():
                 finetuning_args.lora_target = ['query_key_value']
             lora_config = LoraConfig(
                 task_type=TaskType.CAUSAL_LM,
