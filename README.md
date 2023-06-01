@@ -246,6 +246,9 @@ refer: [LLMPruner：大语言模型裁剪工具](https://github.com/yangjianxin1
 ```sh
 sh scripts/prune_llm.sh
 ```
+## Todo List
+
+- [x] 以对bloomz-7b1-mt裁剪词表后的[[YeungNLP/bloomz-6b4-mt-zh]](https://huggingface.co/YeungNLP/bloomz-6b4-mt-zh)模型作为base, 基于医疗开源数据[shibing624/medical](https://huggingface.co/datasets/shibing624/medical),对原项目LLaMA Efficient Tuning做了数据集和模型适配. 使用lora策略进行pretrain.
 
 ## License
 
