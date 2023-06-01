@@ -112,5 +112,15 @@
             "response": "",
             "history": ""
         }
+    },
+    "medical":{
+        "hf_hub_url": "shibing624/medical", 
+        "subset_name":"pretrain",
+        "columns": {
+            "prompt": "text",
+            "query": "",
+            "response": "",
+            "history": ""
+        }
     }
 }

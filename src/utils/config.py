@@ -9,6 +9,7 @@ class DatasetAttr:
 
     load_from: str
     dataset_name: Optional[str] = None
+    subset_name: Optional[str] = None
     file_name: Optional[str] = None
     file_sha1: Optional[str] = None
 
@@ -144,7 +145,10 @@ class DataTrainingArguments:
                     file_name=dataset_info[name]["file_name"],
                     file_sha1=dataset_info[name]["file_sha1"] if "file_sha1" in dataset_info[name] else None
                 )
-
+            
+            if "subset_name" in dataset_info[name]:
+                dataset_attr.subset_name = dataset_info[name]["subset_name"]
+                
             if "columns" in dataset_info[name]:
                 dataset_attr.prompt_column = dataset_info[name]["columns"].get("prompt", None)
                 dataset_attr.query_column = dataset_info[name]["columns"].get("query", None)

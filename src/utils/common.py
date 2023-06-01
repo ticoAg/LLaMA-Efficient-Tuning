@@ -291,7 +291,7 @@ def prepare_data(
         logger.info("Loading dataset {}...".format(dataset_attr))
 
         if dataset_attr.load_from == "hf_hub":
-            raw_datasets = load_dataset(dataset_attr.dataset_name, cache_dir=model_args.cache_dir)
+            raw_datasets = load_dataset(path=dataset_attr.dataset_name, name=dataset_attr.subset_name, cache_dir=model_args.cache_dir)
         elif dataset_attr.load_from == "script":
             raw_datasets = load_dataset(
                 os.path.join(data_args.dataset_dir, dataset_attr.dataset_name),
