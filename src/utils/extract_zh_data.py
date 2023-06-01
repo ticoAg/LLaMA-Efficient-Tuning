@@ -20,7 +20,7 @@ def loadJS(path):
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--data_save_path", default="data/pt_corpus.txt", help="file path to save text.")
-parser.add_argument("--dataset", type=str, default='huatuo_encyclopedia_qa,huatuo_knowledge_graph_qa,天池,medical')
+parser.add_argument("--dataset", type=str, default='medical')
 args = parser.parse_args()
 
 fileObj = open(args.data_save_path, "w", encoding='utf-8')
@@ -77,7 +77,8 @@ if "天池" in args.dataset.split(","):
 if "medical" in args.dataset.split(","):
     logger.debug("start to load shibing624/medical.")
     # git clone https://huggingface.co/datasets/shibing624/medical
-    data = load_dataset("data/medical")
-    ...
+    data = load_dataset("shibing624/medical", "pretrain")['train']
+    for item in tqdm(data):
+        fileObj.write(item['text'])
 
 fileObj.close()
