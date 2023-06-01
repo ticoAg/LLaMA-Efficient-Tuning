@@ -11,14 +11,15 @@ CUDA_VISIBLE_DEVICES=0 python src/train_pt.py \
     --output_dir ckpt/$model-$finetuning_type-$dataset-$finetuning_type \
     --overwrite_cache \
     --per_device_train_batch_size 4 \
-    --gradient_accumulation_steps 2 \
+    --gradient_accumulation_steps 4 \
     --lr_scheduler_type cosine \
     --logging_steps 10 \
-    --save_steps 1000 \
+    --save_steps 10 \
     --learning_rate 5e-5 \
-    --num_train_epochs 3 \
+    --max_steps 15 \
     --plot_loss \
-    --lora_rank 64 \
-    --lora_dropout 0.2 \
+    --lora_rank 16 \
+    --lora_dropout 0.15 \
     --lora_target query_key_value \
     --bf16
+# --num_train_epochs 3 \
