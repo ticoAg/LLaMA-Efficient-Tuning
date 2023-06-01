@@ -1,8 +1,10 @@
 import argparse
 import json
 import logging
+import logging
 from pathlib import Path
 
+from datasets import load_dataset
 from datasets import load_dataset
 from tqdm import tqdm
 
@@ -18,11 +20,13 @@ def loadJS(path):
 parser = argparse.ArgumentParser()
 parser.add_argument("--data_save_path", default="data/pt_corpus.txt", help="file path to save text.")
 parser.add_argument("--dataset", type=str, default='huatuo_encyclopedia_qa, huatuo_knowledge_graph_qa, 天池')
+parser.add_argument("--dataset", type=str, default='huatuo_encyclopedia_qa, huatuo_knowledge_graph_qa, 天池')
 args = parser.parse_args()
 
 fileObj = open(args.data_save_path, "w", encoding='utf-8')
 
 if "alpaca_data_zh_51k" in args.dataset:
+    logger.debug("start to load alpaca_data_zh_51k.")
     logger.debug("start to load alpaca_data_zh_51k.")
     for item in tqdm(loadJS("data/alpaca_data_zh_51k.json")):
         text = ''
@@ -36,6 +40,7 @@ if "alpaca_data_zh_51k" in args.dataset:
 
 if "alpaca_gpt4_data_zh" in args.dataset:
     logger.debug("start to load alpaca_gpt4_data_zh.")
+    logger.debug("start to load alpaca_gpt4_data_zh.")
     for item in tqdm(loadJS("data/alpaca_gpt4_data_zh.json")):
         text = ''
         if item.get('instruction'): text = item['instruction']
@@ -45,6 +50,32 @@ if "alpaca_gpt4_data_zh" in args.dataset:
         if item.get('output'): text = text + "\n" + item['output']
         if item.get('输出'): text = text + "\n" + item['输出']
         fileObj.write(text)
+
+if "huatuo" in args.dataset:
+    logger.debug("start to load FreedomIntelligence/huatuo_encyclopedia_qa.")
+    data = load_dataset("FreedomIntelligence/huatuo_encyclopedia_qa")
+    for item in tqdm(data['train']):
+        text = ''.join([i for j in item['questions'] for i in j])
+        text = text + "\n" + ''.join(item['answers'])
+        fileObj.write(text)
+
+    logger.debug("start to load FreedomIntelligence/huatuo_knowledge_graph_qa.")
+    data = load_dataset("FreedomIntelligence/huatuo_knowledge_graph_qa")
+    for item in tqdm(data['train']):
+        text = ''
+        text = text + ''.join(item['questions'])
+        text = text + "\n" + ''.join(item['answers'])
+        fileObj.write(text)
+
+if "天池" in args.dataset:
+    import csv
+    csv.field_size_limit(500 * 1024 * 1024)
+ 
+    with open('data/KUAKE-IR/corpus.tsv') as f:
+        tsvreader = csv.reader(f, delimiter='\t')
+        for line in tsvreader:
+            fileObj.write(line[1])
+
 
 if "huatuo" in args.dataset:
     logger.debug("start to load FreedomIntelligence/huatuo_encyclopedia_qa.")

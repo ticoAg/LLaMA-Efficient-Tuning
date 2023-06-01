@@ -10,7 +10,7 @@ CUDA_VISIBLE_DEVICES=0 python src/train_pt.py \
     --output_dir ckpt/$model-$finetuning_type-$dataset \
     --overwrite_cache \
     --per_device_train_batch_size 4 \
-    --gradient_accumulation_steps 4 \
+    --gradient_accumulation_steps 2 \
     --lr_scheduler_type cosine \
     --logging_steps 10 \
     --save_steps 1000 \
