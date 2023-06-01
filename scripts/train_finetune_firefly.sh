@@ -14,12 +14,12 @@ CUDA_VISIBLE_DEVICES=0 python src/train_pt.py \
     --gradient_accumulation_steps 4 \
     --lr_scheduler_type cosine \
     --logging_steps 10 \
-    --save_steps 10 \
+    --save_steps 1000 \
     --learning_rate 5e-5 \
-    --max_steps 15 \
+    --num_train_epochs 3 \
     --plot_loss \
     --lora_rank 16 \
     --lora_dropout 0.15 \
     --lora_target query_key_value \
     --bf16
-# --num_train_epochs 3 \
+    
