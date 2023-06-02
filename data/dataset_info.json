@@ -122,5 +122,15 @@
             "response": "",
             "history": ""
         }
+    },
+    "medical_sft":{
+        "hf_hub_url": "shibing624/medical", 
+        "subset_name":"finetune",
+        "columns": {
+            "prompt": "instruction",
+            "query": "input",
+            "response": "output",
+            "history": ""
+        }
     }
 }
