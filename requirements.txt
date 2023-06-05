@@ -2,11 +2,11 @@ torch>=1.13.1
 protobuf
 cpm_kernels
 sentencepiece
-transformers>=4.27.4
+transformers @ git+https://gitee.com/ticoAg/transformers.git
 datasets>=2.10.0
-accelerate>=0.18.0
-peft>=0.3.0
-trl>=0.4.1
+accelerate @ git+https://gitee.com/ticoAg/accelerate.git  
+peft @ git+https://gitee.com/ticoAg/peft.git
+trl @ git+https://gitee.com/ticoAg/trl.git
 jieba
 rouge_chinese
 nltk
