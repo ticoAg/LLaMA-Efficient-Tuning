@@ -52,13 +52,12 @@ class AverageMeter:
 
 
 # Avoid runtime error in model.generate(do_sample=True).
-# Borrowed from: https://huggingface.co/THUDM/chatglm-6b/blob/658202d88ac4bb782b99e99ac3adff58b4d0b813/modeling_chatglm.py#L54
 class InvalidScoreLogitsProcessor(LogitsProcessor):
 
     def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor) -> torch.FloatTensor:
         if torch.isnan(scores).any() or torch.isinf(scores).any():
             scores.zero_()
-            scores[..., 5] = 5e4
+            scores[:, 0] = 1.0
         return scores
 
 
@@ -143,7 +142,7 @@ def load_valuehead_params(model: torch.nn.Module, checkpoint_dir: os.PathLike) -
 
 
 def smooth(scalars: List[float], weight: Optional[float] = 0.9) -> List[float]:
-    """
+    r"""
     EMA implementation according to TensorBoard.
     """
     last = scalars[0]

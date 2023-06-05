@@ -1,5 +1,6 @@
 import os
 import json
+import torch
 from typing import List, Literal, Optional
 from dataclasses import asdict, dataclass, field
 
@@ -60,6 +61,10 @@ class ModelArguments:
     double_quantization: Optional[bool] = field(
         default=True,
         metadata={"help": "Compress the quantization statistics through double quantization."}
+    )
+    compute_dtype: Optional[torch.dtype] = field(
+        default=None,
+        metadata={"help": "Used in quantization configs. Do not specify this argument manually."}
     )
     checkpoint_dir: Optional[str] = field(
         default=None,
@@ -143,7 +148,8 @@ class DataTrainingArguments:
 
     def __post_init__(self): # support mixing multiple datasets
         dataset_names = [ds.strip() for ds in self.dataset.split(",")]
-        dataset_info = json.load(open(os.path.join(self.dataset_dir, "dataset_info.json"), "r"))
+        with open(os.path.join(self.dataset_dir, "dataset_info.json"), "r") as f:
+            dataset_info = json.load(f)
 
         self.dataset_list: List[DatasetAttr] = []
         for name in dataset_names:
