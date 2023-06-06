@@ -195,9 +195,10 @@ def load_pretrained(
         else:
             raise NotImplementedError
         is_mergeable = False
+        config_kwargs["device_map"] = {"": int(os.environ.get("LOCAL_RANK") or 0)}
         logger.info("Quantizing model to {} bit.".format(model_args.quantization_bit))
 
-    if model_args.quantization_bit is not None or (not is_trainable): # automatically load in CUDA
+    if not is_trainable:
         config_kwargs["device_map"] = "auto"
 
     # Load and prepare pretrained models (without valuehead).
