@@ -17,8 +17,12 @@ from utils import (
     plot_loss
 )
 
-# import wandb
-# wandb.init(project="finetune-bloom")
+import wandb
+wandb.init(
+    project="finetune-bloom",
+    name="bloomz-6b4-mt-zh",
+    notes="dataset:alpaca_gpt4_zh, 纯实验测试模型效果"
+    )
 
 def main():
 

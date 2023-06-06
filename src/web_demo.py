@@ -90,7 +90,7 @@ def parse_text(text): # copy from https://github.com/GaiZhenbiao/ChuanhuChatGPT
     return text
 
 
-def predict(query, chatbot, max_length, top_p, temperature, history):
+def predict(query, chatbot, max_length, top_p, temperature, repetition_penalty, history):
     chatbot.append((parse_text(query), ""))
 
     input_ids = tokenizer([format_example(query, history)], return_tensors="pt")["input_ids"]
@@ -102,7 +102,7 @@ def predict(query, chatbot, max_length, top_p, temperature, history):
         "temperature": temperature,
         "num_beams": 1,
         "max_length": max_length,
-        "repetition_penalty": 1.0,
+        "repetition_penalty": repetition_penalty,
         "logits_processor": get_logits_processor(),
         "streamer": streamer
     }
@@ -148,10 +148,11 @@ with gr.Blocks() as demo:
             max_length = gr.Slider(0, 2048, value=1024, step=1.0, label="Maximum length", interactive=True)
             top_p = gr.Slider(0, 1, value=0.7, step=0.01, label="Top P", interactive=True)
             temperature = gr.Slider(0, 1.5, value=0.95, step=0.01, label="Temperature", interactive=True)
+            repetition_penalty = gr.Slider(0, 10000, value=1.2, step=0.01, label="Maximum length", interactive=True)
 
     history = gr.State([])
 
-    submitBtn.click(predict, [user_input, chatbot, max_length, top_p, temperature, history], [chatbot, history], show_progress=True)
+    submitBtn.click(predict, [user_input, chatbot, max_length, top_p, temperature, repetition_penalty, history], [chatbot, history], show_progress=True)
     submitBtn.click(reset_user_input, [], [user_input])
 
     emptyBtn.click(reset_state, outputs=[chatbot, history], show_progress=True)

@@ -10,7 +10,7 @@ def main():
 
     model_args, _, training_args, finetuning_args = prepare_args(stage="sft")
     model, tokenizer = load_pretrained(model_args, finetuning_args)
-    model.save_pretrained(training_args.output_dir, max_shard_size="10GB")
+    model.save_pretrained(training_args.output_dir, max_shard_size="523MB")
     tokenizer.save_pretrained(training_args.output_dir)
     print("model and tokenizer have been saved at:", training_args.output_dir)
 

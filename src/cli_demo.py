@@ -43,11 +43,11 @@ def main():
         gen_kwargs = {
             "input_ids": input_ids,
             "do_sample": True,
-            "top_p": 0.7,
-            "temperature": 0.95,
+            "top_p": 0.9,
+            "temperature": 1,
             "num_beams": 1,
             "max_new_tokens": 512,
-            "repetition_penalty": 1.0,
+            "repetition_penalty": 1.2,
             "logits_processor": get_logits_processor(),
             "streamer": streamer
         }
