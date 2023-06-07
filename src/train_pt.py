@@ -15,8 +15,8 @@ from utils import (
     LogCallback,
     plot_loss
 )
-# import wandb
-# wandb.init(project="finetune-bloom")
+import wandb
+wandb.init(project="finetune-bloom")
 
 def main():
 

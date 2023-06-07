@@ -3,7 +3,6 @@ dataset='medical_sft'
 finetuning_type='lora'
 CUDA_VISIBLE_DEVICES=0 python src/train_sft.py \
     --model_name_or_path $model \
-    --checkpoint_dir ckpt/YeungNLP/bloomz-6b4-mt-zh-lora-medical-lora/checkpoint-11000,ckpt/bloomz-6b4-mt-zh-medical_sft-lora/checkpoint-2000 \
     --do_train \
     --dataset $dataset \
     --finetuning_type $finetuning_type \
@@ -21,4 +20,6 @@ CUDA_VISIBLE_DEVICES=0 python src/train_sft.py \
     --resume_lora_training True \
     --lora_rank 16 \
     --lora_dropout 0.1 \
-    --lora_target query_key_value
+    --lora_target query_key_value,dense,dense_
+
+    # --checkpoint_dir
