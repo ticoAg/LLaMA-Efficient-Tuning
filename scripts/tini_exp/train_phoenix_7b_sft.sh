@@ -1,9 +1,9 @@
 CUDA_VISIBLE_DEVICES=0 python src/train_sft.py \
     --model_name_or_path YeungNLP/bloomz-6b4-mt-zh \
     --do_train \
-    --dataset alpaca_gpt4_zh \
+    --dataset alpaca-gpt4-zh \
     --finetuning_type lora \
-    --output_dir ckpt/phoenix7b \
+    --output_dir ckpt/bloomz-6b4-mt-zh-alpaca-gpt4-zh \
     --per_device_train_batch_size 4 \
     --gradient_accumulation_steps 4 \
     --lr_scheduler_type cosine \
