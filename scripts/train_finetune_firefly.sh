@@ -19,7 +19,7 @@ CUDA_VISIBLE_DEVICES=0 python src/train_pt.py \
     --lora_target query_key_value,dense,dense_ \
     --bf16 \
     --resume_lora_training True \
-    --quantization_bit 4
+    --quantization_bit 4 \
     --use_fast_tokenizer \
     --preprocessing_num_workers 8
         # --overwrite_cache \
