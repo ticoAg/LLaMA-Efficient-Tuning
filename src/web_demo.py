@@ -7,7 +7,13 @@ import mdtex2html
 import gradio as gr
 
 from threading import Thread
-from utils import load_pretrained, prepare_infer_args, get_logits_processor
+from utils import (
+    Template,
+    load_pretrained,
+    prepare_infer_args,
+    get_logits_processor
+)
+
 from transformers import TextIteratorStreamer
 from transformers.utils.versions import require_version
 
@@ -18,26 +24,7 @@ require_version("gradio>=3.30.0", "To fix: pip install gradio>=3.30.0")
 model_args, data_args, finetuning_args = prepare_infer_args()
 model, tokenizer = load_pretrained(model_args, finetuning_args)
 
-
-def format_example_alpaca(query, history):
-    prompt = "Below is an instruction that describes a task. "
-    prompt += "Write a response that appropriately completes the request.\n"
-    prompt += "Instruction:\n"
-    for old_query, response in history:
-        prompt += "Human: {}\nAssistant: {}\n".format(old_query, response)
-    prompt += "Human: {}\nAssistant:".format(query)
-    return prompt
-
-
-def format_example_ziya(query, history):
-    prompt = ""
-    for old_query, response in history:
-        prompt += "<human>: {}\n<bot>: {}\n".format(old_query, response)
-    prompt += "<human>: {}\n<bot>:".format(query)
-    return prompt
-
-
-format_example = format_example_alpaca if data_args.prompt_template == "alpaca" else format_example_ziya
+prompt_template = Template(data_args.prompt_template)
 streamer = TextIteratorStreamer(tokenizer, timeout=60.0, skip_prompt=True, skip_special_tokens=True)
 
 
@@ -93,7 +80,7 @@ def parse_text(text): # copy from https://github.com/GaiZhenbiao/ChuanhuChatGPT
 def predict(query, chatbot, max_length, top_p, temperature, repetition_penalty, history):
     chatbot.append((parse_text(query), ""))
 
-    input_ids = tokenizer([format_example(query, history)], return_tensors="pt")["input_ids"]
+    input_ids = tokenizer([prompt_template.get_prompt(query, history)], return_tensors="pt")["input_ids"]
     input_ids = input_ids.to(model.device)
     gen_kwargs = {
         "input_ids": input_ids,

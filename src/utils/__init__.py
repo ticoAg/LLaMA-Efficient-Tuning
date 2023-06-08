@@ -14,4 +14,6 @@ from .seq2seq import ComputeMetrics, Seq2SeqPeftTrainer
 from .pairwise import PairwiseDataCollatorWithPadding, PairwisePeftTrainer
 from .ppo import PPOPeftTrainer
 
+from .template import Template
+
 from .other import get_logits_processor, plot_loss
