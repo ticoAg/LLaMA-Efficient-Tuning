@@ -21,6 +21,7 @@ import datetime
 from fastapi import FastAPI, Request
 
 from utils import (
+    Template,
     load_pretrained,
     prepare_infer_args,
     get_logits_processor
@@ -28,7 +29,7 @@ from utils import (
 
 
 def torch_gc():
-    if not torch.cuda.is_available():
+    if torch.cuda.is_available():
         num_gpus = torch.cuda.device_count()
         for device_id in range(num_gpus):
             with torch.cuda.device(device_id):
@@ -41,7 +42,7 @@ app = FastAPI()
 
 @app.post("/")
 async def create_item(request: Request):
-    global model, tokenizer, format_example
+    global model, tokenizer, prompt_template
 
     # Parse the request JSON
     json_post_raw = await request.json()
@@ -51,7 +52,7 @@ async def create_item(request: Request):
     history = json_post_list.get("history")
 
     # Tokenize the input prompt
-    input_ids = tokenizer([format_example(prompt, history)], return_tensors="pt")["input_ids"]
+    input_ids = tokenizer([prompt_template.get_prompt(prompt, history)], return_tensors="pt")["input_ids"]
     input_ids = input_ids.to(model.device)
 
     # Generation arguments
@@ -96,23 +97,6 @@ async def create_item(request: Request):
 if __name__ == "__main__":
     model_args, data_args, finetuning_args = prepare_infer_args()
     model, tokenizer = load_pretrained(model_args, finetuning_args)
-
-    def format_example_alpaca(query, history):
-        prompt = "Below is an instruction that describes a task. "
-        prompt += "Write a response that appropriately completes the request.\n"
-        prompt += "Instruction:\n"
-        for old_query, response in history:
-            prompt += "Human: {}\nAssistant: {}\n".format(old_query, response)
-        prompt += "Human: {}\nAssistant:".format(query)
-        return prompt
-
-    def format_example_ziya(query, history):
-        prompt = ""
-        for old_query, response in history:
-            prompt += "<human>: {}\n<bot>: {}\n".format(old_query, response)
-        prompt += "<human>: {}\n<bot>:".format(query)
-        return prompt
-
-    format_example = format_example_alpaca if data_args.prompt_template == "alpaca" else format_example_ziya
+    prompt_template = Template(data_args.prompt_template)
 
     uvicorn.run(app, host='0.0.0.0', port=8000, workers=1)

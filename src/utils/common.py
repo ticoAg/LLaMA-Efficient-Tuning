@@ -29,6 +29,8 @@ from peft import (
     get_peft_model
 )
 
+from peft.utils import CONFIG_NAME
+
 from trl import AutoModelForCausalLMWithValueHead
 
 from .config import (
@@ -36,6 +38,8 @@ from .config import (
     DataTrainingArguments,
     FinetuningArguments
 )
+
+from .template import Template
 
 from .other import (
     get_logger,
@@ -98,6 +102,9 @@ def _init_adapter(
         lastest_checkpoint = None
 
         if model_args.checkpoint_dir is not None:
+            assert os.path.exists(os.path.join(model_args.checkpoint_dir[0], CONFIG_NAME)), \
+                "The given checkpoint is not a LoRA checkpoint, please specify `--finetuning_type full/freeze` instead."
+
             if (is_trainable and model_args.resume_lora_training) or (not is_mergeable): # continually train on the lora weights
                 checkpoints_to_merge, lastest_checkpoint = model_args.checkpoint_dir[:-1], model_args.checkpoint_dir[-1]
             else:
@@ -229,6 +236,7 @@ def load_pretrained(
 
     if not is_trainable:
         model.requires_grad_(False) # fix all model params
+        model = model.half() if model_args.quantization_bit is None else model # cast from fp32 to fp16
 
     print_trainable_params(model)
 
@@ -276,6 +284,9 @@ def prepare_args(
     if training_args.do_train and (not training_args.fp16):
         logger.warning("We recommend enable fp16 mixed precision training.")
 
+    if data_args.prompt_template == "alpaca":
+        logger.warning("Please specify `prompt_template` if you are using other pre-trained models.")
+
     if training_args.local_rank != -1 and training_args.ddp_find_unused_parameters is None:
         logger.warning("`ddp_find_unused_parameters` needs to be set as False in DDP training.")
         training_args.ddp_find_unused_parameters = False
@@ -314,6 +325,9 @@ def prepare_infer_args() -> Tuple[ModelArguments, DataTrainingArguments, Finetun
 
     if model_args.quantization_bit is not None and finetuning_args.finetuning_type != "lora":
         raise ValueError("Quantization is only compatible with the LoRA method.")
+
+    if data_args.prompt_template == "alpaca":
+        logger.warning("Please specify `prompt_template` if you are using other pre-trained models.")
 
     return model_args, data_args, finetuning_args
 
@@ -400,38 +414,17 @@ def preprocess_data(
 
     column_names = list(dataset.column_names)
     prefix = data_args.source_prefix if data_args.source_prefix is not None else ""
+    prompt_template = Template(data_args.prompt_template)
 
     # support question with a single answer or multiple answers
-    def format_example_alpaca(examples):
+    def format_example(examples):
         for i in range(len(examples["prompt"])):
             if examples["prompt"][i] and examples["response"][i]:
                 query, answer = examples["prompt"][i], examples["response"][i]
                 if examples["query"][i]:
                     query += "\n" + examples["query"][i]
-                prompt = "Below is an instruction that describes a task. "
-                prompt += "Write a response that appropriately completes the request.\n"
-                prompt += "Instruction:\n" + prefix
-                if examples["history"][i]:
-                    for old_query, response in examples["history"][i]:
-                        prompt += "Human: {}\nAssistant: {}\n".format(old_query, response)
-                prompt += "Human: {}\nAssistant: ".format(query)
+                prompt = prompt_template.get_prompt(query, examples["history"][i], prefix)
                 yield prompt, answer
-
-    def format_example_ziya(examples):
-        for i in range(len(examples["prompt"])):
-            if examples["prompt"][i] and examples["response"][i]:
-                query, answer = examples["prompt"][i], examples["response"][i]
-                if examples["query"][i]:
-                    query += "\n" + examples["query"][i]
-                prompt = ""
-                if examples["history"][i]:
-                    for old_query, response in examples["history"][i]:
-                        prompt += "<human>: {}\n<bot>: {}\n".format(old_query, response)
-                prompt += "<human>: {}\n<bot>:".format(query)
-                prompt = prefix + prompt
-                yield prompt, answer
-
-    format_example = format_example_alpaca if data_args.prompt_template == "alpaca" else format_example_ziya
 
     def preprocess_pretrain_dataset(examples):
         # build grouped texts with format `<s> X1 X2 X3 ...` (without </s>)
