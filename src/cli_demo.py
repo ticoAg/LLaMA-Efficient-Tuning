@@ -23,7 +23,8 @@ def main():
     streamer = TextIteratorStreamer(tokenizer, timeout=60.0, skip_prompt=True, skip_special_tokens=True)
 
     def predict_and_print(query, history: list):
-        input_ids = tokenizer([prompt_template.get_prompt(query, history)], return_tensors="pt")["input_ids"]
+        prompted_input = prompt_template.get_prompt(query, history)
+        input_ids = tokenizer([prompted_input], return_tensors="pt")["input_ids"]
         input_ids = input_ids.to(model.device)
         gen_kwargs = {
             "input_ids": input_ids,
