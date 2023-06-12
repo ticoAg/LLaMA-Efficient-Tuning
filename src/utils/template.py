@@ -11,7 +11,9 @@ class Template:
         assert hasattr(self, "_format_{}".format(self.name)), "Template {} does not exist.".format(self.name)
 
     def get_prompt(self, query: str, history: Optional[list] = None, prefix: Optional[str] = "") -> str:
-        return getattr(self, "_format_{}".format(self.name))(query, history, prefix)
+        prompted_text = getattr(self, "_format_{}".format(self.name))(query, history, prefix)
+        print(prompted_text)
+        return prompted_text
 
     def _format_vanilla(self, query: str, history: Optional[list], prefix: Optional[str] = "") -> str:
         prompt = prefix
@@ -28,8 +30,9 @@ class Template:
         if prefix:
             prompt = prefix
         else:
-            prompt = "Below is an instruction that describes a task. "
-            prompt += "Write a response that appropriately completes the request.\n\n"
+            prompt = ""
+            # prompt = "Below is an instruction that describes a task. "
+            # prompt += "Write a response that appropriately completes the request.\n\n"
             prompt += "Instruction:\n"
         if history:
             for old_query, response in history:
