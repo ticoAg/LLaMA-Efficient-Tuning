@@ -8,3 +8,6 @@ ckpt/
 data/pt_corpus.txt
 data/KUAKE-IR
 data/pt_corpus.txt
+# data/dataset_info.json
+data/pretrain
+output

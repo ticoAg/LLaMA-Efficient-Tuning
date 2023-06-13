@@ -1,5 +1,6 @@
 torch>=1.13.1
 protobuf
+scipy
 cpm_kernels
 sentencepiece
 transformers @ git+https://gitee.com/ticoAg/transformers.git

@@ -16,7 +16,11 @@ from utils import (
     plot_loss
 )
 import wandb
-wandb.init(project="finetune-bloom")
+wandb.init(
+    project="finetune-bloom",
+    name="bloomz-6b4-mt-zh_pt_medical_epoch3",
+    notes="dataset:medical, 医学语料加训"
+    )
 
 def main():
 
