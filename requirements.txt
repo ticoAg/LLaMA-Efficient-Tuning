@@ -8,7 +8,7 @@ datasets>=2.10.0
 accelerate @ git+https://gitee.com/ticoAg/accelerate.git  
 peft @ git+https://gitee.com/ticoAg/peft.git
 trl @ git+https://gitee.com/ticoAg/trl.git
-bitsandbytes @ git+https://gitee.com/ticoAg/bitsandbytes.git
+# bitsandbytes @ git+https://gitee.com/ticoAg/bitsandbytes.git
 jieba
 rouge_chinese
 nltk
