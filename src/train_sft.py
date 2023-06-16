@@ -20,7 +20,7 @@ from utils import (
 import wandb
 wandb.init(
     project="finetune-bloom",
-    name="bloomz-6b4-mt-zh",
+    name="train_sft_lora_baichuan7b_alpacagpt4zh51k_epoch3",
     notes="dataset:alpaca_gpt4_zh, 纯实验测试模型效果"
     )
 

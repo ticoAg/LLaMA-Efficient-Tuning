@@ -1,11 +1,12 @@
 CUDA_VISIBLE_DEVICES=0 python src/train_sft.py \
-    --model_name_or_path ckpt/baichuan-inc/baichuan-7B \
+    --model_name_or_path baichuan-inc/baichuan-7B \
     --do_train \
-    --dataset medical_sft \
+    --dataset alpaca_gpt4_zh \
+    --preprocessing_num_workers 8 \
     --finetuning_type lora \
     --lora_rank 16 \
     --lora_dropout 0.1 \
-    --lora_target W_pack \
+    --lora_target W_pack,o_proj,gate_proj,up_proj,down_proj \
     --output_dir ckpt/train_sft_lora_baichuan7b_alpacagpt4zh51k_epoch3 \
     --per_device_train_batch_size 4 \
     --per_device_eval_batch_size 4 \
