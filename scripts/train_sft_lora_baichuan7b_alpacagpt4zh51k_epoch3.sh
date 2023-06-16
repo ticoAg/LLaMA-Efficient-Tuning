@@ -20,12 +20,16 @@ CUDA_VISIBLE_DEVICES=0 python src/train_sft.py \
     --num_train_epochs 3.0 \
     --dev_ratio 0.01 \
     --evaluation_strategy steps \
-    --load_best_model_at_end \
     --resume_lora_training True \
     --plot_loss \
-    --bf16 \
-    --quantization_bit 4
+    --bf16
+    # --load_best_model_at_end \
 
 # python src/web_demo.py \
 #     --model_name_or_path ckpt/baichuan-inc/baichuan-7B \
 #     --checkpoint_dir ckpt/train_sft_lora_baichuan7b_alpacagpt4zh51k_epoch3
+
+cd /hy-tmp/
+tar -cvf - workspace | pigz > workspace.tar.gz
+oss cp workspace.tar.gz oss://workspace.tar.gz
+shutdown
