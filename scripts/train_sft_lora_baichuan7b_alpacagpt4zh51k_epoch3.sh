@@ -25,7 +25,7 @@
 #     --bf16
     # --load_best_model_at_end \
 
-python src/web_demo.py \
+python src/cli_demo.py \
     --model_name_or_path baichuan-inc/baichuan-7B \
     --checkpoint_dir ckpt/train_sft_lora_baichuan7b_alpacagpt4zh51k_epoch3
 
