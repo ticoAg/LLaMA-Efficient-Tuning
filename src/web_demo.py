@@ -140,6 +140,7 @@ with gr.Blocks() as demo:
             max_length = gr.Slider(0, 2048, value=1024, step=1.0, label="Maximum length", interactive=True)
             top_p = gr.Slider(0, 1, value=generating_args.top_p, step=0.01, label="Top P", interactive=True)
             temperature = gr.Slider(0, 1.5, value=generating_args.temperature, step=0.01, label="Temperature", interactive=True)
+            repetition_penalty = gr.Slider(0, 1.5, value=generating_args.temperature, step=0.01, label="repetition_penalty", interactive=True)
 
     history = gr.State([])
 
