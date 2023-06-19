@@ -23,11 +23,12 @@
 #     --resume_lora_training True \
 #     --plot_loss \
 #     --bf16
-    # --load_best_model_at_end \
 
 python src/cli_demo.py \
     --model_name_or_path baichuan-inc/baichuan-7B \
-    --checkpoint_dir ckpt/train_sft_lora_baichuan7b_alpacagpt4zh51k_epoch3
+    --checkpoint_dir ckpt/train_sft_lora_baichuan7b_alpacagpt4zh51k_epoch3 \
+    --prompt_template alpaca \
+    --source_prefix ""
 
 # cd /hy-tmp/
 # tar -cvf - workspace | pigz > workspace.tar.gz
