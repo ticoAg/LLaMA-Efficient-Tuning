@@ -156,5 +156,14 @@
       "response": "",
       "history": ""
     }
+  },
+  "HuatuoGPT_sft_data_v1": {
+    "script_url": "/mnt/workspace/HuatuoGPT-sft-data-v1",
+    "columns": {
+      "prompt": "instruction",
+      "query": "input",
+      "response": "output",
+      "history": "history"
+    }
   }
 }

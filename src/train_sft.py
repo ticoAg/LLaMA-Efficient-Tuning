@@ -19,9 +19,8 @@ from utils import (
 
 import wandb
 wandb.init(
-    project="finetune-bloom",
-    name="train_sft_lora_baichuan7b_alpacagpt4zh51k_epoch3",
-    notes="dataset:alpaca_gpt4_zh, 纯实验测试模型效果"
+    project="ft-百川",
+    name="百川7b_sft_HuatuoGPTsftdatav1_epoch3"
     )
 
 def main():

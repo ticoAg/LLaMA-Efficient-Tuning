@@ -19,6 +19,17 @@ class Template:
                 sep="",
                 use_history=False
             )
+        
+        elif self.name == "LK-Bot":
+            r"""
+            Supports: https://github.com/CVI-SZU/Linly
+            """
+            self._register_template(
+                prefix="",
+                prompt="用户: {query}\n来康Bot: ",
+                sep="\n",
+                use_history=True
+            )
 
         elif self.name == "default":
             r"""
