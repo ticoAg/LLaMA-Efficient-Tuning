@@ -9,7 +9,7 @@ CUDA_VISIBLE_DEVICES=0 python src/train_sft.py \
     --lora_dropout 0.1 \
     --lora_target W_pack,o_proj,gate_proj,up_proj,down_proj \
     --output_dir ckpt/train_sft_lora_baichuan7b_HuatuoGPTsftdatav1_epoch3 \
-    --per_device_train_batch_size 4 \
+    --per_device_train_batch_size 2 \
     --per_device_eval_batch_size 4 \
     --gradient_accumulation_steps 4 \
     --lr_scheduler_type cosine \

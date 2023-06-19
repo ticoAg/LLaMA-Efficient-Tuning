@@ -19,10 +19,10 @@ from utils import (
 
 import wandb
 wandb.init(
-    project="ft-百川",
+    project="finetune-bloom",
     name="百川7b_sft_HuatuoGPTsftdatav1_epoch3"
     )
-
+    
 def main():
 
     # Prepare pretrained model and dataset
