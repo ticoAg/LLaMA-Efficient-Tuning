@@ -15,7 +15,7 @@ CUDA_VISIBLE_DEVICES=0 python src/train_sft.py \
     --lr_scheduler_type cosine \
     --logging_steps 10 \
     --save_steps 1000 \
-    --eval_steps 100 \
+    --eval_steps 1000 \
     --learning_rate 5e-5 \
     --max_grad_norm 0.5 \
     --num_train_epochs 3.0 \
