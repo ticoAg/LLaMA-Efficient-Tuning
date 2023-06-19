@@ -145,7 +145,7 @@ class DataTrainingArguments:
         metadata={"help": "Proportion of the dataset to include in the development set, should be between 0.0 and 1.0."}
     )
     prompt_template: Optional[str] = field(
-        default="alpaca",
+        default="default",
         metadata={"help": "Which template to use for constructing prompts in training and inference."}
     )
 
@@ -191,6 +191,13 @@ class FinetuningArguments:
         default="lora",
         metadata={"help": "Which fine-tuning method to use."}
     )
+    num_hidden_layers: Optional[int] = field(
+        default=32,
+        metadata={"help": "Number of decoder blocks in the model. \
+                  LLaMA choices: [\"32\", \"40\", \"60\", \"80\"], \
+                  BLOOM choices: [\"24\", \"30\", \"70\"], \
+                  Baichuan choices: [\"32\"]"}
+    )
     num_layer_trainable: Optional[int] = field(
         default=3,
         metadata={"help": "Number of trainable layers for Freeze fine-tuning."}
@@ -227,11 +234,11 @@ class FinetuningArguments:
             self.lora_target = [target.strip() for target in self.lora_target.split(",")]
 
         if self.num_layer_trainable > 0: # fine-tuning the last n layers if num_layer_trainable > 0
-            trainable_layer_ids = [27 - k for k in range(self.num_layer_trainable)]
+            trainable_layer_ids = [self.num_hidden_layers - k for k in range(self.num_layer_trainable)]
         else: # fine-tuning the first n layers if num_layer_trainable < 0
             trainable_layer_ids = [k for k in range(-self.num_layer_trainable)]
 
-        self.trainable_layers = ["layers.{:d}.{}".format(idx, self.name_module_trainable) for idx in trainable_layer_ids]
+        self.trainable_layers = ["{:d}.{}".format(idx, self.name_module_trainable) for idx in trainable_layer_ids]
 
         assert self.finetuning_type in ["none", "freeze", "lora", "full"], "Invalid fine-tuning method."
 
