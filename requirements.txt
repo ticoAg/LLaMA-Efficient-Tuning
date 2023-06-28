@@ -3,16 +3,14 @@ protobuf
 scipy
 cpm_kernels
 sentencepiece
-transformers @ git+https://gitee.com/ticoAg/transformers.git
+transformers
 datasets>=2.10.0
-accelerate @ git+https://gitee.com/ticoAg/accelerate.git  
-peft @ git+https://gitee.com/ticoAg/peft.git
-trl @ git+https://gitee.com/ticoAg/trl.git
-# bitsandbytes @ git+https://gitee.com/ticoAg/bitsandbytes.git
+accelerate
+peft
+trl
 jieba
 rouge_chinese
 nltk
 gradio
 mdtex2html
-protobuf==3.19.0
 wandb
