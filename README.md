@@ -202,6 +202,34 @@ accelerate config # configure the environment
 accelerate launch src/train_XX.py # arguments (same as above)
 ```
 
+<details><summary>Example configuration for full-tuning with DeepSpeed ZeRO-2</summary>
+
+```yaml
+compute_environment: LOCAL_MACHINE
+deepspeed_config:
+  gradient_accumulation_steps: 4
+  gradient_clipping: 0.5
+  offload_optimizer_device: none
+  offload_param_device: none
+  zero3_init_flag: false
+  zero_stage: 2
+distributed_type: DEEPSPEED
+downcast_bf16: 'no'
+machine_rank: 0
+main_training_function: main
+mixed_precision: fp16
+num_machines: 1
+num_processes: 4
+rdzv_backend: static
+same_network: true
+tpu_env: []
+tpu_use_cluster: false
+tpu_use_sudo: false
+use_cpu: false
+```
+
+</details>
+
 ### Evaluation (BLEU and ROUGE_CHINESE)
 
 ```bash
@@ -261,3 +289,7 @@ If this work is helpful, please cite as:
 ## Acknowledgement
 
 This repo is a sibling of [ChatGLM-Efficient-Tuning](https://github.com/hiyouga/ChatGLM-Efficient-Tuning). They share a similar code structure of efficient tuning on large language models.
+
+## Star History
+
+![Star History Chart](https://api.star-history.com/svg?repos=hiyouga/LLaMA-Efficient-Tuning&type=Date)
