@@ -11,3 +11,6 @@ data/pt_corpus.txt
 # data/dataset_info.json
 data/pretrain
 output
+output
+*.pyc
+.vscode
