@@ -3,7 +3,6 @@ import torch
 from typing import Dict, Optional, Sequence, Union
 
 from transformers import DataCollatorWithPadding, BatchEncoding
-from transformers.modeling_utils import PreTrainedModel
 from transformers.tokenization_utils import PreTrainedTokenizer
 
 from .other import IGNORE_INDEX
@@ -16,11 +15,9 @@ class DynamicDataCollatorWithPadding(DataCollatorWithPadding):
     def __init__(
             self,
             tokenizer: PreTrainedTokenizer,
-            model: PreTrainedModel,
             ignore_pad_token_for_loss: Optional[bool] = False
     ):
         super().__init__(tokenizer, padding=True)
-        self.model = model
         self.label_pad_token_id = IGNORE_INDEX if ignore_pad_token_for_loss else tokenizer.pad_token_id
 
     def get_attention_masks(self, input_ids: torch.Tensor, device: torch.device) -> torch.Tensor:
@@ -29,8 +26,10 @@ class DynamicDataCollatorWithPadding(DataCollatorWithPadding):
         """
         batch_size, seq_length = input_ids.size()
         attention_mask = torch.ones((batch_size, seq_length), device=device)
+
         for i, seq in enumerate(input_ids):
             attention_mask[i, :(seq != self.tokenizer.pad_token_id).nonzero()[0].item()] = 0 # padding
+
         attention_mask = attention_mask.bool()
         return attention_mask
 
@@ -52,7 +51,11 @@ class DynamicDataCollatorWithPadding(DataCollatorWithPadding):
                 labels = [torch.tensor(feature["labels"]).flip(0) for feature in features]
             input_ids = input_ids + labels # pad them to the same length
 
-        input_ids = torch.nn.utils.rnn.pad_sequence(input_ids, batch_first=True, padding_value=self.tokenizer.pad_token_id).flip(-1)
+        input_ids = torch.nn.utils.rnn.pad_sequence(
+            input_ids,
+            batch_first=True,
+            padding_value=self.tokenizer.pad_token_id
+        ).flip(-1)
 
         batch = {}
 

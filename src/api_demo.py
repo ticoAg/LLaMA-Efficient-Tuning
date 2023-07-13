@@ -1,24 +1,20 @@
 # coding=utf-8
-# Implements API for fine-tuned models.
+# Implements API for fine-tuned models in OpenAI's format. (https://platform.openai.com/docs/api-reference/chat)
 # Usage: python api_demo.py --model_name_or_path path_to_model --checkpoint_dir path_to_checkpoint
-
-# Request:
-# curl http://127.0.0.1:8000 --header 'Content-Type: application/json' --data '{"prompt": "Hello there!", "history": []}'
-
-# Response:
-# {
-#   "response": "'Hi there!'",
-#   "history": "[('Hello there!', 'Hi there!')]",
-#   "status": 200,
-#   "time": "2000-00-00 00:00:00"
-# }
+# Visit http://localhost:8000/docs for document.
 
 
-import json
+import time
 import torch
 import uvicorn
-import datetime
-from fastapi import FastAPI, Request
+from threading import Thread
+from pydantic import BaseModel, Field
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+from transformers import TextIteratorStreamer
+from sse_starlette import EventSourceResponse
+from typing import Any, Dict, List, Literal, Optional
 
 from utils import (
     Template,
@@ -28,75 +24,205 @@ from utils import (
 )
 
 
-def torch_gc():
+@asynccontextmanager
+async def lifespan(app: FastAPI): # collects GPU memory
+    yield
     if torch.cuda.is_available():
-        num_gpus = torch.cuda.device_count()
-        for device_id in range(num_gpus):
-            with torch.cuda.device(device_id):
-                torch.cuda.empty_cache()
-                torch.cuda.ipc_collect()
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
 
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 
-@app.post("/")
-async def create_item(request: Request):
-    global model, tokenizer, prompt_template
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-    # Parse the request JSON
-    json_post_raw = await request.json()
-    json_post = json.dumps(json_post_raw)
-    json_post_list = json.loads(json_post)
-    prompt = json_post_list.get("prompt")
-    history = json_post_list.get("history")
 
-    # Tokenize the input prompt
-    input_ids = tokenizer([prompt_template.get_prompt(prompt, history)], return_tensors="pt")["input_ids"]
-    input_ids = input_ids.to(model.device)
+class ModelCard(BaseModel):
+    id: str
+    object: Optional[str] = "model"
+    created: Optional[int] = Field(default_factory=lambda: int(time.time()))
+    owned_by: Optional[str] = "owner"
+    root: Optional[str] = None
+    parent: Optional[str] = None
+    permission: Optional[list] = []
 
-    # Generation arguments
-    gen_kwargs = {
-        "input_ids": input_ids,
-        "do_sample": True,
-        "top_p": 0.7,
-        "temperature": 0.95,
-        "num_beams": 1,
-        "max_new_tokens": 512,
-        "repetition_penalty": 1.0,
+
+class ModelList(BaseModel):
+    object: Optional[str] = "list"
+    data: Optional[List[ModelCard]] = []
+
+
+class ChatMessage(BaseModel):
+    role: Literal["user", "assistant", "system"]
+    content: str
+
+
+class DeltaMessage(BaseModel):
+    role: Optional[Literal["user", "assistant", "system"]] = None
+    content: Optional[str] = None
+
+
+class ChatCompletionRequest(BaseModel):
+    model: str
+    messages: List[ChatMessage]
+    temperature: Optional[float] = None
+    top_p: Optional[float] = None
+    n: Optional[int] = 1
+    max_tokens: Optional[int] = None
+    stream: Optional[bool] = False
+
+
+class ChatCompletionResponseChoice(BaseModel):
+    index: int
+    message: ChatMessage
+    finish_reason: Literal["stop", "length"]
+
+
+class ChatCompletionResponseStreamChoice(BaseModel):
+    index: int
+    delta: DeltaMessage
+    finish_reason: Optional[Literal["stop", "length"]] = None
+
+
+class ChatCompletionResponseUsage(BaseModel):
+    prompt_tokens: int
+    completion_tokens: int
+    total_tokens: int
+
+
+class ChatCompletionResponse(BaseModel):
+    id: Optional[str] = "chatcmpl-default"
+    object: Literal["chat.completion"]
+    created: Optional[int] = Field(default_factory=lambda: int(time.time()))
+    model: str
+    choices: List[ChatCompletionResponseChoice]
+    usage: ChatCompletionResponseUsage
+
+
+class ChatCompletionStreamResponse(BaseModel):
+    id: Optional[str] = "chatcmpl-default"
+    object: Literal["chat.completion.chunk"]
+    created: Optional[int] = Field(default_factory=lambda: int(time.time()))
+    model: str
+    choices: List[ChatCompletionResponseStreamChoice]
+
+
+@app.get("/v1/models", response_model=ModelList)
+async def list_models():
+    global model_args
+    model_card = ModelCard(id="gpt-3.5-turbo")
+    return ModelList(data=[model_card])
+
+
+@app.post("/v1/chat/completions", response_model=ChatCompletionResponse)
+async def create_chat_completion(request: ChatCompletionRequest):
+    global model, tokenizer, source_prefix, generating_args
+
+    if request.messages[-1].role != "user":
+        raise HTTPException(status_code=400, detail="Invalid request")
+    query = request.messages[-1].content
+
+    prev_messages = request.messages[:-1]
+    if len(prev_messages) > 0 and prev_messages[0].role == "system":
+        prefix = prev_messages.pop(0).content
+    else:
+        prefix = source_prefix
+
+    history = []
+    if len(prev_messages) % 2 == 0:
+        for i in range(0, len(prev_messages), 2):
+            if prev_messages[i].role == "user" and prev_messages[i+1].role == "assistant":
+                history.append([prev_messages[i].content, prev_messages[i+1].content])
+
+    inputs = tokenizer([prompt_template.get_prompt(query, history, prefix)], return_tensors="pt")
+    inputs = inputs.to(model.device)
+
+    gen_kwargs = generating_args.to_dict()
+    gen_kwargs.update({
+        "input_ids": inputs["input_ids"],
+        "temperature": request.temperature if request.temperature else gen_kwargs["temperature"],
+        "top_p": request.top_p if request.top_p else gen_kwargs["top_p"],
         "logits_processor": get_logits_processor()
-    }
+    })
 
-    # Generate response
-    with torch.no_grad():
-        generation_output = model.generate(**gen_kwargs)
-    outputs = generation_output.tolist()[0][len(input_ids[0]):]
+    if request.max_tokens:
+        gen_kwargs.pop("max_length", None)
+        gen_kwargs["max_new_tokens"] = request.max_tokens
+
+    if request.stream:
+        generate = predict(gen_kwargs, request.model)
+        return EventSourceResponse(generate, media_type="text/event-stream")
+
+    generation_output = model.generate(**gen_kwargs)
+    outputs = generation_output.tolist()[0][len(inputs["input_ids"][0]):]
     response = tokenizer.decode(outputs, skip_special_tokens=True)
 
-    # Update history
-    history = history + [(prompt, response)]
+    usage = ChatCompletionResponseUsage(
+        prompt_tokens=len(inputs["input_ids"][0]),
+        completion_tokens=len(outputs),
+        total_tokens=len(inputs["input_ids"][0]) + len(outputs)
+    )
 
-    # Prepare response
-    now = datetime.datetime.now()
-    time = now.strftime("%Y-%m-%d %H:%M:%S")
-    answer = {
-        "response": repr(response),
-        "history": repr(history),
-        "status": 200,
-        "time": time
-    }
+    choice_data = ChatCompletionResponseChoice(
+        index=0,
+        message=ChatMessage(role="assistant", content=response),
+        finish_reason="stop"
+    )
 
-    # Log and clean up
-    log = "[" + time + "] " + "\", prompt:\"" + prompt + "\", response:\"" + repr(response) + "\""
-    print(log)
-    torch_gc()
+    return ChatCompletionResponse(model=request.model, choices=[choice_data], usage=usage, object="chat.completion")
 
-    return answer
+
+async def predict(gen_kwargs: Dict[str, Any], model_id: str):
+    global model, tokenizer
+
+    streamer = TextIteratorStreamer(tokenizer, timeout=60.0, skip_prompt=True, skip_special_tokens=True)
+    gen_kwargs["streamer"] = streamer
+
+    thread = Thread(target=model.generate, kwargs=gen_kwargs)
+    thread.start()
+
+    choice_data = ChatCompletionResponseStreamChoice(
+        index=0,
+        delta=DeltaMessage(role="assistant"),
+        finish_reason=None
+    )
+    chunk = ChatCompletionStreamResponse(model=model_id, choices=[choice_data], object="chat.completion.chunk")
+    yield chunk.json(exclude_unset=True, ensure_ascii=False)
+
+    for new_text in streamer:
+        if len(new_text) == 0:
+            continue
+
+        choice_data = ChatCompletionResponseStreamChoice(
+            index=0,
+            delta=DeltaMessage(content=new_text),
+            finish_reason=None
+        )
+        chunk = ChatCompletionStreamResponse(model=model_id, choices=[choice_data], object="chat.completion.chunk")
+        yield chunk.json(exclude_unset=True, ensure_ascii=False)
+
+    choice_data = ChatCompletionResponseStreamChoice(
+        index=0,
+        delta=DeltaMessage(),
+        finish_reason="stop"
+    )
+    chunk = ChatCompletionStreamResponse(model=model_id, choices=[choice_data], object="chat.completion.chunk")
+    yield chunk.json(exclude_unset=True, ensure_ascii=False)
+    yield "[DONE]"
 
 
 if __name__ == "__main__":
-    model_args, data_args, finetuning_args = prepare_infer_args()
+    model_args, data_args, finetuning_args, generating_args = prepare_infer_args()
     model, tokenizer = load_pretrained(model_args, finetuning_args)
-    prompt_template = Template(data_args.prompt_template)
 
-    uvicorn.run(app, host='0.0.0.0', port=8000, workers=1)
+    prompt_template = Template(data_args.prompt_template)
+    source_prefix = data_args.source_prefix if data_args.source_prefix else ""
+
+    uvicorn.run(app, host="0.0.0.0", port=8000, workers=1)

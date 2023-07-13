@@ -5,12 +5,10 @@ import torch
 import logging
 from typing import Dict, List, Optional
 
-from transformers.trainer import TRAINER_STATE_NAME
-from transformers.modeling_utils import PreTrainedModel
+from transformers.trainer import TRAINER_STATE_NAME, WEIGHTS_NAME, WEIGHTS_INDEX_NAME
+from transformers.modeling_utils import PreTrainedModel, load_sharded_checkpoint
 from transformers.generation.utils import LogitsProcessorList
 from transformers.generation.logits_process import LogitsProcessor
-
-from peft.utils import WEIGHTS_NAME
 
 
 IGNORE_INDEX = -100
@@ -73,9 +71,10 @@ def get_logits_processor() -> LogitsProcessorList:
 # Inspired by: https://github.com/huggingface/peft/blob/c0209c35abbf88c63aa267800d98a8e212ed0a42/src/peft/utils/other.py#L35
 def prepare_model_for_training(
         model: PreTrainedModel,
+        finetuning_type: str,
         output_embedding_layer_name: Optional[str] = "lm_head",
         use_gradient_checkpointing: Optional[bool] = True,
-        layer_norm_names: Optional[List[str]] = ["norm", "ln_f"] # for LLaMA and BLOOM setting
+        layer_norm_names: Optional[List[str]] = ["norm", "ln_f", "ln_attn", "ln_mlp"] # for LLaMA, BLOOM and Falcon settings
 ) -> PreTrainedModel:
 
     for name, param in model.named_parameters():
@@ -83,17 +82,23 @@ def prepare_model_for_training(
             param.data = param.data.to(torch.float32)
 
     if use_gradient_checkpointing:
-        model.enable_input_require_grads()
+        if hasattr(model, "enable_input_require_grads"):
+            model.enable_input_require_grads()
+        else:
+            def make_inputs_require_grad(module, input, output):
+                output.requires_grad_(True)
+            model.get_input_embeddings().register_forward_hook(make_inputs_require_grad)
+
         model.gradient_checkpointing_enable()
         model.config.use_cache = False # turn off when gradient checkpointing is enabled
 
-    if hasattr(model, output_embedding_layer_name):
-        output_embedding_layer = getattr(model, output_embedding_layer_name)
+    if finetuning_type != "full" and hasattr(model, output_embedding_layer_name):
+        output_embedding_layer: torch.nn.Linear = getattr(model, output_embedding_layer_name)
         input_dtype = output_embedding_layer.weight.dtype
 
         class CastOutputToFloat(torch.nn.Sequential):
 
-            def forward(self, x):
+            def forward(self, x: torch.Tensor) -> torch.Tensor:
                 return super().forward(x.to(input_dtype)).to(torch.float32)
 
         setattr(model, output_embedding_layer_name, CastOutputToFloat(output_embedding_layer))
@@ -126,21 +131,30 @@ def get_state_dict(model: torch.nn.Module) -> Dict[str, torch.Tensor]: # get sta
     return filtered_state_dict
 
 
-def load_trainable_params(model: torch.nn.Module, checkpoint_dir: os.PathLike) -> None:
+def load_trainable_params(model: torch.nn.Module, checkpoint_dir: os.PathLike) -> bool:
     weights_file = os.path.join(checkpoint_dir, WEIGHTS_NAME)
-    assert os.path.exists(weights_file), f"Provided path ({checkpoint_dir}) does not contain the pretrained weights."
-    model_state_dict = torch.load(weights_file, map_location="cpu")
-    model.load_state_dict(model_state_dict, strict=False) # skip missing keys
+    if os.path.exists(weights_file):
+        model_state_dict = torch.load(weights_file, map_location="cpu")
+        model.load_state_dict(model_state_dict, strict=False) # skip missing keys
+    elif os.path.exists(os.path.join(checkpoint_dir, WEIGHTS_INDEX_NAME)):
+        load_sharded_checkpoint(model, checkpoint_dir, strict=False)
+    else:
+        logger.warning("Provided path ({}) does not contain pre-trained weights.".format(checkpoint_dir))
+        return False
+    return True
 
 
-def load_valuehead_params(model: torch.nn.Module, checkpoint_dir: os.PathLike) -> None:
+def load_valuehead_params(model: torch.nn.Module, checkpoint_dir: os.PathLike) -> bool:
     valuehead_file = os.path.join(checkpoint_dir, VALUE_HEAD_FILE_NAME)
-    assert os.path.exists(valuehead_file), f"Provided path ({checkpoint_dir}) does not contain the valuehead weights."
+    if not os.path.exists(valuehead_file):
+        logger.warning("Provided path ({}) does not contain valuehead weights.".format(checkpoint_dir))
+        return False
     valuehead_state_dict = torch.load(valuehead_file, map_location="cpu")
     model.register_buffer("reward_head_weight", valuehead_state_dict["summary.weight"])
     model.register_buffer("reward_head_bias", valuehead_state_dict["summary.bias"])
     model.register_buffer("default_head_weight", torch.zeros_like(valuehead_state_dict["summary.weight"]))
     model.register_buffer("default_head_bias", torch.zeros_like(valuehead_state_dict["summary.bias"]))
+    return True
 
 
 def smooth(scalars: List[float], weight: Optional[float] = 0.9) -> List[float]:

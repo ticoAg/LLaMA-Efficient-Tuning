@@ -1,7 +1,7 @@
 import os
 import json
 import torch
-from typing import List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 from dataclasses import asdict, dataclass, field
 
 
@@ -10,14 +10,11 @@ class DatasetAttr:
 
     load_from: str
     dataset_name: Optional[str] = None
-    file_name: Optional[str] = None
-    file_sha1: Optional[str] = None
+    dataset_sha1: Optional[str] = None
+    source_prefix: Optional[str] = None
 
     def __repr__(self) -> str:
-        if self.dataset_name is not None:
-            return self.dataset_name
-        else:
-            return self.file_name
+        return self.dataset_name
 
     def __post_init__(self):
         self.prompt_column = "instruction"
@@ -56,11 +53,11 @@ class ModelArguments:
     )
     quantization_type: Optional[Literal["fp4", "nf4"]] = field(
         default="nf4",
-        metadata={"help": "Quantization data type to use."}
+        metadata={"help": "Quantization data type to use in int4 training."}
     )
     double_quantization: Optional[bool] = field(
         default=True,
-        metadata={"help": "Compress the quantization statistics through double quantization."}
+        metadata={"help": "Whether to use double quantization in int4 training or not."}
     )
     compute_dtype: Optional[torch.dtype] = field(
         default=None,
@@ -87,6 +84,8 @@ class ModelArguments:
         if self.checkpoint_dir is not None: # support merging multiple lora weights
             self.checkpoint_dir = [cd.strip() for cd in self.checkpoint_dir.split(",")]
 
+        if self.quantization_bit is not None:
+            assert self.quantization_bit in [4, 8], "We only accept 4-bit or 8-bit quantization."
 
 @dataclass
 class DataTrainingArguments:
@@ -125,7 +124,7 @@ class DataTrainingArguments:
         default=None,
         metadata={"help": "For debugging purposes, truncate the number of examples for each dataset."}
     )
-    num_beams: Optional[int] = field(
+    eval_num_beams: Optional[int] = field(
         default=None,
         metadata={"help": "Number of beams to use for evaluation. This argument will be passed to `model.generate`"}
     )
@@ -135,24 +134,31 @@ class DataTrainingArguments:
     )
     source_prefix: Optional[str] = field(
         default=None,
-        metadata={"help": "A prefix to add before every source text (useful for T5 models)."}
+        metadata={"help": "A prefix to add before every source text. Use `|` to separate multiple prefixes in training."}
     )
     dev_ratio: Optional[float] = field(
         default=0,
         metadata={"help": "Proportion of the dataset to include in the development set, should be between 0.0 and 1.0."}
     )
     prompt_template: Optional[str] = field(
-        default="alpaca",
+        default="default",
         metadata={"help": "Which template to use for constructing prompts in training and inference."}
     )
 
-    def __post_init__(self): # support mixing multiple datasets
+    def init_for_training(self): # support mixing multiple datasets
         dataset_names = [ds.strip() for ds in self.dataset.split(",")]
         with open(os.path.join(self.dataset_dir, "dataset_info.json"), "r") as f:
             dataset_info = json.load(f)
 
+        if self.source_prefix is not None:
+            prefix_list = self.source_prefix.split("|")
+            prefix_list = prefix_list * len(dataset_names) if len(prefix_list) == 1 else prefix_list
+            assert len(prefix_list) == len(dataset_names), "The number of prefixes should be either identical with datasets or 1."
+        else:
+            prefix_list = [None] * len(dataset_names)
+
         self.dataset_list: List[DatasetAttr] = []
-        for name in dataset_names:
+        for i, name in enumerate(dataset_names):
             if name not in dataset_info:
                 raise ValueError("Undefined dataset {} in dataset_info.json.".format(name))
 
@@ -163,9 +169,11 @@ class DataTrainingArguments:
             else:
                 dataset_attr = DatasetAttr(
                     "file",
-                    file_name=dataset_info[name]["file_name"],
-                    file_sha1=dataset_info[name]["file_sha1"] if "file_sha1" in dataset_info[name] else None
+                    dataset_name=dataset_info[name]["file_name"],
+                    dataset_sha1=dataset_info[name].get("file_sha1", None)
                 )
+
+            dataset_attr.source_prefix = prefix_list[i]
 
             if "columns" in dataset_info[name]:
                 dataset_attr.prompt_column = dataset_info[name]["columns"].get("prompt", None)
@@ -185,6 +193,14 @@ class FinetuningArguments:
         default="lora",
         metadata={"help": "Which fine-tuning method to use."}
     )
+    num_hidden_layers: Optional[int] = field(
+        default=32,
+        metadata={"help": "Number of decoder blocks in the model. \
+                  LLaMA choices: [\"32\", \"40\", \"60\", \"80\"], \
+                  BLOOM choices: [\"24\", \"30\", \"70\"], \
+                  Falcon choices: [\"32\", \"60\"], \
+                  Baichuan choices: [\"32\"]"}
+    )
     num_layer_trainable: Optional[int] = field(
         default=3,
         metadata={"help": "Number of trainable layers for Freeze fine-tuning."}
@@ -193,7 +209,8 @@ class FinetuningArguments:
         default="mlp",
         metadata={"help": "Name of trainable modules for Freeze fine-tuning. \
                   LLaMA choices: [\"mlp\", \"self_attn\"], \
-                  BLOOM choices: [\"mlp\", \"self_attention\"]"}
+                  BLOOM & Falcon choices: [\"mlp\", \"self_attention\"], \
+                  Baichuan choices: [\"mlp\", \"self_attn\"]"}
     )
     lora_rank: Optional[int] = field(
         default=8,
@@ -210,20 +227,21 @@ class FinetuningArguments:
     lora_target: Optional[str] = field(
         default="q_proj,v_proj",
         metadata={"help": "Name(s) of target modules to apply LoRA. Use comma to separate multiple modules. \
-                  LLaMA choices: [\"q_proj\", \"k_proj\", \"v_proj\", \"o_proj\", \"up_proj\", \"down_proj\"], \
-                  BLOOM choices: [\"query_key_value\", \"dense\", \"dense_\"]"}
+                  LLaMA choices: [\"q_proj\", \"k_proj\", \"v_proj\", \"o_proj\", \"gate_proj\", \"up_proj\", \"down_proj\"], \
+                  BLOOM & Falcon choices: [\"query_key_value\", \"self_attention.dense\", \"mlp.dense\"], \
+                  Baichuan choices: [\"W_pack\", \"o_proj\", \"gate_proj\", \"up_proj\", \"down_proj\"]"}
     )
 
     def __post_init__(self):
-        if isinstance(self.lora_target, str):
-            self.lora_target = [target.strip() for target in self.lora_target.split(",")] # support custom target modules of LoRA
+        if isinstance(self.lora_target, str): # support custom target modules/layers of LoRA
+            self.lora_target = [target.strip() for target in self.lora_target.split(",")]
 
         if self.num_layer_trainable > 0: # fine-tuning the last n layers if num_layer_trainable > 0
-            trainable_layer_ids = [27-k for k in range(self.num_layer_trainable)]
+            trainable_layer_ids = [self.num_hidden_layers - k - 1 for k in range(self.num_layer_trainable)]
         else: # fine-tuning the first n layers if num_layer_trainable < 0
             trainable_layer_ids = [k for k in range(-self.num_layer_trainable)]
 
-        self.trainable_layers = ["layers.{:d}.{}".format(idx, self.name_module_trainable) for idx in trainable_layer_ids]
+        self.trainable_layers = ["{:d}.{}".format(idx, self.name_module_trainable) for idx in trainable_layer_ids]
 
         assert self.finetuning_type in ["none", "freeze", "lora", "full"], "Invalid fine-tuning method."
 
@@ -239,3 +257,52 @@ class FinetuningArguments:
         with open(json_path, "r", encoding="utf-8") as f:
             text = f.read()
         return cls(**json.loads(text))
+
+
+@dataclass
+class GeneratingArguments:
+    """
+    Arguments pertaining to specify the decoding parameters.
+    """
+    do_sample: Optional[bool] = field(
+        default=True,
+        metadata={"help": "Whether or not to use sampling, use greedy decoding otherwise."}
+    )
+    temperature: Optional[float] = field(
+        default=0.95,
+        metadata={"help": "The value used to modulate the next token probabilities."}
+    )
+    top_p: Optional[float] = field(
+        default=0.7,
+        metadata={"help": "The smallest set of most probable tokens with probabilities that add up to top_p or higher are kept."}
+    )
+    top_k: Optional[int] = field(
+        default=50,
+        metadata={"help": "The number of highest probability vocabulary tokens to keep for top-k filtering."}
+    )
+    num_beams: Optional[int] = field(
+        default=1,
+        metadata={"help": "Number of beams for beam search. 1 means no beam search."}
+    )
+    max_length: Optional[int] = field(
+        default=None,
+        metadata={"help": "The maximum length the generated tokens can have. It can be overridden by max_new_tokens."}
+    )
+    max_new_tokens: Optional[int] = field(
+        default=512,
+        metadata={"help": "The maximum numbers of tokens to generate, ignoring the number of tokens in the prompt."}
+    )
+    repetition_penalty: Optional[float] = field(
+        default=1.0,
+        metadata={"help": "The parameter for repetition penalty. 1.0 means no penalty."}
+    )
+    length_penalty: Optional[float] = field(
+        default=1.0,
+        metadata={"help": "Exponential penalty to the length that is used with beam-based generation."}
+    )
+
+    def to_dict(self) -> Dict[str, Any]:
+        args = asdict(self)
+        if args.get("max_new_tokens", None):
+            args.pop("max_length", None)
+        return args
