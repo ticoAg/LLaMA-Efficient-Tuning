@@ -1,13 +1,9 @@
-echo ${MODEL_PATH}
-echo ${DATASET_PATH}
-echo ${TRAIN_MODEL_OUTPUT}
-ls -l ${DATASET_PATH}
 deepspeed --num_gpus=4 \
     src/train_sft.py \
     --model_name_or_path ${MODEL_PATH} \
     --do_train \
-    --dataset ${DATASET_PATH} \
-    --finetuning_type full \
+    --dataset medical_sft \
+    --finetuning_type lora \
     --output_dir ${TRAIN_MODEL_OUTPUT} \
     --per_device_train_batch_size 4 \
     --per_device_eval_batch_size 4 \

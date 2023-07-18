@@ -179,8 +179,7 @@
     }
   },
   "medical_sft": {
-    "hf_hub_url": "shibing624/medical",
-    "subset_name": "finetune",
+    "file_name": "/data/persist/dataset/aip/dataset/enn/nlp/qas/88/V1",
     "columns": {
       "prompt": "instruction",
       "query": "input",
