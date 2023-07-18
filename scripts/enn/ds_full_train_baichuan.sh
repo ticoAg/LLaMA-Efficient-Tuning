@@ -1,4 +1,7 @@
-wandb offline
+echo ${MODEL_PATH}
+echo ${DATASET_PATH}
+echo ${TRAIN_MODEL_OUTPUT}
+ls -l ${DATASET_PATH}
 deepspeed --num_gpus=4 \
     src/train_sft.py \
     --model_name_or_path ${MODEL_PATH} \
