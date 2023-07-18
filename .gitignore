@@ -1,5 +1,6 @@
 *.pyc
 .vscode
+.cache
 
 # model/
 model/merged_vocab_model
@@ -13,4 +14,3 @@ data/pretrain
 output
 output
 *.pyc
-.vscode
