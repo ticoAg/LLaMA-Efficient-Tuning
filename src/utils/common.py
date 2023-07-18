@@ -85,31 +85,28 @@ def _init_adapter(
 
     if finetuning_args.finetuning_type == "freeze":
         logger.info("Fine-tuning method: Freeze")
+
         for name, param in model.named_parameters():
             if not any(trainable_layer in name for trainable_layer in finetuning_args.trainable_layers):
                 param.requires_grad_(False)
             else:
                 param.data = param.data.to(torch.float32)
 
-    if model_args.checkpoint_dir is not None:
-        if finetuning_args.finetuning_type != "lora":
-            assert is_mergeable and len(model_args.checkpoint_dir) == 1, "Only LoRA tuning accepts multiple checkpoints."
+        if model_args.checkpoint_dir is not None:
             assert load_trainable_params(model, model_args.checkpoint_dir[0]), "Model checkpoint is not correctly loaded."
-        else:
-            assert is_mergeable or len(model_args.checkpoint_dir) == 1, "Quantized model only accepts a single checkpoint."
 
     if finetuning_args.finetuning_type == "lora":
         logger.info("Fine-tuning method: LoRA")
-        lastest_checkpoint = None
+        latest_checkpoint = None
 
         if model_args.checkpoint_dir is not None:
-            if os.path.exists(os.path.join(model_args.checkpoint_dir[0], WEIGHTS_NAME)) and \
-                not os.path.exists(os.path.join(model_args.checkpoint_dir[0], CONFIG_NAME)):
-                raise ValueError("The given checkpoint may be not a LoRA checkpoint, \
-                                  please specify `--finetuning_type full/freeze` instead.")
+            assert os.path.exists(os.path.join(model_args.checkpoint_dir[0], WEIGHTS_NAME)), \
+                "Provided path ({}) does not contain a LoRA weight.".format(model_args.checkpoint_dir[0])
+            assert os.path.exists(os.path.join(model_args.checkpoint_dir[0], CONFIG_NAME)), \
+                "The given checkpoint may be not a LoRA checkpoint, please specify `--finetuning_type full/freeze` instead."
 
             if (is_trainable and model_args.resume_lora_training) or (not is_mergeable): # continually train on the lora weights
-                checkpoints_to_merge, lastest_checkpoint = model_args.checkpoint_dir[:-1], model_args.checkpoint_dir[-1]
+                checkpoints_to_merge, latest_checkpoint = model_args.checkpoint_dir[:-1], model_args.checkpoint_dir[-1]
             else:
                 checkpoints_to_merge = model_args.checkpoint_dir
 
@@ -120,13 +117,10 @@ def _init_adapter(
             if len(checkpoints_to_merge) > 0:
                 logger.info("Merged {} model checkpoint(s).".format(len(checkpoints_to_merge)))
 
-            if lastest_checkpoint is not None: # resume lora training or quantized inference
-                model = PeftModel.from_pretrained(model, lastest_checkpoint, is_trainable=is_trainable)
+            if latest_checkpoint is not None: # resume lora training or quantized inference
+                model = PeftModel.from_pretrained(model, latest_checkpoint, is_trainable=is_trainable)
 
-        if is_trainable and lastest_checkpoint is None: # create new lora weights while training
-            # this code can show what named module the model have
-            # for name, param in model.named_parameters():
-            #     print(name, param.shape)
+        if is_trainable and latest_checkpoint is None: # create new lora weights while training
             lora_config = LoraConfig(
                 task_type=TaskType.CAUSAL_LM,
                 inference_mode=False,
@@ -174,8 +168,8 @@ def load_pretrained(
         padding_side="left",
         **config_kwargs
     )
-    tokenizer.pad_token_id = 0 if tokenizer.pad_token_id is None else tokenizer.pad_token_id # set as the <unk> token
-    tokenizer.pad_token_id = 0 if tokenizer.pad_token_id == 64000 else tokenizer.pad_token_id # for baichuan model (older version)
+    if tokenizer.pad_token_id is None or tokenizer.pad_token_id == 64000: # 64000 for baichuan model (older version)
+        tokenizer.pad_token_id = 0 # set as the <unk> token
 
     config = AutoConfig.from_pretrained(model_args.model_name_or_path, **config_kwargs)
     is_mergeable = True
@@ -189,6 +183,7 @@ def load_pretrained(
                 load_in_8bit=True,
                 llm_int8_threshold=6.0
             )
+
         elif model_args.quantization_bit == 4:
             require_version("bitsandbytes>=0.39.0", "To fix: pip install bitsandbytes>=0.39.0")
             require_version("transformers>=4.30.1", "To fix: pip install transformers>=4.30.1")
@@ -201,6 +196,7 @@ def load_pretrained(
                 bnb_4bit_use_double_quant=model_args.double_quantization,
                 bnb_4bit_quant_type=model_args.quantization_type
             )
+
         is_mergeable = False
         config_kwargs["device_map"] = {"": int(os.environ.get("LOCAL_RANK", "0"))}
         logger.info("Quantizing model to {} bit.".format(model_args.quantization_bit))
@@ -208,14 +204,29 @@ def load_pretrained(
     if not is_trainable: # `device_map=auto` should be used for inference only
         config_kwargs["device_map"] = "auto"
 
+    if model_args.checkpoint_dir is not None and finetuning_args.finetuning_type == "full":
+        model_to_load = model_args.checkpoint_dir[0]
+    else:
+        model_to_load = model_args.model_name_or_path
+
     # Load and prepare pretrained models (without valuehead).
     model = AutoModelForCausalLM.from_pretrained(
-        model_args.model_name_or_path,
+        model_to_load,
         config=config,
         torch_dtype=torch.bfloat16 if model_args.compute_dtype == torch.bfloat16 else torch.float16,
         low_cpu_mem_usage=True,
         **config_kwargs
     )
+
+    # Register auto class to save the custom code files.
+    if hasattr(config, "auto_map") and "AutoConfig" in config.auto_map:
+        config.__class__.register_for_auto_class()
+    if hasattr(config, "auto_map") and "AutoTokenizer" in config.auto_map:
+        tokenizer.__class__.register_for_auto_class()
+    if hasattr(config, "auto_map") and "AutoModelForCausalLM" in config.auto_map:
+        model.__class__.register_for_auto_class()
+
+    # Initialize adapters
     model = prepare_model_for_training(model, finetuning_args.finetuning_type) if is_trainable else model
     model = _init_adapter(model, model_args, finetuning_args, is_trainable, is_mergeable)
 
@@ -269,17 +280,26 @@ def prepare_args(
     transformers.utils.logging.enable_explicit_format()
 
     # Check arguments (do not check finetuning_args since it may be loaded from checkpoints)
-    if stage != "sft" and training_args.predict_with_generate:
-        raise ValueError("`predict_with_generate` cannot be set as True at PT, RM and PPO stages.")
+    data_args.init_for_training()
 
-    if training_args.do_train and training_args.predict_with_generate:
-        raise ValueError("`predict_with_generate` cannot be set as True while training.")
+    assert stage == "sft" or (not training_args.predict_with_generate), \
+        "`predict_with_generate` cannot be set as True at PT, RM and PPO stages."
 
-    if training_args.do_predict and (not training_args.predict_with_generate):
-        raise ValueError("Please enable `predict_with_generate` to save model predictions.")
+    assert not (training_args.do_train and training_args.predict_with_generate), \
+        "`predict_with_generate` cannot be set as True while training."
 
-    if model_args.quantization_bit is not None and finetuning_args.finetuning_type != "lora":
-        raise ValueError("Quantization is only compatible with the LoRA method.")
+    assert (not training_args.do_predict) or training_args.predict_with_generate, \
+        "Please enable `predict_with_generate` to save model predictions."
+
+    assert model_args.quantization_bit is None or finetuning_args.finetuning_type == "lora", \
+        "Quantization is only compatible with the LoRA method."
+
+    if model_args.checkpoint_dir is not None:
+        if finetuning_args.finetuning_type != "lora":
+            assert len(model_args.checkpoint_dir) == 1, "Only LoRA tuning accepts multiple checkpoints."
+        else:
+            assert model_args.quantization_bit is None or len(model_args.checkpoint_dir) == 1, \
+                "Quantized model only accepts a single checkpoint."
 
     if model_args.quantization_bit is not None and (not training_args.do_train):
         logger.warning("Evaluating model in 4/8-bit mode may cause lower scores.")
@@ -326,8 +346,15 @@ def prepare_infer_args() -> Tuple[ModelArguments, DataTrainingArguments, Finetun
     else:
         model_args, data_args, finetuning_args, generating_args = parser.parse_args_into_dataclasses()
 
-    if model_args.quantization_bit is not None and finetuning_args.finetuning_type != "lora":
-        raise ValueError("Quantization is only compatible with the LoRA method.")
+    assert model_args.quantization_bit is None or finetuning_args.finetuning_type == "lora", \
+        "Quantization is only compatible with the LoRA method."
+
+    if model_args.checkpoint_dir is not None:
+        if finetuning_args.finetuning_type != "lora":
+            assert len(model_args.checkpoint_dir) == 1, "Only LoRA tuning accepts multiple checkpoints."
+        else:
+            assert model_args.quantization_bit is None or len(model_args.checkpoint_dir) == 1, \
+                "Quantized model only accepts a single checkpoint."
 
     if data_args.prompt_template == "default":
         logger.warning("Please specify `prompt_template` if you are using other pre-trained models.")
@@ -347,6 +374,13 @@ def prepare_data(
         if sha1 != hash:
             logger.warning("Checksum failed for {}. It may vary depending on the platform.".format(file_path))
 
+    ext2type = {
+        "csv": "csv",
+        "json": "json",
+        "jsonl": "json",
+        "txt": "text"
+    }
+
     max_samples = data_args.max_samples
     all_datasets: List[Dataset] = [] # support multiple datasets
 
@@ -357,35 +391,41 @@ def prepare_data(
         if dataset_attr.load_from == "hf_hub":
             raw_datasets = load_dataset(path=dataset_attr.dataset_name, name=dataset_attr.subset_name, cache_dir=model_args.cache_dir)
         elif dataset_attr.load_from == "script":
-            raw_datasets = load_dataset(
-                os.path.join(data_args.dataset_dir, dataset_attr.dataset_name),
-                cache_dir=model_args.cache_dir
-            )
+            data_path = os.path.join(data_args.dataset_dir, dataset_attr.dataset_name)
+            data_files = None
         elif dataset_attr.load_from == "file":
-            data_file = os.path.join(data_args.dataset_dir, dataset_attr.file_name)
+            data_path = None
+            data_files: List[str] = []
 
-            extension = dataset_attr.file_name.split(".")[-1]
-            if extension == "csv":
-                file_type = "csv"
-            elif extension == "json" or extension == "jsonl":
-                file_type = "json"
+            if os.path.isdir(os.path.join(data_args.dataset_dir, dataset_attr.dataset_name)):
+                for file_name in os.listdir(os.path.join(data_args.dataset_dir, dataset_attr.dataset_name)):
+                    data_files.append(os.path.join(data_args.dataset_dir, dataset_attr.dataset_name, file_name))
+
+                    if data_path is None:
+                        data_path = ext2type.get(data_files[0].split(".")[-1], None)
+                    else:
+                        assert data_path == ext2type.get(data_files[-1].split(".")[-1], None), "file type does not match."
+            elif os.path.isfile(os.path.join(data_args.dataset_dir, dataset_attr.dataset_name)):
+                data_files.append(os.path.join(data_args.dataset_dir, dataset_attr.dataset_name))
+                data_path = ext2type.get(data_files[0].split(".")[-1], None)
             else:
-                file_type = "text"
+                raise ValueError("File not found.")
 
-            if dataset_attr.file_sha1 is not None:
-                checksum(data_file, dataset_attr.file_sha1)
+            assert data_path, "File extension must be txt, csv, json or jsonl."
+
+            if len(data_files) == 1 and dataset_attr.dataset_sha1 is not None:
+                checksum(data_files[0], dataset_attr.dataset_sha1)
             else:
-                logger.warning("Checksum failed: missing SHA-1 hash value in dataset_info.json.")
-
-            raw_datasets = load_dataset(
-                file_type,
-                data_files=data_file,
-                cache_dir=model_args.cache_dir,
-                use_auth_token=True if model_args.use_auth_token else None
-            )
+                logger.warning("Checksum failed: missing SHA-1 hash value in dataset_info.json or too many files.")
         else:
             raise NotImplementedError
 
+        raw_datasets = load_dataset(
+            data_path,
+            data_files=data_files,
+            cache_dir=model_args.cache_dir,
+            use_auth_token=True if model_args.use_auth_token else None
+        )
         dataset = raw_datasets[data_args.split]
 
         if max_samples is not None:
@@ -393,6 +433,7 @@ def prepare_data(
             dataset = dataset.select(range(max_samples_temp))
 
         dummy_data = [None] * len(dataset)
+        prefix_data = [dataset_attr.source_prefix] * len(dataset)
         for column_name, target_name in [
             ("prompt_column", "prompt"),
             ("query_column", "query"),
@@ -404,6 +445,7 @@ def prepare_data(
                     dataset = dataset.rename_column(getattr(dataset_attr, column_name), target_name)
                 else: # None or empty string
                     dataset = dataset.add_column(target_name, dummy_data)
+        dataset = dataset.add_column("prefix", prefix_data)
         all_datasets.append(dataset)
 
     if len(data_args.dataset_list) == 1:
@@ -423,7 +465,6 @@ def preprocess_data(
 ) -> Dataset:
 
     column_names = list(dataset.column_names)
-    prefix = data_args.source_prefix if data_args.source_prefix is not None else ""
     prompt_template = Template(data_args.prompt_template)
 
     # support question with a single answer or multiple answers
@@ -432,11 +473,12 @@ def preprocess_data(
             if examples["prompt"][i] and examples["response"][i]:
                 query, answer = examples["prompt"][i], examples["response"][i]
                 query = query + "\n" + examples["query"][i] if examples["query"][i] else query
+                prefix = examples["prefix"][i] if examples["prefix"][i] else ""
                 dialog = prompt_template.get_dialog(query, answer, examples["history"][i], prefix)
                 yield dialog
 
     def preprocess_pretrain_dataset(examples):
-        # build grouped texts with format `[BOS] X1 X2 X3 ...` (without [EOS])
+        # build grouped texts with format `<bos> X1 X2 X3 ...` (without <eos>)
         text_ids = tokenizer(examples["prompt"], add_special_tokens=False)["input_ids"]
         concatenated_ids = list(chain(*text_ids))
         total_length = len(concatenated_ids)
@@ -452,63 +494,74 @@ def preprocess_data(
         }
 
     def preprocess_supervised_dataset(examples):
-        # build inputs with format `X [BOS] Y [EOS]` and labels with format `[IGNORE] ... [IGNORE] Y [EOS]`
+        # build inputs with format `<bos> X Y <eos>` and labels with format `<ignore> ... <ignore> Y <eos>`
         # for input with history, we build multiple input-label pairs just like:
         # https://github.com/lm-sys/FastChat/blob/f17c092f64840fa6354ed52789dccb2daa793d0b/fastchat/train/train.py#L112
         model_inputs = {"input_ids": [], "labels": []}
+        max_length = data_args.max_source_length + data_args.max_target_length
+
         for dialog in get_dialog(examples):
             input_ids, labels = [], []
 
             for i in range(len(dialog) // 2):
-                source_ids = tokenizer.encode(text=dialog[2*i], add_special_tokens=False)
+                source_ids = tokenizer.encode(text=dialog[2*i], add_special_tokens=(i == 0))
                 target_ids = tokenizer.encode(text=dialog[2*i+1], add_special_tokens=False)
-                input_ids += source_ids + [tokenizer.bos_token_id] + target_ids + [tokenizer.eos_token_id]
-                labels += [IGNORE_INDEX] * (len(source_ids) + 1) + target_ids + [tokenizer.eos_token_id]
 
-            model_inputs["input_ids"].append(input_ids[:data_args.max_source_length + data_args.max_target_length])
-            model_inputs["labels"].append(labels[:data_args.max_source_length + data_args.max_target_length])
-        return model_inputs
+                if len(source_ids) > data_args.max_source_length:
+                    source_ids = source_ids[:data_args.max_source_length]
+                if len(target_ids) > data_args.max_target_length - 1: # eos token
+                    target_ids = target_ids[:data_args.max_target_length - 1]
 
-    def preprocess_unsupervised_dataset(examples):
-        # build inputs with format `X [BOS]` and labels with format `Y [BOS]`
-        model_inputs = {"input_ids": [], "labels": []}
-        for dialog in get_dialog(examples):
-            prompt, answer = "".join(dialog[:-1]), dialog[-1]
+                if len(input_ids) + len(source_ids) + len(target_ids) + 1 > max_length:
+                    break
 
-            source_ids = tokenizer.encode(text=prompt, add_special_tokens=False)
-            target_ids = tokenizer.encode(text=answer, add_special_tokens=False)
-
-            if len(source_ids) > data_args.max_source_length - 1: # bos token
-                source_ids = source_ids[:data_args.max_source_length - 1]
-            if len(target_ids) > data_args.max_target_length - 1: # bos token
-                target_ids = target_ids[:data_args.max_target_length - 1]
-
-            input_ids = source_ids + [tokenizer.bos_token_id]
-            labels = target_ids + [tokenizer.bos_token_id]
+                input_ids += source_ids + target_ids + [tokenizer.eos_token_id]
+                labels += [IGNORE_INDEX] * len(source_ids) + target_ids + [tokenizer.eos_token_id]
 
             model_inputs["input_ids"].append(input_ids)
             model_inputs["labels"].append(labels)
+
+        return model_inputs
+
+    def preprocess_unsupervised_dataset(examples):
+        # build inputs with format `<bos> X` and labels with format `<bos> Y`
+        model_inputs = {"input_ids": [], "labels": []}
+
+        for dialog in get_dialog(examples):
+            prompt, answer = "".join(dialog[:-1]), dialog[-1]
+
+            source_ids = tokenizer.encode(text=prompt, add_special_tokens=True)
+            target_ids = tokenizer.encode(text=answer, add_special_tokens=True)
+
+            if len(source_ids) > data_args.max_source_length:
+                source_ids = source_ids[:data_args.max_source_length]
+            if len(target_ids) > data_args.max_target_length:
+                target_ids = target_ids[:data_args.max_target_length]
+
+            model_inputs["input_ids"].append(source_ids)
+            model_inputs["labels"].append(target_ids)
+
         return model_inputs
 
     def preprocess_pairwise_dataset(examples):
-        # build input pairs with format `X [BOS] Y1 [EOS]` and `X [BOS] Y2 [EOS]`
+        # build input pairs with format `<bos> X Y1 <eos>` and `<bos> X Y2 <eos>`
         model_inputs = {"accept_ids": [], "reject_ids": []}
         for dialog in get_dialog(examples):
             prompt, answer = "".join(dialog[:-1]), dialog[-1]
 
-            source_ids = tokenizer.encode(text=prompt, add_special_tokens=False)
+            source_ids = tokenizer.encode(text=prompt, add_special_tokens=True)
             accept_ids = tokenizer.encode(text=answer[0], add_special_tokens=False)
             reject_ids = tokenizer.encode(text=answer[1], add_special_tokens=False)
 
-            if len(source_ids) > data_args.max_source_length - 1: # bos token
-                source_ids = source_ids[:data_args.max_source_length - 1]
+            if len(source_ids) > data_args.max_source_length:
+                source_ids = source_ids[:data_args.max_source_length]
             if len(accept_ids) > data_args.max_target_length - 1: # eos token
                 accept_ids = accept_ids[:data_args.max_target_length - 1]
             if len(reject_ids) > data_args.max_target_length - 1: # eos token
                 reject_ids = reject_ids[:data_args.max_target_length - 1]
 
-            accept_ids = source_ids + [tokenizer.bos_token_id] + accept_ids + [tokenizer.eos_token_id]
-            reject_ids = source_ids + [tokenizer.bos_token_id] + reject_ids + [tokenizer.eos_token_id]
+            accept_ids = source_ids + accept_ids + [tokenizer.eos_token_id]
+            reject_ids = source_ids + reject_ids + [tokenizer.eos_token_id]
 
             model_inputs["accept_ids"].append(accept_ids)
             model_inputs["reject_ids"].append(reject_ids)
@@ -516,21 +569,22 @@ def preprocess_data(
 
     def print_supervised_dataset_example(example):
         print("input_ids:\n{}".format(example["input_ids"]))
-        print("inputs:\n{}".format(tokenizer.decode(example["input_ids"])))
+        print("inputs:\n{}".format(tokenizer.decode(example["input_ids"], skip_special_tokens=False)))
         print("label_ids:\n{}".format(example["labels"]))
         print("labels:\n{}".format(
-            tokenizer.decode([d if d != IGNORE_INDEX else tokenizer.pad_token_id for d in example["labels"]]))
-        )
+            tokenizer.decode([d if d != IGNORE_INDEX else tokenizer.pad_token_id for d in example["labels"]],
+                             skip_special_tokens=False)
+        ))
 
     def print_pairwise_dataset_example(example):
         print("accept_ids:\n{}".format(example["accept_ids"]))
-        print("accepts:\n{}".format(tokenizer.decode(example["accept_ids"])))
+        print("accepts:\n{}".format(tokenizer.decode(example["accept_ids"], skip_special_tokens=False)))
         print("reject_ids:\n{}".format(example["reject_ids"]))
-        print("rejects:\n{}".format(tokenizer.decode(example["reject_ids"])))
+        print("rejects:\n{}".format(tokenizer.decode(example["reject_ids"], skip_special_tokens=False)))
 
     def print_unsupervised_dataset_example(example):
         print("input_ids:\n{}".format(example["input_ids"]))
-        print("inputs:\n{}".format(tokenizer.decode(example["input_ids"])))
+        print("inputs:\n{}".format(tokenizer.decode(example["input_ids"], skip_special_tokens=False)))
 
     if stage == "pt":
         preprocess_function = preprocess_pretrain_dataset
