@@ -1,92 +1,338 @@
-# ai-health-manager-llm
+# LLaMA Efficient Tuning
 
+![GitHub Repo stars](https://img.shields.io/github/stars/hiyouga/LLaMA-Efficient-Tuning?style=social)
+![GitHub Code License](https://img.shields.io/github/license/hiyouga/LLaMA-Efficient-Tuning)
+![GitHub last commit](https://img.shields.io/github/last-commit/hiyouga/LLaMA-Efficient-Tuning)
+![GitHub pull request](https://img.shields.io/badge/PRs-welcome-blue)
 
+👋 Join our [WeChat](assets/wechat.jpg).
 
-## Getting started
+## Changelog
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+[23/07/11] Now we support training the **Baichuan-13B** model in this repo. Try `--model_name_or_path baichuan-inc/Baichuan-13B-Base` and `--lora_target W_pack` arguments to use the Baichuan-13B model. Remember to use `--prompt_template baichuan` argument when you are using the Baichuan-13B-Chat model.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+[23/07/09] Now we release [FastEdit](https://github.com/hiyouga/FastEdit)⚡🩹, an easy-to-use package for editing the factual knowledge of large language models efficiently. Please follow [FastEdit](https://github.com/hiyouga/FastEdit) if you are interested.
 
-## Add your files
+[23/07/07] Now we support training the **InternLM-7B** model in this repo. Try `--model_name_or_path internlm/internlm-7b` argument to use the InternLM model. Remember to use `--prompt_template intern` argument when you are using the InternLM-chat model.
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+[23/07/05] Now we support training the **Falcon-7B/40B** models in this repo. Try `--model_name_or_path tiiuae/falcon-7b` and `--lora_target query_key_value` arguments to use the Falcon model.
 
+[23/06/29] We provide a **reproducible example** of training a chat model using instruction-following datasets, see this [HuggingFace Repo](https://huggingface.co/hiyouga/baichuan-7b-sft) for details.
+
+[23/06/22] Now we align the [demo API](src/api_demo.py) with the [OpenAI's](https://platform.openai.com/docs/api-reference/chat) format where you can insert the fine-tuned model in **arbitrary ChatGPT-based applications**.
+
+[23/06/15] Now we support training the **Baichuan-7B** model in this repo. Try `--model_name_or_path baichuan-inc/Baichuan-7B` and `--lora_target W_pack` arguments to use the Baichuan-7B model. If you want to train with RTX3090, use `git checkout baichuan-7b-rtx3090` to switch to the `baichuan-7b-rtx3090` branch and try the `--baichuan_rtx_gpu true` argument. (Other RTX series GPUs can also be tried)
+
+[23/06/03] Now we support quantized training and inference (aka **[QLoRA](https://github.com/artidoro/qlora)**). Try `--quantization_bit 4/8` argument to work with quantized model. (experimental feature)
+
+[23/05/31] Now we support training the **BLOOM & BLOOMZ** models in this repo. Try `--model_name_or_path bigscience/bloomz-7b1-mt` and `--lora_target query_key_value` arguments to use the BLOOMZ model.
+
+## Supported Models
+
+- [LLaMA](https://github.com/facebookresearch/llama) (7B/13B/33B/65B)
+- [BLOOM](https://huggingface.co/bigscience/bloom) & [BLOOMZ](https://huggingface.co/bigscience/bloomz) (560M/1.1B/1.7B/3B/7.1B/176B)
+- [Falcon](https://huggingface.co/tiiuae/falcon-7b) (7B/40B)
+- [Baichuan](https://huggingface.co/baichuan-inc/baichuan-7B) (7B/13B)
+- [InternLM](https://github.com/InternLM/InternLM) (7B)
+
+## Supported Training Approaches
+
+- [(Continually) pre-training](https://s3-us-west-2.amazonaws.com/openai-assets/research-covers/language-unsupervised/language_understanding_paper.pdf)
+  - Full-parameter tuning
+  - Partial-parameter tuning
+  - [LoRA](https://arxiv.org/abs/2106.09685)
+  - [QLoRA](https://arxiv.org/abs/2305.14314)
+- [Supervised fine-tuning](https://arxiv.org/abs/2109.01652)
+  - Full-parameter tuning
+  - Partial-parameter tuning
+  - [LoRA](https://arxiv.org/abs/2106.09685)
+  - [QLoRA](https://arxiv.org/abs/2305.14314)
+- [RLHF](https://arxiv.org/abs/2203.02155)
+  - [LoRA](https://arxiv.org/abs/2106.09685)
+  - [QLoRA](https://arxiv.org/abs/2305.14314)
+
+## Provided Datasets
+
+- For pre-training:
+  - [Wiki Demo](data/wiki_demo.txt)
+- For supervised fine-tuning:
+  - [Stanford Alpaca](https://github.com/tatsu-lab/stanford_alpaca)
+  - [Stanford Alpaca (Chinese)](https://github.com/ymcui/Chinese-LLaMA-Alpaca)
+  - [GPT-4 Generated Data](https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM)
+  - [BELLE 2M](https://huggingface.co/datasets/BelleGroup/train_2M_CN)
+  - [BELLE 1M](https://huggingface.co/datasets/BelleGroup/train_1M_CN)
+  - [BELLE 0.5M](https://huggingface.co/datasets/BelleGroup/train_0.5M_CN)
+  - [BELLE Dialogue 0.4M](https://huggingface.co/datasets/BelleGroup/generated_chat_0.4M)
+  - [BELLE School Math 0.25M](https://huggingface.co/datasets/BelleGroup/school_math_0.25M)
+  - [BELLE Multiturn Chat 0.8M](https://huggingface.co/datasets/BelleGroup/multiturn_chat_0.8M)
+  - [Guanaco Dataset](https://huggingface.co/datasets/JosephusCheung/GuanacoDataset)
+  - [Firefly 1.1M](https://huggingface.co/datasets/YeungNLP/firefly-train-1.1M)
+  - [CodeAlpaca 20k](https://huggingface.co/datasets/sahil2801/CodeAlpaca-20k)
+  - [Alpaca CoT](https://huggingface.co/datasets/QingyiSi/Alpaca-CoT)
+  - [Web QA (Chinese)](https://huggingface.co/datasets/suolyer/webqa)
+  - [UltraChat](https://github.com/thunlp/UltraChat)
+  - [Open Assistant](https://huggingface.co/datasets/OpenAssistant/oasst1)
+  - [Open Assistant (Chinese)](https://huggingface.co/datasets/OpenAssistant/oasst1)
+- For reward model training:
+  - [HH-RLHF](https://huggingface.co/datasets/Anthropic/hh-rlhf)
+  - [Open Assistant](https://huggingface.co/datasets/OpenAssistant/oasst1)
+  - [Open Assistant (Chinese)](https://huggingface.co/datasets/OpenAssistant/oasst1)
+  - [GPT-4 Generated Data](https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM)
+  - [GPT-4 Generated Data (Chinese)](https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM)
+
+Please refer to [data/README.md](data/README.md) for details.
+
+Some datasets require confirmation before using them, so we recommend logging in with your HuggingFace account using these commands.
+
+```bash
+pip install --upgrade huggingface_hub
+huggingface-cli login
 ```
-cd existing_repo
-git remote add origin https://gitlab.enncloud.cn/znjkgj/sf/ai-health-manager-llm.git
-git branch -M main
-git push -uf origin main
+
+## Requirement
+
+- Python 3.8+ and PyTorch 1.13.1+
+- 🤗Transformers, Datasets, Accelerate, PEFT and TRL
+- jieba, rouge-chinese and nltk (used at evaluation)
+- gradio and mdtex2html (used in web_demo.py)
+- uvicorn, fastapi and sse-starlette (used in api_demo.py)
+
+And **powerful GPUs**!
+
+If you want to enable quantized LoRA (QLoRA) on the Windows platform, you should install a pre-built version of `bitsandbytes` library, which supports CUDA 11.1 to 12.1.
+
+```bash
+pip install https://github.com/jllllll/bitsandbytes-windows-webui/releases/download/wheels/bitsandbytes-0.39.1-py3-none-win_amd64.whl
 ```
 
-## Integrate with your tools
+## Getting Started
 
-- [ ] [Set up project integrations](https://gitlab.enncloud.cn/znjkgj/sf/ai-health-manager-llm/-/settings/integrations)
+### Data Preparation (optional)
 
-## Collaborate with your team
+Please refer to `data/example_dataset` for checking the details about the format of dataset files. You can either use a single `.json` file or a [dataset loading script](https://huggingface.co/docs/datasets/dataset_script) with multiple files to create a custom dataset.
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+Note: please update `data/dataset_info.json` to use your custom dataset. About the format of this file, please refer to `data/README.md`.
 
-## Test and Deploy
+### Dependence Installation (optional)
 
-Use the built-in continuous integration in GitLab.
+```bash
+git clone https://github.com/hiyouga/LLaMA-Efficient-Tuning.git
+conda create -n llama_etuning python=3.10
+conda activate llama_etuning
+cd LLaMA-Efficient-Tuning
+pip install -r requirements.txt
+```
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+### LLaMA Weights Preparation (optional)
 
-***
+1. Download the weights of the LLaMA models.
+2. Convert them to HF format using the following command.
 
-# Editing this README
+```bash
+python -m transformers.models.llama.convert_llama_weights_to_hf \
+    --input_dir path_to_llama_weights --model_size 7B --output_dir path_to_llama_model
+```
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
+### (Continually) Pre-Training
 
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+```bash
+CUDA_VISIBLE_DEVICES=0 python src/train_pt.py \
+    --model_name_or_path path_to_your_model \
+    --do_train \
+    --dataset wiki_demo \
+    --finetuning_type lora \
+    --output_dir path_to_pt_checkpoint \
+    --overwrite_cache \
+    --per_device_train_batch_size 4 \
+    --gradient_accumulation_steps 4 \
+    --lr_scheduler_type cosine \
+    --logging_steps 10 \
+    --save_steps 1000 \
+    --learning_rate 5e-5 \
+    --num_train_epochs 3.0 \
+    --plot_loss \
+    --fp16
+```
 
-## Name
-Choose a self-explaining name for your project.
+### Supervised Fine-Tuning
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+```bash
+CUDA_VISIBLE_DEVICES=0 python src/train_sft.py \
+    --model_name_or_path path_to_your_model \
+    --do_train \
+    --dataset alpaca_gpt4_en \
+    --finetuning_type lora \
+    --output_dir path_to_sft_checkpoint \
+    --overwrite_cache \
+    --per_device_train_batch_size 4 \
+    --gradient_accumulation_steps 4 \
+    --lr_scheduler_type cosine \
+    --logging_steps 10 \
+    --save_steps 1000 \
+    --learning_rate 5e-5 \
+    --num_train_epochs 3.0 \
+    --plot_loss \
+    --fp16
+```
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+### Reward Model Training
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+```bash
+CUDA_VISIBLE_DEVICES=0 python src/train_rm.py \
+    --model_name_or_path path_to_your_model \
+    --do_train \
+    --dataset comparison_gpt4_en \
+    --finetuning_type lora \
+    --output_dir path_to_rm_checkpoint \
+    --per_device_train_batch_size 4 \
+    --gradient_accumulation_steps 4 \
+    --lr_scheduler_type cosine \
+    --logging_steps 10 \
+    --save_steps 1000 \
+    --learning_rate 1e-5 \
+    --num_train_epochs 1.0 \
+    --plot_loss \
+    --fp16
+```
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+### PPO Training (RLHF)
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+```bash
+CUDA_VISIBLE_DEVICES=0 python src/train_ppo.py \
+    --model_name_or_path path_to_your_model \
+    --do_train \
+    --dataset alpaca_gpt4_en \
+    --finetuning_type lora \
+    --checkpoint_dir path_to_sft_checkpoint \
+    --reward_model path_to_rm_checkpoint \
+    --output_dir path_to_ppo_checkpoint \
+    --per_device_train_batch_size 2 \
+    --gradient_accumulation_steps 4 \
+    --lr_scheduler_type cosine \
+    --logging_steps 10 \
+    --save_steps 1000 \
+    --learning_rate 1e-5 \
+    --num_train_epochs 1.0 \
+    --resume_lora_training False \
+    --plot_loss
+```
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+### Distributed Training
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+```bash
+accelerate config # configure the environment
+accelerate launch src/train_XX.py # arguments (same as above)
+```
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+<details><summary>Example configuration for full-tuning with DeepSpeed ZeRO-2</summary>
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+```yaml
+compute_environment: LOCAL_MACHINE
+deepspeed_config:
+  gradient_accumulation_steps: 4
+  gradient_clipping: 0.5
+  offload_optimizer_device: none
+  offload_param_device: none
+  zero3_init_flag: false
+  zero_stage: 2
+distributed_type: DEEPSPEED
+downcast_bf16: 'no'
+machine_rank: 0
+main_training_function: main
+mixed_precision: fp16
+num_machines: 1
+num_processes: 4
+rdzv_backend: static
+same_network: true
+tpu_env: []
+tpu_use_cluster: false
+tpu_use_sudo: false
+use_cpu: false
+```
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+</details>
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+### Evaluation (BLEU and ROUGE_CHINESE)
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python src/train_sft.py \
+    --model_name_or_path path_to_your_model \
+    --do_eval \
+    --dataset alpaca_gpt4_en \
+    --checkpoint_dir path_to_checkpoint \
+    --output_dir path_to_eval_result \
+    --per_device_eval_batch_size 8 \
+    --max_samples 50 \
+    --predict_with_generate
+```
+
+We recommend using `--per_device_eval_batch_size=1` and `--max_target_length 128` at 4/8-bit evaluation.
+
+### API / CLI / Web Demo
+
+```bash
+python src/xxx_demo.py \
+    --model_name_or_path path_to_your_model \
+    --checkpoint_dir path_to_checkpoint
+```
+
+### Export model
+
+```bash
+python src/export_model.py \
+    --model_name_or_path path_to_your_model \
+    --checkpoint_dir path_to_checkpoint \
+    --output_dir path_to_export
+```
+### Merge vocab model
+```bash
+python src/utils/merge_tokenizer.py \
+    --llama_tokenizer_dir model/vocab_model/tokenizer.model \
+    --chinese_sp_model_file model/vocab_model/chinese_sp.model \
+    --save_path model/merged_vocab_model
+```
+> [sentencepiece 根据文本文件训练词表sp_model](https://github.com/google/sentencepiece/blob/master/python/README.md#model-training)
+
+### 裁剪模型
+
+refer: [LLMPruner：大语言模型裁剪工具](https://github.com/yangjianxin1/LLMPruner)
+注意: 仅当新词表为原词表子集时生效，获得新词表中每个token_id到原词表的token_id的映射，对于新词表中的每个token，取出其对应的权重，复制到新模型中
+```sh
+sh scripts/prune_llm.sh
+```
+## Todo List
+
+- [x] 以对bloomz-7b1-mt裁剪词表后的[[YeungNLP/bloomz-6b4-mt-zh]](https://huggingface.co/YeungNLP/bloomz-6b4-mt-zh)模型作为base, 基于医疗开源数据[shibing624/medical](https://huggingface.co/datasets/shibing624/medical),对原项目LLaMA Efficient Tuning做了数据集和模型适配. 使用lora策略进行pretrain.
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+This repository is licensed under the [Apache-2.0 License](LICENSE).
+
+Please follow the model licenses to use the corresponding model weights:
+
+- [LLaMA](https://github.com/facebookresearch/llama/blob/main/MODEL_CARD.md)
+- [BLOOM](https://huggingface.co/spaces/bigscience/license)
+- [Falcon](LICENSE)
+- [baichuan](https://huggingface.co/baichuan-inc/baichuan-7B/resolve/main/baichuan-7B%20%E6%A8%A1%E5%9E%8B%E8%AE%B8%E5%8F%AF%E5%8D%8F%E8%AE%AE.pdf)
+- [InternLM](https://github.com/InternLM/InternLM#open-source-license)
+
+## Citation
+
+If this work is helpful, please kindly cite as:
+
+```bibtex
+@Misc{llama-efficient-tuning,
+  title = {LLaMA Efficient Tuning},
+  author = {hiyouga},
+  howpublished = {\url{https://github.com/hiyouga/LLaMA-Efficient-Tuning}},
+  year = {2023}
+}
+```
+
+## Acknowledgement
+
+This repo is a sibling of [ChatGLM-Efficient-Tuning](https://github.com/hiyouga/ChatGLM-Efficient-Tuning). They share a similar code structure of efficient tuning on large language models.
+
+## Star History
+
+![Star History Chart](https://api.star-history.com/svg?repos=hiyouga/LLaMA-Efficient-Tuning&type=Date)
