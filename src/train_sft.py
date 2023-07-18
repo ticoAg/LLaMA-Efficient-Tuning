@@ -17,11 +17,11 @@ from utils import (
     plot_loss
 )
 
-import wandb
-wandb.init(
-    project="finetune-bloom",
-    name="百川7b_sft_HuatuoGPTsftdatav1_epoch3"
-    )
+# import wandb
+# wandb.init(
+#     project="finetune-bloom",
+#     name="百川7b_sft_HuatuoGPTsftdatav1_epoch3"
+#     )
     
 def main():
 

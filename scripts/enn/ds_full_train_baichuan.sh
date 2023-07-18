@@ -1,10 +1,11 @@
+wandb offline
 deepspeed --num_gpus=4 \
-    src/train_pt.py \
-    --model_name_or_path /aip/model/opensource/huggingface/baichuan-inc/Baichuan-7B \
+    src/train_sft.py \
+    --model_name_or_path ${MODEL_PATH} \
     --do_train \
-    --dataset medical \
+    --dataset ${DATASET_PATH} \
     --finetuning_type full \
-    --output_dir output/baichuan/full-tuning-7b-med \
+    --output_dir ${TRAIN_MODEL_OUTPUT} \
     --per_device_train_batch_size 4 \
     --per_device_eval_batch_size 4 \
     --gradient_accumulation_steps 8 \
