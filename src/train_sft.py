@@ -16,7 +16,8 @@ from utils import (
     get_logits_processor,
     plot_loss
 )
-
+import os
+os.environ['WANDB_DISABLED'] = 'true'
 # import wandb
 # wandb.init(
 #     project="finetune-bloom",
