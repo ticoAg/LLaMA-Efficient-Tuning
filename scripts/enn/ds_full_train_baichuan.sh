@@ -1,10 +1,10 @@
-deepspeed --num_gpus=4 \
-    src/train_pt.py \
-    --model_name_or_path baichuan-inc/baichuan-7B \
+deepspeed --num_gpus=4  --force_multi \
+    src/train_sft.py \
+    --model_name_or_path ${MODEL_PATH} \
     --do_train \
-    --dataset medical \
+    --dataset medical_sft \
     --finetuning_type full \
-    --output_dir output/baichuan/full-tuning-7b-med \
+    --output_dir ${TRAIN_MODEL_OUTPUT} \
     --per_device_train_batch_size 4 \
     --per_device_eval_batch_size 4 \
     --gradient_accumulation_steps 8 \
