@@ -1,11 +1,12 @@
 deepspeed --num_gpus=4  --force_multi \
-    src/train_sft.py \
+    src/train_bash.py \
+    --stage pt \
     --model_name_or_path ${MODEL_PATH} \
     --do_train \
     --dataset medical_sft \
     --finetuning_type full \
     --output_dir ${TRAIN_MODEL_OUTPUT} \
-    --per_device_train_batch_size 4 \
+    --per_device_train_batch_size 8 \
     --per_device_eval_batch_size 4 \
     --gradient_accumulation_steps 8 \
     --lr_scheduler_type cosine \
