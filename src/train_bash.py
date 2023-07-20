@@ -1,5 +1,8 @@
 from llmtuner import get_train_args, run_pt, run_sft, run_rm, run_ppo
 
+import os
+
+os.environ["WANDB_DISABLED"] = "true"
 
 def main():
     model_args, data_args, training_args, finetuning_args, general_args = get_train_args()
