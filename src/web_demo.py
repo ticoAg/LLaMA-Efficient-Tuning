@@ -5,7 +5,7 @@
 import gradio as gr
 from transformers.utils.versions import require_version
 
-from llmtuner import get_infer_args
+from llmtuner.tuner import get_infer_args
 from llmtuner.webui.chat import WebChatModel
 from llmtuner.webui.components.chatbot import create_chat_box
 from llmtuner.webui.manager import Manager
@@ -29,7 +29,7 @@ def main():
         lang.change(manager.gen_label, [lang], [lang] + list(chat_elems.values()))
 
     demo.queue()
-    demo.launch(server_name="0.0.0.0", share=False, inbrowser=True)
+    demo.launch(server_name="0.0.0.0", server_port=7860, share=False, inbrowser=True)
 
 
 if __name__ == "__main__":
