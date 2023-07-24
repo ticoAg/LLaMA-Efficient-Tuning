@@ -207,15 +207,6 @@
       "history": ""
     }
   },
-  "medical_local": {
-    "file_name": "pretrain/train_encyclopedia.json",
-    "columns": {
-      "prompt": "text",
-      "query": "",
-      "response": "",
-      "history": ""
-    }
-  },
   "medical_sft": {
     "file_name": "/data/persist/dataset/aip/dataset/enn/nlp/qas/88/V1/train_zh_0.json",
     "columns": {
@@ -223,24 +214,6 @@
       "query": "input",
       "response": "output",
       "history": ""
-    }
-  },
-  "pretrain_data": {
-    "file_name": "pretrain_data",
-    "columns": {
-      "prompt": "content",
-      "query": "",
-      "response": "",
-      "history": ""
-    }
-  },
-  "HuatuoGPT_sft_data_v1": {
-    "script_url": "/mnt/workspace/HuatuoGPT-sft-data-v1",
-    "columns": {
-      "prompt": "instruction",
-      "query": "input",
-      "response": "output",
-      "history": "history"
     }
   },
   "refinedweb": {
@@ -271,7 +244,7 @@
     }
   },
   "wikipedia_zh": {
-    "hf_hub_url": "pleisto/wikipedia-cn-20230720-filtered",
+    "file_name": "/home/tico/Desktop/LLaMA-Efficient-Tuning/.cache/wikipedia-cn-20230720-filtered/wikipedia-cn-20230720-filtered.json",
     "columns": {
       "prompt": "completion",
       "query": "",
