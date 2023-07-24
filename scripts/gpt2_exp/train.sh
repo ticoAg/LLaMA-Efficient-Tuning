@@ -1,0 +1,22 @@
+python src/train_bash.py \
+    --stage pt \
+    --model_name_or_path gpt2 \
+    --do_train \
+    --dataset wikipedia_zh \
+    --finetuning_type full \
+    --output_dir scripts/gpt2_exp/ckpt \
+    --per_device_train_batch_size 4 \
+    --gradient_accumulation_steps 16 \
+    --lr_scheduler_type cosine \
+    --logging_steps 10 \
+    --save_steps 1000 \
+    --eval_steps 500 \
+    --learning_rate 5e-5 \
+    --max_grad_norm 0.5 \
+    --num_train_epochs 1.0 \
+    --dev_ratio 0.01 \
+    --evaluation_strategy steps \
+    --plot_loss \
+    --preprocessing_num_workers 8 \
+    --max_source_length 1024 \
+    --bf16

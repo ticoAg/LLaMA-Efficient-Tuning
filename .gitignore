@@ -15,4 +15,3 @@ output
 *.pyc
 .vscode
 .cache
-scripts/gpt2_exp
