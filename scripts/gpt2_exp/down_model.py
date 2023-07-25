@@ -13,4 +13,4 @@ config = datasets.DownloadConfig(resume_download=True, max_retries=1000, num_pro
 dataset = datasets.load_dataset(repo_id, 
                                     cache_dir=".hf_cache", 
                                     download_config=config)
-dataset.save_to_disk(repo_id)
+# dataset.save_to_disk(repo_id)
