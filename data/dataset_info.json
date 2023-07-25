@@ -251,5 +251,14 @@
       "response": "",
       "history": ""
     }
+  },
+  "tigerResearch_pretrain_zh": {
+    "hf_hub_url": "TigerResearch/pretrain_zh",
+    "columns": {
+      "prompt": "content",
+      "query": "",
+      "response": "",
+      "history": ""
+    }
   }
 }

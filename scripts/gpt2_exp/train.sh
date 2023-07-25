@@ -2,9 +2,9 @@ python src/train_bash.py \
     --stage pt \
     --model_name_or_path gpt2 \
     --do_train \
-    --dataset wikipedia_zh \
+    --dataset tigerResearch_pretrain_zh \
     --finetuning_type full \
-    --output_dir scripts/gpt2_exp/ckpt \
+    --output_dir .cache/gpt2-tigerResearch_pretrain_zh \
     --per_device_train_batch_size 4 \
     --gradient_accumulation_steps 16 \
     --lr_scheduler_type cosine \
@@ -17,6 +17,6 @@ python src/train_bash.py \
     --dev_ratio 0.01 \
     --evaluation_strategy steps \
     --plot_loss \
-    --preprocessing_num_workers 8 \
+    --preprocessing_num_workers 64 \
     --max_source_length 1024 \
     --bf16
