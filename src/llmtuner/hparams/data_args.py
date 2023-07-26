@@ -9,6 +9,7 @@ class DatasetAttr:
 
     load_from: str
     dataset_name: Optional[str] = None
+    subset_name: Optional[str] = None
     dataset_sha1: Optional[str] = None
     source_prefix: Optional[str] = None
 
@@ -98,7 +99,12 @@ class DataArguments:
                 raise ValueError("Undefined dataset {} in dataset_info.json.".format(name))
 
             if "hf_hub_url" in dataset_info[name]:
-                dataset_attr = DatasetAttr("hf_hub", dataset_name=dataset_info[name]["hf_hub_url"])
+                if dataset_info[name].get("subset_name"):
+                    dataset_attr = DatasetAttr("hf_hub", 
+                                               subset_name=dataset_info[name]["subset_name"],
+                                               dataset_name=dataset_info[name]["hf_hub_url"])
+                else:
+                    dataset_attr = DatasetAttr("hf_hub", dataset_name=dataset_info[name]["hf_hub_url"])
             elif "script_url" in dataset_info[name]:
                 dataset_attr = DatasetAttr("script", dataset_name=dataset_info[name]["script_url"])
             else:
