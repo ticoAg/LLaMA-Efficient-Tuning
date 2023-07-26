@@ -253,7 +253,7 @@
     }
   },
   "tigerResearch_pretrain_zh": {
-    "hf_hub_url": "../.cache/pretrain_zh",
+    "hf_hub_url": "../.cache/pretrain_zh/data",
     "columns": {
       "prompt": "content",
       "query": "",
