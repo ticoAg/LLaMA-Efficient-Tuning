@@ -188,34 +188,6 @@
       "history": ""
     }
   },
-  "pt_corpus": {
-    "file_name": "pt_corpus.txt",
-    "columns": {
-      "prompt": "text",
-      "query": "",
-      "response": "",
-      "history": ""
-    }
-  },
-  "medical": {
-    "hf_hub_url": "shibing624/medical",
-    "subset_name": "pretrain",
-    "columns": {
-      "prompt": "text",
-      "query": "",
-      "response": "",
-      "history": ""
-    }
-  },
-  "medical_sft": {
-    "file_name": "/data/persist/dataset/aip/dataset/enn/nlp/qas/88/V1/train_zh_0.json",
-    "columns": {
-      "prompt": "instruction",
-      "query": "input",
-      "response": "output",
-      "history": ""
-    }
-  },
   "refinedweb": {
     "hf_hub_url": "tiiuae/falcon-refinedweb",
     "columns": {
@@ -244,18 +216,9 @@
     }
   },
   "wikipedia_zh": {
-    "file_name": "/home/tico/Desktop/LLaMA-Efficient-Tuning/.cache/wikipedia-cn-20230720-filtered/wikipedia-cn-20230720-filtered.json",
+    "hf_hub_url": "pleisto/wikipedia-cn-20230720-filtered",
     "columns": {
       "prompt": "completion",
-      "query": "",
-      "response": "",
-      "history": ""
-    }
-  },
-  "tigerResearch_pretrain_zh": {
-    "hf_hub_url": "../.cache/pretrain_zh/data",
-    "columns": {
-      "prompt": "content",
       "query": "",
       "response": "",
       "history": ""
