@@ -2,7 +2,7 @@ python src/train_bash.py \
     --stage pt \
     --model_name_or_path gpt2 \
     --do_train \
-    --dataset medical \
+    --dataset tigerResearch_pretrain_zh \
     --finetuning_type full \
     --output_dir .cache/gpt2-tigerResearch_pretrain_zh \
     --per_device_train_batch_size 4 \
