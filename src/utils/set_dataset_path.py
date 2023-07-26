@@ -13,10 +13,12 @@ import os
 
 logger = get_logger(__name__)
 
-dataset_info_path = Path("data", "dataset_info.json")
-dataset_info_save_path = Path(".cache", "dataset_info.json")
+dataset_info_path = Path("data", "_dataset_info.json")
+dataset_info_save_path = Path("data", "dataset_info.json")
 wikipedia_zh_path = "/home/tico/Desktop/LLaMA-Efficient-Tuning/.cache/wikipedia-cn-20230720-filtered/wikipedia-cn-20230720-filtered.json"
-tigerResearch_pretrain_zh_path = r"C:\Users\16276\Documents\datasets\TigerResearch"
+
+tigerResearch_pretrain_zh_path = Path("C:\\Users\\16276\\Documents\\datasets\\TigerResearch")
+
 medical_sft_path = os.environ.get('DATASET_PATH')
 
 config_to_update = {
@@ -30,13 +32,13 @@ config_to_update = {
         }
     },
     "tigerResearch_pretrain_zh": {
-    "script_url": tigerResearch_pretrain_zh_path,
-    "columns": {
-            "prompt": "content",
-            "query": "",
-            "response": "",
-            "history": ""
-        }
+        "target_dir": str(tigerResearch_pretrain_zh_path),
+        "columns": {
+                "prompt": "content",
+                "query": "",
+                "response": "",
+                "history": ""
+            }
     },
     "medical_sft": {
         "file_name": medical_sft_path,

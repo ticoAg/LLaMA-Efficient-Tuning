@@ -107,6 +107,8 @@ class DataArguments:
                     dataset_attr = DatasetAttr("hf_hub", dataset_name=dataset_info[name]["hf_hub_url"])
             elif "script_url" in dataset_info[name]:
                 dataset_attr = DatasetAttr("script", dataset_name=dataset_info[name]["script_url"])
+            elif "target_dir" in dataset_info[name]:
+                dataset_attr = DatasetAttr("target_dir", dataset_name=dataset_info[name]["target_dir"])
             else:
                 dataset_attr = DatasetAttr(
                     "file",
