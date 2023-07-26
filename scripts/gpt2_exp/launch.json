@@ -1,0 +1,39 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: 当前文件",
+            "type": "python",
+            "request": "launch",
+            "program": "src\\train_bash.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--stage", "pt",
+                "--model_name_or_path", "gpt2",
+                "--do_train",
+                "--dataset", "alpaca_gpt4_zh",
+                "--finetuning_type", "full",
+                "--output_dir", ".cache/gpt2-tigerResearch_pretrain_zh",
+                "--per_device_train_batch_size", "1",
+                "--gradient_accumulation_steps", "16",
+                "--lr_scheduler_type", "cosine",
+                "--logging_steps", "10",
+                "--save_steps", "1000",
+                "--eval_steps", "500",
+                "--learning_rate", "5e-5",
+                "--max_grad_norm", "0.5",
+                "--num_train_epochs", "1.0",
+                "--dev_ratio", "0.01",
+                "--evaluation_strategy", "steps",
+                "--plot_loss",
+                "--preprocessing_num_workers", "1",
+                "--max_source_length", "1024",
+                "--bf16"
+            ]
+        }
+    ]
+}

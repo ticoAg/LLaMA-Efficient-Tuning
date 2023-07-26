@@ -32,6 +32,27 @@ def preprocess_dataset(
                 yield dialog
 
     def preprocess_pretrain_dataset(examples):
+        """分块定长截断法
+        """
+        # build grouped texts with format `<bos> X1 X2 X3 ...` (without <eos>)
+        text_ids = tokenizer(examples["prompt"], add_special_tokens=False)["input_ids"]
+        concatenated_ids = list(chain(*text_ids))
+        total_length = len(concatenated_ids)
+        block_size = data_args.max_source_length - 1
+        # we drop the small remainder, and if the total_length < block_size, we exclude this batch
+        total_length = (total_length // block_size) * block_size
+        # split by chunks of max_source_length
+        result = [[tokenizer.bos_token_id] + concatenated_ids[i: i + block_size]
+                  for i in range(0, total_length, block_size)]
+        return {
+            "input_ids": result,
+            "labels": result.copy()
+        }
+    
+    # TODO 
+    def preprocess_pretrain_dataset_v1(examples):
+        """自适应分段填充法
+        """
         # build grouped texts with format `<bos> X1 X2 X3 ...` (without <eos>)
         text_ids = tokenizer(examples["prompt"], add_special_tokens=False)["input_ids"]
         concatenated_ids = list(chain(*text_ids))
@@ -141,7 +162,8 @@ def preprocess_dataset(
         print("inputs:\n{}".format(tokenizer.decode(example["input_ids"], skip_special_tokens=False)))
 
     if stage == "pt":
-        preprocess_function = preprocess_pretrain_dataset
+        # preprocess_function = preprocess_pretrain_dataset
+        preprocess_function = preprocess_pretrain_dataset_v1
     elif stage == "sft":
         if not training_args.predict_with_generate:
             preprocess_function = preprocess_supervised_dataset
