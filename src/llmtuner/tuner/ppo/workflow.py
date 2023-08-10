@@ -1,27 +1,30 @@
 # Inspired by:
-# https://github.com/lvwerra/trl/blob/main/examples/sentiment/scripts/gpt-neox-20b_peft/gpt-neo-20b_sentiment_peft.py
+# https://github.com/lvwerra/trl/blob/main/examples/research_projects/stack_llama/scripts/rl_training.py
 
 import math
+from typing import TYPE_CHECKING
 from trl import PPOConfig
 from torch.optim import AdamW
 from typing import Optional, List
-from transformers import DataCollatorForSeq2Seq, Seq2SeqTrainingArguments, TrainerCallback
+from transformers import DataCollatorForSeq2Seq
 from transformers.optimization import get_scheduler
 
 from llmtuner.dsets import get_dataset, preprocess_dataset
-from llmtuner.extras.callbacks import LogCallback
 from llmtuner.extras.ploting import plot_loss
-from llmtuner.hparams import ModelArguments, DataArguments, FinetuningArguments
 from llmtuner.tuner.core import load_model_and_tokenizer
 from llmtuner.tuner.ppo.trainer import PPOPeftTrainer
 
+if TYPE_CHECKING:
+    from transformers import Seq2SeqTrainingArguments, TrainerCallback
+    from llmtuner.hparams import ModelArguments, DataArguments, FinetuningArguments
+
 
 def run_ppo(
-    model_args: ModelArguments,
-    data_args: DataArguments,
-    training_args: Seq2SeqTrainingArguments,
-    finetuning_args: FinetuningArguments,
-    callbacks: Optional[List[TrainerCallback]] = [LogCallback()]
+    model_args: "ModelArguments",
+    data_args: "DataArguments",
+    training_args: "Seq2SeqTrainingArguments",
+    finetuning_args: "FinetuningArguments",
+    callbacks: Optional[List["TrainerCallback"]] = None
 ):
     dataset = get_dataset(model_args, data_args)
     model, tokenizer = load_model_and_tokenizer(model_args, finetuning_args, training_args.do_train, stage="ppo")
@@ -38,14 +41,15 @@ def run_ppo(
         max_grad_norm=training_args.max_grad_norm
     )
 
-    optimizer = AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=ppo_config.learning_rate)
+    optimizer = AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=training_args.learning_rate)
     total_train_batch_size = \
         training_args.per_device_train_batch_size * training_args.gradient_accumulation_steps * training_args.world_size
+    num_training_steps = training_args.num_train_epochs * math.ceil(len(dataset) / total_train_batch_size)
     lr_scheduler = get_scheduler(
         training_args.lr_scheduler_type,
         optimizer=optimizer,
-        num_warmup_steps=training_args.warmup_steps,
-        num_training_steps=(training_args.num_train_epochs * math.ceil(len(dataset) / total_train_batch_size))
+        num_warmup_steps=training_args.get_warmup_steps(num_training_steps),
+        num_training_steps=num_training_steps
     )
 
     # Initialize our Trainer

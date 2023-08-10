@@ -3,13 +3,14 @@ import os
 import threading
 import time
 import transformers
+from transformers.trainer import TRAINING_ARGS_NAME
 from typing import Generator, List, Optional, Tuple
 
 from llmtuner.extras.callbacks import LogCallback
 from llmtuner.extras.constants import DEFAULT_MODULE
 from llmtuner.extras.logging import LoggerHandler
 from llmtuner.extras.misc import torch_gc
-from llmtuner.tuner import get_train_args, run_sft
+from llmtuner.tuner import run_exp
 from llmtuner.webui.common import get_model_path, get_save_dir
 from llmtuner.webui.locales import ALERTS
 from llmtuner.webui.utils import format_info, get_eval_results
@@ -53,14 +54,14 @@ class Runner:
         return model_name_or_path, "", logger_handler, trainer_callback
 
     def finalize(
-        self, lang: str, finish_info: Optional[str] = None
+        self, lang: str, finish_info: str
     ) -> str:
         self.running = False
         torch_gc()
         if self.aborted:
             return ALERTS["info_aborted"][lang]
         else:
-            return finish_info if finish_info is not None else ALERTS["info_finished"][lang]
+            return finish_info
 
     def run_train(
         self,
@@ -82,7 +83,7 @@ class Runner:
         gradient_accumulation_steps: int,
         lr_scheduler_type: str,
         max_grad_norm: str,
-        dev_ratio: float,
+        val_size: float,
         logging_steps: int,
         save_steps: int,
         warmup_steps: int,
@@ -104,14 +105,17 @@ class Runner:
         else:
             checkpoint_dir = None
 
+        output_dir = os.path.join(get_save_dir(model_name), finetuning_type, output_dir)
+
         args = dict(
+            stage="sft",
             model_name_or_path=model_name_or_path,
             do_train=True,
             overwrite_cache=True,
             checkpoint_dir=checkpoint_dir,
             finetuning_type=finetuning_type,
             quantization_bit=int(quantization_bit) if quantization_bit else None,
-            prompt_template=template,
+            template=template,
             source_prefix=source_prefix,
             dataset_dir=dataset_dir,
             dataset=",".join(dataset),
@@ -132,25 +136,17 @@ class Runner:
             lora_rank=lora_rank,
             lora_dropout=lora_dropout,
             lora_target=lora_target or DEFAULT_MODULE.get(model_name.split("-")[0], "q_proj,v_proj"),
-            output_dir=os.path.join(get_save_dir(model_name), finetuning_type, output_dir)
+            output_dir=output_dir
         )
 
-        if dev_ratio > 1e-6:
-            args["dev_ratio"] = dev_ratio
+        if val_size > 1e-6:
+            args["val_size"] = val_size
             args["evaluation_strategy"] = "steps"
             args["eval_steps"] = save_steps
             args["load_best_model_at_end"] = True
 
-        model_args, data_args, training_args, finetuning_args, _ = get_train_args(args)
-
-        run_args = dict(
-            model_args=model_args,
-            data_args=data_args,
-            training_args=training_args,
-            finetuning_args=finetuning_args,
-            callbacks=[trainer_callback]
-        )
-        thread = threading.Thread(target=run_sft, kwargs=run_args)
+        run_kwargs = dict(args=args, callbacks=[trainer_callback])
+        thread = threading.Thread(target=run_exp, kwargs=run_kwargs)
         thread.start()
 
         while thread.is_alive():
@@ -158,9 +154,14 @@ class Runner:
             if self.aborted:
                 yield ALERTS["info_aborting"][lang]
             else:
-                yield format_info(logger_handler.log, trainer_callback.tracker)
+                yield format_info(logger_handler.log, trainer_callback)
 
-        yield self.finalize(lang)
+        if os.path.exists(os.path.join(output_dir, TRAINING_ARGS_NAME)):
+            finish_info = ALERTS["info_finished"][lang]
+        else:
+            finish_info = ALERTS["err_failed"][lang]
+
+        yield self.finalize(lang, finish_info)
 
     def run_eval(
         self,
@@ -194,6 +195,7 @@ class Runner:
             output_dir = os.path.join(get_save_dir(model_name), finetuning_type, "eval_base")
 
         args = dict(
+            stage="sft",
             model_name_or_path=model_name_or_path,
             do_eval=True,
             overwrite_cache=True,
@@ -201,7 +203,7 @@ class Runner:
             checkpoint_dir=checkpoint_dir,
             finetuning_type=finetuning_type,
             quantization_bit=int(quantization_bit) if quantization_bit else None,
-            prompt_template=template,
+            template=template,
             source_prefix=source_prefix,
             dataset_dir=dataset_dir,
             dataset=",".join(dataset),
@@ -216,16 +218,8 @@ class Runner:
             args.pop("do_eval", None)
             args["do_predict"] = True
 
-        model_args, data_args, training_args, finetuning_args, _ = get_train_args(args)
-
-        run_args = dict(
-            model_args=model_args,
-            data_args=data_args,
-            training_args=training_args,
-            finetuning_args=finetuning_args,
-            callbacks=[trainer_callback]
-        )
-        thread = threading.Thread(target=run_sft, kwargs=run_args)
+        run_kwargs = dict(args=args, callbacks=[trainer_callback])
+        thread = threading.Thread(target=run_exp, kwargs=run_kwargs)
         thread.start()
 
         while thread.is_alive():
@@ -233,6 +227,11 @@ class Runner:
             if self.aborted:
                 yield ALERTS["info_aborting"][lang]
             else:
-                yield format_info(logger_handler.log, trainer_callback.tracker)
+                yield format_info(logger_handler.log, trainer_callback)
 
-        yield self.finalize(lang, get_eval_results(os.path.join(output_dir, "all_results.json")))
+        if os.path.exists(os.path.join(output_dir, "all_results.json")):
+            finish_info = get_eval_results(os.path.join(output_dir, "all_results.json"))
+        else:
+            finish_info = ALERTS["err_failed"][lang]
+
+        yield self.finalize(lang, finish_info)

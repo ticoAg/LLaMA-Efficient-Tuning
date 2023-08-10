@@ -227,9 +227,9 @@ LOCALES = {
             "info": "用于梯度裁剪的范数。"
         }
     },
-    "dev_ratio": {
+    "val_size": {
         "en": {
-            "label": "Dev ratio",
+            "label": "Val size",
             "info": "Proportion of data in the dev set."
         },
         "zh": {
@@ -512,6 +512,10 @@ ALERTS = {
     "err_no_save_dir": {
         "en": "Please provide export dir.",
         "zh": "请填写导出目录"
+    },
+    "err_failed": {
+        "en": "Failed.",
+        "zh": "训练出错。"
     },
     "info_aborting": {
         "en": "Aborted, wait for terminating...",

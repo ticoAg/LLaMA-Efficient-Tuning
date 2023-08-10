@@ -19,7 +19,9 @@ class FinetuningArguments:
                   LLaMA-2 choices: [\"32\", \"40\", \"80\"], \
                   BLOOM choices: [\"24\", \"30\", \"70\"], \
                   Falcon choices: [\"32\", \"60\"], \
-                  Baichuan choices: [\"32\", \"40\"]"}
+                  Baichuan choices: [\"32\", \"40\"] \
+                  Qwen choices: [\"32\"], \
+                  XVERSE choices: [\"40\"]"}
     )
     num_layer_trainable: Optional[int] = field(
         default=3,
@@ -30,7 +32,9 @@ class FinetuningArguments:
         metadata={"help": "Name of trainable modules for Freeze fine-tuning. \
                   LLaMA & LLaMA-2 choices: [\"mlp\", \"self_attn\"], \
                   BLOOM & Falcon choices: [\"mlp\", \"self_attention\"], \
-                  Baichuan choices: [\"mlp\", \"self_attn\"]"}
+                  Baichuan choices: [\"mlp\", \"self_attn\"], \
+                  Qwen choices: [\"mlp\", \"attn\"], \
+                  InternLM, XVERSE choices: the same as LLaMA."}
     )
     lora_rank: Optional[int] = field(
         default=8,
@@ -49,7 +53,9 @@ class FinetuningArguments:
         metadata={"help": "Name(s) of target modules to apply LoRA. Use commas to separate multiple modules. \
                   LLaMA & LLaMA-2 choices: [\"q_proj\", \"k_proj\", \"v_proj\", \"o_proj\", \"gate_proj\", \"up_proj\", \"down_proj\"], \
                   BLOOM & Falcon choices: [\"query_key_value\", \"self_attention.dense\", \"mlp.dense\"], \
-                  Baichuan choices: [\"W_pack\", \"o_proj\", \"gate_proj\", \"up_proj\", \"down_proj\"]"}
+                  Baichuan choices: [\"W_pack\", \"o_proj\", \"gate_proj\", \"up_proj\", \"down_proj\"], \
+                  Qwen choices: [\"c_attn\", \"attn.c_proj\", \"w1\", \"w2\", \"mlp.c_proj\"], \
+                  InternLM, XVERSE choices: the same as LLaMA."}
     )
 
     def __post_init__(self):

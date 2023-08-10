@@ -1,16 +1,18 @@
-from typing import Dict
+from typing import TYPE_CHECKING, Dict
 from transformers.trainer_utils import SchedulerType
 
 import gradio as gr
-from gradio.components import Component
 
 from llmtuner.webui.common import list_dataset, DEFAULT_DATA_DIR
 from llmtuner.webui.components.data import create_preview_box
-from llmtuner.webui.runner import Runner
 from llmtuner.webui.utils import can_preview, get_preview, gen_plot
 
+if TYPE_CHECKING:
+    from gradio.components import Component
+    from llmtuner.webui.runner import Runner
 
-def create_sft_tab(top_elems: Dict[str, Component], runner: Runner) -> Dict[str, Component]:
+
+def create_sft_tab(top_elems: Dict[str, "Component"], runner: "Runner") -> Dict[str, "Component"]:
     with gr.Row():
         dataset_dir = gr.Textbox(value=DEFAULT_DATA_DIR, scale=2)
         dataset = gr.Dropdown(multiselect=True, scale=4)
@@ -36,7 +38,7 @@ def create_sft_tab(top_elems: Dict[str, Component], runner: Runner) -> Dict[str,
             value="cosine", choices=[scheduler.value for scheduler in SchedulerType]
         )
         max_grad_norm = gr.Textbox(value="1.0")
-        dev_ratio = gr.Slider(value=0, minimum=0, maximum=1, step=0.001)
+        val_size = gr.Slider(value=0, minimum=0, maximum=1, step=0.001)
 
     with gr.Accordion(label="Advanced config", open=False) as advanced_tab:
         with gr.Row():
@@ -56,7 +58,7 @@ def create_sft_tab(top_elems: Dict[str, Component], runner: Runner) -> Dict[str,
         stop_btn = gr.Button()
 
     with gr.Row():
-        with gr.Column(scale=4):
+        with gr.Column(scale=3):
             output_dir = gr.Textbox()
 
             with gr.Box():
@@ -86,7 +88,7 @@ def create_sft_tab(top_elems: Dict[str, Component], runner: Runner) -> Dict[str,
             gradient_accumulation_steps,
             lr_scheduler_type,
             max_grad_norm,
-            dev_ratio,
+            val_size,
             logging_steps,
             save_steps,
             warmup_steps,
@@ -120,7 +122,7 @@ def create_sft_tab(top_elems: Dict[str, Component], runner: Runner) -> Dict[str,
         gradient_accumulation_steps=gradient_accumulation_steps,
         lr_scheduler_type=lr_scheduler_type,
         max_grad_norm=max_grad_norm,
-        dev_ratio=dev_ratio,
+        val_size=val_size,
         advanced_tab=advanced_tab,
         logging_steps=logging_steps,
         save_steps=save_steps,
