@@ -15,9 +15,8 @@ CUDA_VISIBLE_DEVICES=1 python src/train_bash.py \
     --save_steps 1000 \
     --eval_steps 500 \
     --learning_rate 5e-5 \
-    --max_grad_norm 0.5 \
     --num_train_epochs 1.0 \
-    --val_size 0.01 \
+    --val_size 3000 \
     --evaluation_strategy steps \
     --plot_loss \
     --max_source_length 1024 \

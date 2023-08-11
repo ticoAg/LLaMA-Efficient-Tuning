@@ -19,6 +19,8 @@ def split_dataset(
                 dataset = dataset.shuffle(buffer_size=data_args.buffer_size, seed=training_args.seed)
                 return {"train_dataset": train_set, "eval_dataset": val_set}
             else:
+                if data_args.val_size > 1:
+                    data_args.val_size = int(data_args.val_size)
                 dataset = dataset.train_test_split(test_size=data_args.val_size, seed=training_args.seed)
                 return {"train_dataset": dataset["train"], "eval_dataset": dataset["test"]}
         else:
