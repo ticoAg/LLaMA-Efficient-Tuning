@@ -223,5 +223,23 @@
       "response": "",
       "history": ""
     }
+  },
+  "tiger_sft_zh": {
+    "hf_hub_url": "TigerResearch/sft_zh",
+    "columns": {
+      "prompt": "instruction",
+      "query": "input",
+      "response": "output",
+      "history": ""
+    }
+  },
+  "tiger_pretrain_zh": {
+    "script_url": "TigerResearch/pretrain_zh",
+    "columns": {
+      "prompt": "content",
+      "query": "",
+      "response": "",
+      "history": ""
+    }
   }
 }

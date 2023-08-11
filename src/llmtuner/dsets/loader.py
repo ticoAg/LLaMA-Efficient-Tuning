@@ -1,5 +1,6 @@
 import os
 import hashlib
+from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional
 
 from datasets import Value, concatenate_datasets, interleave_datasets, load_dataset
@@ -46,21 +47,16 @@ def get_dataset(
 
     for dataset_attr in data_args.dataset_list:
         logger.info("Loading dataset {}...".format(dataset_attr))
-        loaded = False
         data_files = None
         if dataset_attr.load_from == "hf_hub":
             data_path = dataset_attr.dataset_name
         elif dataset_attr.load_from == "script":
-            data_path = os.path.join(data_args.dataset_dir, dataset_attr.dataset_name)
-        elif dataset_attr.load_from == "target_dir":
-            raw_datasets = load_dataset(
-                dataset_attr.dataset_name, 
-                dataset_attr.subset_name,
-                data_files=data_files,
-                cache_dir=model_args.cache_dir,
-                use_auth_token=True if model_args.use_auth_token else None
-            )
-            loaded = True
+            data_path = Path(data_args.dataset_dir, dataset_attr.dataset_name)
+            if not data_path.exists():
+                data_path = Path(dataset_attr.dataset_name)
+                if not data_path.exists():
+                    raise AssertionError(f"{data_path} not exists.")
+            data_path = data_path._str
         elif dataset_attr.load_from == "file":
             data_path = None
             data_files: List[str] = []
