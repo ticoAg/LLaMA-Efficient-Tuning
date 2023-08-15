@@ -70,6 +70,7 @@ class Runner:
         quantization_bit: str,
         template: str,
         source_prefix: str,
+        training_stage: str,
         dataset_dir: str,
         dataset: List[str],
         max_source_length: int,
@@ -91,7 +92,6 @@ class Runner:
         lora_dropout: float,
         lora_target: str,
         resume_lora_training: bool,
-        rlhf_method: str,
         dpo_beta: float,
         reward_model: str,
         output_dir: str
@@ -138,19 +138,21 @@ class Runner:
         )
         args[compute_type] = True
 
-        if rlhf_method == "Reward Modeling":
+        if training_stage == "Reward Modeling":
             args["stage"] = "rm"
             args["resume_lora_training"] = False
-        elif rlhf_method == "PPO":
+        elif training_stage == "PPO":
             args["stage"] = "ppo"
             args["resume_lora_training"] = False
             args["reward_model"] = reward_model
             args["padding_side"] = "left"
             val_size = 0
-        elif rlhf_method == "DPO":
+        elif training_stage == "DPO":
             args["stage"] = "dpo"
             args["resume_lora_training"] = False
             args["dpo_beta"] = dpo_beta
+        elif training_stage == "Pre-Training":
+            args["stage"] = "pt"
 
         if val_size > 1e-6:
             args["val_size"] = val_size
