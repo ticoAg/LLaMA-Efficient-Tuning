@@ -23,4 +23,4 @@ deepspeed --num_gpus=8 src/train_bash.py \
     --plot_loss \
     --template baichuan \
     --bf16 \
-    --deepspeed deepspeed.json
+    --deepspeed scripts/full_tune_baichuan_offical/deep_speed.json
