@@ -1,6 +1,6 @@
 deepspeed --num_gpus=8 src/train_bash.py \
     --stage sft \
-    --model_name_or_path baichuan-inc/Baichuan-13B-Base \
+    --model_name_or_path baichuan-inc/Baichuan-7B \
     --do_train \
     --dataset alpaca_gpt4_en,alpaca_gpt4_zh \
     --finetuning_type full \
@@ -21,5 +21,6 @@ deepspeed --num_gpus=8 src/train_bash.py \
     --evaluation_strategy steps \
     --load_best_model_at_end \
     --plot_loss \
-    --fp16 \
+    --template baichuan \
+    --bf16 \
     --deepspeed deepspeed.json
