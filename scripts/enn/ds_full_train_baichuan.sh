@@ -1,24 +1,24 @@
-deepspeed --num_gpus=4  --force_multi \
-    src/train_bash.py \
+accelerate launch src/train_bash.py \
     --stage pt \
-    --model_name_or_path ${MODEL_PATH} \
+    --model_name_or_path gpt2 \
     --do_train \
-    --dataset medical_sft \
+    --dataset wikipedia_zh \
     --finetuning_type full \
-    --output_dir ${TRAIN_MODEL_OUTPUT} \
-    --per_device_train_batch_size 8 \
+    --output_dir .cache/ds_test/ \
+    --use_fast_tokenizer \
+    --per_device_train_batch_size 16 \
+    --gradient_accumulation_steps 16 \
     --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps 8 \
-    --lr_scheduler_type cosine \
+    --lr_scheduler_type cosine \  
     --logging_steps 10 \
     --save_steps 1000 \
     --eval_steps 500 \
     --learning_rate 5e-5 \
-    --max_grad_norm 0.5 \
     --num_train_epochs 3.0 \
-    --dev_ratio 0.01 \
+    --val_size 300 \
     --evaluation_strategy steps \
     --load_best_model_at_end \
     --plot_loss \
     --fp16 \
+    --template ziya \
     --deepspeed scripts/enn/ds_config.json
