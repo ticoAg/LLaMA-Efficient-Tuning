@@ -1,26 +1,27 @@
-deepspeed --num_gpus=8 src/train_bash.py \
+deepspeed --num_gpus=2 \
+    src/train_bash.py \
     --stage sft \
-    --model_name_or_path baichuan-inc/Baichuan-7B \
     --do_train \
-    --dataset alpaca_gpt4_en,alpaca_gpt4_zh \
     --finetuning_type full \
+    --model_name_or_path baichuan-inc/Baichuan-7B \
+    --checkpoint_dir .cache/baichuan_sft_offical/checkpoint-100 \
     --output_dir .cache/baichuan_sft_offical \
-    --overwrite_cache \
-    --per_device_train_batch_size 4 \
-    --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps 8 \
-    --preprocessing_num_workers 16 \
-    --lr_scheduler_type cosine \
-    --logging_steps 10 \
+        --template baichuan \
+        --dataset alpaca_gpt4_en,alpaca_gpt4_zh \
+        --per_device_train_batch_size 4 \
+        --per_device_eval_batch_size 4 \
+        --gradient_accumulation_steps 8 \
+        --preprocessing_num_workers 16 \
+        --num_train_epochs 2.0 \
+        --val_size 0.01 \
     --save_steps 100 \
     --eval_steps 100 \
-    --learning_rate 5e-5 \
-    --max_grad_norm 0.5 \
-    --num_train_epochs 2.0 \
-    --val_size 0.01 \
     --evaluation_strategy steps \
+        --learning_rate 5e-5 \
+        --lr_scheduler_type cosine \
+        --max_grad_norm 0.5 \
+    --logging_steps 10 \
     --load_best_model_at_end \
     --plot_loss \
-    --template baichuan \
     --bf16 \
     --deepspeed scripts/full_tune_baichuan_offical/deep_speed.json

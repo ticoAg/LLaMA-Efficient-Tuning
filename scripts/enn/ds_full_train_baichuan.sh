@@ -9,7 +9,7 @@ accelerate launch src/train_bash.py \
     --per_device_train_batch_size 16 \
     --gradient_accumulation_steps 16 \
     --per_device_eval_batch_size 4 \
-    --lr_scheduler_type cosine \  
+    --lr_scheduler_type cosine \
     --logging_steps 10 \
     --save_steps 1000 \
     --eval_steps 500 \
