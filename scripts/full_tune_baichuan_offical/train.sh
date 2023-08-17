@@ -1,4 +1,4 @@
-deepspeed --num_gpus=2 \
+deepspeed --num_gpus=4 \
     src/train_bash.py \
     --stage sft \
     --do_train \
