@@ -1,14 +1,13 @@
-deepspeed --num_gpus=4 \
+deepspeed --num_gpus=8 \
     src/train_bash.py \
     --stage sft \
     --do_train \
     --finetuning_type full \
-    --model_name_or_path baichuan-inc/Baichuan-7B \
-    --checkpoint_dir .cache/baichuan_sft_offical/checkpoint-100 \
-    --output_dir .cache/baichuan_sft_offical \
+    --model_name_or_path baichuan-inc/Baichuan-13B-Base \
+    --output_dir .cache/baichuan13b_sft_offical \
         --template baichuan \
         --dataset alpaca_gpt4_en,alpaca_gpt4_zh \
-        --per_device_train_batch_size 4 \
+        --per_device_train_batch_size 8 \
         --per_device_eval_batch_size 4 \
         --gradient_accumulation_steps 8 \
         --preprocessing_num_workers 16 \
