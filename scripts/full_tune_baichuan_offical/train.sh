@@ -30,7 +30,7 @@ deepspeed --num_gpus=8 src/train_bash.py \
     --stage sft \
     --model_name_or_path baichuan-inc/Baichuan-7B \
     --do_train \
-    --dataset alpaca_gpt4_en,alpaca_gpt4_zh,alpaca_cot,firefly,oaast_sft_zh \
+    --dataset alpaca_gpt4_en,alpaca_gpt4_zh,self_cognition,firefly,oaast_sft_zh,sharegpt_zh \
     --finetuning_type full \
     --output_dir .cache/baichuan_sft_offical \
     --per_device_train_batch_size 8 \
@@ -39,7 +39,7 @@ deepspeed --num_gpus=8 src/train_bash.py \
     --preprocessing_num_workers 16 \
     --lr_scheduler_type cosine \
     --logging_steps 10 \
-    --save_steps 1000 \
+    --save_steps 2000 \
     --eval_steps 200 \
     --learning_rate 5e-5 \
     --max_grad_norm 0.5 \
