@@ -1,4 +1,4 @@
-deepspeed --num_gpus=4 \
+deepspeed --include localhost:4,5,6,7 \
     src/train_bash.py \
     --stage pt \
     --do_train \
@@ -8,10 +8,10 @@ deepspeed --num_gpus=4 \
         --template baichuan \
         --dataset self_cognition,pretrain_med_v0.1_book_wiki_qaConcat \
         --max_source_length 4096 \
-        --per_device_train_batch_size 8 \
-        --per_device_eval_batch_size 16 \
+        --per_device_train_batch_size 4 \
+        --per_device_eval_batch_size 8 \
         --gradient_accumulation_steps 8 \
-        --preprocessing_num_workers 16 \
+        --preprocessing_num_workers 64 \
         --num_train_epochs 2.0 \
     --save_steps 100 \
     --eval_steps 100 \
