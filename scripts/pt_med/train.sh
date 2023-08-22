@@ -1,4 +1,4 @@
-deepspeed --include localhost:4,5,6,7 \
+deepspeed --num_gpus=4 \
     src/train_bash.py \
     --stage pt \
     --do_train \
@@ -25,7 +25,7 @@ deepspeed --include localhost:4,5,6,7 \
     --load_best_model_at_end \
     --plot_loss \
     --bf16 \
-    --deepspeed scripts/ds_config/ds_state1.json
+    --deepspeed scripts/ds_config/ds_stage1.json
 
 
 # deepspeed --num_gpus=8 src/train_bash.py \
