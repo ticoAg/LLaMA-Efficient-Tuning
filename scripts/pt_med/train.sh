@@ -6,16 +6,16 @@ deepspeed --include localhost:4,5,6,7 \
     --model_name_or_path baichuan-inc/Baichuan-7B \
     --output_dir .cache/baichuan7b_pt_med \
         --template baichuan \
-        --dataset self_cognition,pretrain_med_v0.1_book_wiki_qaConcat \
+        --dataset pretrain_med_v0.1_book_wiki_qaConcat \
         --max_source_length 4096 \
-        --per_device_train_batch_size 4 \
-        --per_device_eval_batch_size 8 \
+        --per_device_train_batch_size 2 \
+        --per_device_eval_batch_size 2 \
         --gradient_accumulation_steps 8 \
         --preprocessing_num_workers 64 \
         --num_train_epochs 2.0 \
-    --save_steps 100 \
-    --eval_steps 100 \
-    --val_size 0.01 \
+    --save_steps 1000 \
+    --eval_steps 1000 \
+    --val_size 0.001 \
     --warmup_ratio 0.1 \
     --evaluation_strategy steps \
         --learning_rate 5e-5 \
@@ -25,7 +25,7 @@ deepspeed --include localhost:4,5,6,7 \
     --load_best_model_at_end \
     --plot_loss \
     --bf16 \
-    --deepspeed scripts/ds_config/ds_stage1.json
+    --deepspeed scripts/ds_config/ds_stage2.json
 
 
 # deepspeed --num_gpus=8 src/train_bash.py \
