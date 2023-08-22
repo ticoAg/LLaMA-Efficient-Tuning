@@ -16,7 +16,7 @@ deepspeed --include localhost:4,5,6,7 \
     --save_steps 100 \
     --eval_steps 100 \
     --val_size 0.01 \
-    --warmup_steps 0.1 \
+    --warmup_ratio 0.1 \
     --evaluation_strategy steps \
         --learning_rate 5e-5 \
         --lr_scheduler_type cosine \
