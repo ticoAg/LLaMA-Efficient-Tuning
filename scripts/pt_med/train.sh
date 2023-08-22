@@ -12,6 +12,7 @@ deepspeed --include localhost:4,5,6,7 \
         --per_device_eval_batch_size 2 \
         --gradient_accumulation_steps 8 \
         --preprocessing_num_workers 64 \
+        --use_fast_tokenizer True \
         --num_train_epochs 2.0 \
     --save_steps 500 \
     --save_total_limit 5 \
