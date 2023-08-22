@@ -231,5 +231,32 @@
       "response": "",
       "history": ""
     }
+  },
+  "pretrain_med_v0.1_book_wiki_qaConcat": {
+    "script_url": "/data/datasets/pretrain_med_v0.1_book_wiki_qaConcat",
+    "columns": {
+      "prompt": "content",
+      "query": "",
+      "response": "",
+      "history": ""
+    }
+  },
+  "pretrain_common_WanJuan_nlp_zh_textbook": {
+    "script_url": "/data/datasets/pretrain_common_WanJuan_nlp_zh_textbook",
+    "columns": {
+      "prompt": "content",
+      "query": "",
+      "response": "",
+      "history": ""
+    }
+  },
+  "pretrain_common_v0.1_custom_mnbvc_4_subset":{
+    "script_url": "/data/datasets/pretrain_common_v0.1_custom_mnbvc_4_subset",
+    "columns": {
+      "prompt": "content",
+      "query": "",
+      "response": "",
+      "history": ""
+    }
   }
 }
