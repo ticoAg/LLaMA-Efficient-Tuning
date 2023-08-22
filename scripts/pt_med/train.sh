@@ -6,7 +6,7 @@ deepspeed --include localhost:4,5,6,7 \
     --model_name_or_path baichuan-inc/Baichuan-7B \
     --output_dir .cache/baichuan7b_pt_med \
         --template baichuan \
-        --dataset pretrain_med_v0.1_book_wiki_qaConcat \
+        --dataset self_cognition,pretrain_med_v0.1_book_wiki_qaConcat \
         --max_source_length 4096 \
         --per_device_train_batch_size 8 \
         --per_device_eval_batch_size 16 \
