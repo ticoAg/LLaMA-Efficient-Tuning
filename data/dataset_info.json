@@ -224,7 +224,7 @@
     }
   },
   "tiger_pretrain_zh": {
-    "script_url": "/home/datasets/tigerbot_pretrain_zh/data",
+    "hf_hub_url": "TigerResearch/sft_zh",
     "columns": {
       "prompt": "content",
       "query": "",
