@@ -215,7 +215,7 @@
     }
   },
   "tiger_sft_zh": {
-    "script_url": "C:\\Users\\16276\\Documents\\sft_zh",
+    "script_url": "TigerResearch/sft_zh",
     "columns": {
       "prompt": "instruction",
       "query": "input",
@@ -224,7 +224,7 @@
     }
   },
   "tiger_pretrain_zh": {
-    "hf_hub_url": "TigerResearch/sft_zh",
+    "hf_hub_url": "TigerResearch/pretrain_zh",
     "columns": {
       "prompt": "content",
       "query": "",
