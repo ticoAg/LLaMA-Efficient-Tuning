@@ -3,3 +3,5 @@ wandb
 .cache
 .vscode
 data/TigerResearch
+__pycache__
+.ipynb_checkpoints
