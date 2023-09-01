@@ -264,7 +264,8 @@
       "query": "input",
       "response": "output",
       "history": ""
-    }
+    },
+    "stage": "sft"
   },
   "tiger_pretrain_zh": {
     "hf_hub_url": "TigerResearch/pretrain_zh",
@@ -273,7 +274,8 @@
       "query": "",
       "response": "",
       "history": ""
-    }
+    },
+    "stage": "pt"
   },
   "pretrain_med_v0.1_book_wiki_qaConcat": {
     "script_url": "/data/datasets/pretrain_med_v0.1_book_wiki_qaConcat",
@@ -282,7 +284,8 @@
       "query": "",
       "response": "",
       "history": ""
-    }
+    },
+    "stage": "pt"
   },
   "pretrain_common_WanJuan_nlp_zh_textbook": {
     "script_url": "/data/datasets/pretrain_common_WanJuan_nlp_zh_textbook",
@@ -291,7 +294,8 @@
       "query": "",
       "response": "",
       "history": ""
-    }
+    },
+    "stage": "pt"
   },
   "pretrain_common_v0.1_custom_mnbvc_4_subset":{
     "script_url": "/data/datasets/pretrain_common_v0.1_custom_mnbvc_4_subset",
@@ -300,7 +304,8 @@
       "query": "",
       "response": "",
       "history": ""
-    }
+    },
+    "stage": "pt"
   },
   "sft_med_multiturn":{
     "script_url":"/data/datasets/sft_med_multiturn",
@@ -309,6 +314,7 @@
       "query": "input",
       "response": "output",
       "history": "history"
-    }
+    },
+    "stage": "sft"
   }
 }
