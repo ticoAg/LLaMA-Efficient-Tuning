@@ -4,7 +4,7 @@ deepspeed --include localhost:0,1,2,3,4,5,6,7 \
     --do_train \
     --finetuning_type full \
     --model_name_or_path baichuan-inc/Baichuan-7B \
-    --output_dir .cache/baichuan7b_sft_multi \
+    --output_dir .cache/baichuan7b_sft_multimed \
         --template baichuan \
         --dataset sft_med_multiturn \
         --max_source_length 2048 \
