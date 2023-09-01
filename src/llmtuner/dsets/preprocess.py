@@ -23,9 +23,23 @@ def preprocess_dataset(
     template = get_template_and_fix_tokenizer(data_args.template, tokenizer)
 
     def construct_example(examples: Dict[str, List[Any]]) -> Generator[Any, None, None]:
-        for i in range(len(examples["prompt"])):
-            query, response = examples["prompt"][i], examples["response"][i]
-            query = query + "\n" + examples["query"][i] if "query" in examples and examples["query"][i] else query
+        # for i in range(len(examples["prompt"])):
+            # query, response = examples["prompt"][i], examples["response"][i]
+            # query = query + "\n" + examples["query"][i] if "query" in examples and examples["query"][i] else query
+            # history = examples["history"][i] if "history" in examples else None
+            # system = examples["system"][i] if "system" in examples else None
+        for i in range(len(examples["response"])):
+            prompt = examples["prompt"][i] if "prompt" in examples and examples["prompt"][i] else ""
+            inputs = examples["query"][i] if "query" in examples and examples["query"][i] else ""
+            response = examples['response'][i]
+            query = ""
+            if prompt: 
+                query += prompt
+            if inputs: 
+                if prompt:
+                    query = query + '\n' + inputs
+                else:
+                    query = inputs
             history = examples["history"][i] if "history" in examples else None
             system = examples["system"][i] if "system" in examples else None
             yield query, response, history, system
@@ -139,7 +153,8 @@ def preprocess_dataset(
         preprocess_function = preprocess_pretrain_dataset
         print_function = print_unsupervised_dataset_example
     elif stage == "sft" and not training_args.predict_with_generate:
-        dataset = dataset.filter(lambda example: example["prompt"] and example["response"])
+        # dataset = dataset.filter(lambda example: example["prompt"] and example["response"])
+        dataset = dataset.filter(lambda example: example["response"])
         preprocess_function = preprocess_supervised_dataset
         print_function = print_supervised_dataset_example
     elif stage == "rm":
