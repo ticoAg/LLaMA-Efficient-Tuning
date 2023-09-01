@@ -11,7 +11,8 @@ class DatasetAttr:
     dataset_name: Optional[str] = None
     subset_name: Optional[str] = None
     dataset_sha1: Optional[str] = None
-    source_prefix: Optional[str] = None
+    system_prompt: Optional[str] = None
+    stage: Optional[str] = None
 
     def __repr__(self) -> str:
         return self.dataset_name
@@ -87,9 +88,9 @@ class DataArguments:
         default=True,
         metadata={"help": "Whether to ignore the tokens corresponding to padded labels in the loss computation or not."}
     )
-    source_prefix: Optional[str] = field(
+    system_prompt: Optional[str] = field(
         default=None,
-        metadata={"help": "A prefix to add before every source text. Use `|` to separate multiple prefixes in training."}
+        metadata={"help": "System prompt to add before the user query. Use `|` to separate multiple prompts in training."}
     )
     val_size: Optional[float] = field(
         default=0,
@@ -101,12 +102,9 @@ class DataArguments:
         with open(os.path.join(self.dataset_dir, "dataset_info.json"), "r") as f:
             dataset_info = json.load(f)
 
-        if self.source_prefix is not None:
-            prefix_list = self.source_prefix.split("|")
-            prefix_list = prefix_list * len(dataset_names) if len(prefix_list) == 1 else prefix_list
-            assert len(prefix_list) == len(dataset_names), "The number of prefixes should be either identical with datasets or 1."
-        else:
-            prefix_list = [None] * len(dataset_names)
+        prompt_list = self.system_prompt.split("|") if self.system_prompt else [None]
+        prompt_list = prompt_list * (len(dataset_names) // len(prompt_list))
+        assert len(prompt_list) == len(dataset_names), "Number of system prompts should be equal to datasets or 1."
 
         if self.interleave_probs is not None:
             self.interleave_probs = [float(prob.strip()) for prob in self.interleave_probs.split(",")]
@@ -124,15 +122,17 @@ class DataArguments:
                 else:
                     dataset_attr = DatasetAttr("hf_hub", dataset_name=dataset_info[name]["hf_hub_url"])
             elif "script_url" in dataset_info[name]:
-                dataset_attr = DatasetAttr("script", dataset_name=dataset_info[name]["script_url"])
+                dataset_attr = DatasetAttr(
+                    "script",
+                    dataset_name=dataset_info[name]["script_url"],
+                    stage=dataset_info[name].get("stage", None))
             else:
                 dataset_attr = DatasetAttr(
                     "file",
                     dataset_name=dataset_info[name]["file_name"],
-                    dataset_sha1=dataset_info[name].get("file_sha1", None)
+                    dataset_sha1=dataset_info[name].get("file_sha1", None),
+                    stage=dataset_info[name].get("stage", None)
                 )
-
-            dataset_attr.source_prefix = prefix_list[i]
 
             if "columns" in dataset_info[name]:
                 dataset_attr.prompt = dataset_info[name]["columns"].get("prompt", None)
@@ -140,4 +140,5 @@ class DataArguments:
                 dataset_attr.response = dataset_info[name]["columns"].get("response", None)
                 dataset_attr.history = dataset_info[name]["columns"].get("history", None)
 
+            dataset_attr.system_prompt = prompt_list[i]
             self.dataset_list.append(dataset_attr)

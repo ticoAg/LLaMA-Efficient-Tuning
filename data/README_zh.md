@@ -11,8 +11,23 @@
     "query": "数据集代表请求的表头名称（默认：input）",
     "response": "数据集代表回答的表头名称（默认：output）",
     "history": "数据集代表历史对话的表头名称（默认：None）"
-  }
+  },
+  "stage": "数据所应用的训练阶段，可选值有 pt, sft, rm 三个，对应预训练，指令监督微调(PPO)，奖励模型(DPO)训练, 默认为None，表示不限制"
 }
 ```
 
 其中 `prompt` 和 `response` 列应当是非空的字符串。`query` 列的内容将会和 `prompt` 列拼接作为模型输入。`history` 列应当是一个列表，其中每个元素是一个字符串二元组，分别代表用户请求和模型答复。
+
+对于奖励模型或 DPO 训练的数据集，`response` 列应当是一个字符串列表，排在前面的代表更优的答案，例如：
+
+```json
+{
+  "instruction": "Question",
+  "input": "",
+  "output": [
+    "Chosen answer",
+    "Rejected answer"
+  ],
+  "stage": "rm"
+}
+```
