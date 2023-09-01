@@ -24,6 +24,6 @@ deepspeed --include localhost:0,1,2,3,4,5,6,7 \
         --learning_rate 1e-4 \
         --lr_scheduler_type cosine \
         --max_grad_norm 0.5 \
-    --logging_steps 5 \
+    --logging_steps 2 \
     --bf16 \
     --deepspeed scripts/ds_config/ds_stage2.json
