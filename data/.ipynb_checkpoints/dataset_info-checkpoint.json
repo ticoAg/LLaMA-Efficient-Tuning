@@ -98,8 +98,8 @@
   "firefly": {
     "hf_hub_url": "YeungNLP/firefly-train-1.1M",
     "columns": {
-      "prompt": "",
-      "query": "input",
+      "prompt": "input",
+      "query": "",
       "response": "target",
       "history": ""
     }
@@ -113,8 +113,8 @@
   "webqa": {
     "hf_hub_url": "suolyer/webqa",
     "columns": {
-      "prompt": "",
-      "query": "input",
+      "prompt": "input",
+      "query": "",
       "response": "output",
       "history": ""
     }
@@ -259,13 +259,13 @@
       "history": ""
     }
   },
-  "sft_med_multiturn":{
+  "sft_med_multi_turn":{
     "script_url":"/data/datasets/sft_med_multiturn",
     "columns": {
       "prompt": "instruction",
       "query": "input",
       "response": "output",
       "history": "history"
-    }
+     }
   }
 }

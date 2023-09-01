@@ -108,11 +108,14 @@ def get_dataset(
         all_datasets.append(dataset)
 
     if len(data_args.dataset_list) == 1:
+        logger.info(f"  All datasets Size = {round(all_datasets[0].download_size / 1024**3, 4)} GB")
         return all_datasets[0]
     elif data_args.mix_strategy == "concat":
         if data_args.streaming:
             logger.warning("The samples between different datasets will not be mixed in streaming mode.")
-        return concatenate_datasets(all_datasets)
+        dataset = concatenate_datasets(all_datasets)
+        logger.info(f"  All datasets Size = {round(dataset.download_size / 1024**3, 4)} GB")
+        return dataset
     elif data_args.mix_strategy.startswith("interleave"):
         if not data_args.streaming:
             logger.warning("We recommend using `mix_strategy=concat` in non-streaming mode.")

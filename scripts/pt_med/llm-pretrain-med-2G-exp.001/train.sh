@@ -4,7 +4,7 @@ deepspeed --include localhost:4,5,6,7 \
     --do_train \
     --finetuning_type full \
     --model_name_or_path baichuan-inc/Baichuan-7B \
-    --output_dir .cache/baichuan7b_pt_med \
+    --output_dir .cache/llm-pretrain-med-2G-exp.001 \
         --template baichuan \
         --dataset pretrain_med_v0.1_book_wiki_qaConcat \
         --max_source_length 4096 \
