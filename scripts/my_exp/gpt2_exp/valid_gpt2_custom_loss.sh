@@ -1,12 +1,11 @@
 python src/train_bash.py \
     --stage sft \
-    --model_name_or_path ticoAg/gpt2-tiger-sft-zh \
+    --model_name_or_path ticoAg/gpt2-tigerbot-pt-zh \
     --do_train \
     --finetuning_type full \
-    --dataset sft_med_multiturn \
-    --max_samples 100000 \
+    --dataset ICare \
     --num_train_epochs 3 \
-    --output_dir .cache/debug_efficient_multiurn \
+    --output_dir .cache/ICare \
     --overwrite_output_dir \
     --template ziya \
     --use_fast_tokenizer \
@@ -22,5 +21,4 @@ python src/train_bash.py \
     --val_size 0.001 \
     --warmup_ratio 0.1 \
     --learning_rate 1e-4 \
-    --max_grad_norm 0.5 \
     --bf16

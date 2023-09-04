@@ -16,9 +16,6 @@ if TYPE_CHECKING:
     from transformers import TrainerCallback
     from llmtuner.hparams import ModelArguments, DataArguments, FinetuningArguments, GeneratingArguments
 
-import wandb
-wandb.init(project="gpt2-proj")
-
 def run_sft(
     model_args: "ModelArguments",
     data_args: "DataArguments",
