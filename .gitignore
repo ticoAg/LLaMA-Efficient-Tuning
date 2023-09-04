@@ -1,7 +1,7 @@
 wandb
 *.pyc
 .cache
-.vscode
+# .vscode
 data/TigerResearch
 __pycache__
 .ipyn# Byte-compiled / optimized / DLL files

@@ -32,15 +32,15 @@ class TargetLMLoss(Loss):
     def __call__(self, model, inputs, training_args, return_outputs=False):
         input_ids = inputs['input_ids']
         attention_mask = inputs['attention_mask']
-        target_mask = inputs['target_mask']
+        # target_mask = inputs['target_mask']
         # 模型前馈预测
         outputs = model(input_ids=input_ids, attention_mask=attention_mask, return_dict=True)
         logits = outputs["logits"] if isinstance(outputs, dict) else outputs[0]
 
         # 将labels中不属于target的部分，设为ignore_index，只计算target部分的loss
-        labels = torch.where(target_mask == 1, input_ids, self.ignore_index)
+        # labels = torch.where(target_mask == 1, input_ids, self.ignore_index)
         shift_logits = logits[..., :-1, :].contiguous()
-        shift_labels = labels[..., 1:].contiguous()
+        shift_labels = inputs['labels'][..., 1:].contiguous()
         # Flatten the tokens
         loss = self.loss_fn(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
         return (loss, outputs) if return_outputs else loss

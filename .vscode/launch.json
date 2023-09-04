@@ -1,0 +1,39 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "debug custom sft loss",
+            "type": "python",
+            "request": "launch",
+            "program": "src/train_bash.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "--stage","sft",
+                "--model_name_or_path","ticoAg/gpt2-tiger-sft-zh",
+                "--overwrite_output_dir",
+                "--do_train",
+                "--finetuning_type","full",
+                "--dataset","sft_med_multiturn",
+                "--max_samples", "1000",
+                "--num_train_epochs", "3",
+                "--template","ziya",
+                "--use_fast_tokenizer",
+                "--per_device_train_batch_size","4",
+                "--per_device_eval_batch_size", "4",
+                "--gradient_accumulation_steps","4",
+                "--output_dir",".cache/debug_efficient_multiurn",
+                "--lr_scheduler_type","cosine",
+                "--logging_steps","1",
+                "--save_steps","1000",
+                "--warmup_ratio","0.1",
+                "--learning_rate","1e-4",
+                "--max_grad_norm", "0.5",
+                "--bf16"
+            ]
+        }
+    ]
+}

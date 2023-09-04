@@ -1,0 +1,26 @@
+python src/train_bash.py \
+    --stage sft \
+    --model_name_or_path ticoAg/gpt2-tiger-sft-zh \
+    --do_train \
+    --finetuning_type full \
+    --dataset sft_med_multiturn \
+    --max_samples 100000 \
+    --num_train_epochs 3 \
+    --output_dir .cache/debug_efficient_multiurn \
+    --overwrite_output_dir \
+    --template ziya \
+    --use_fast_tokenizer \
+    --per_device_train_batch_size 4 \
+    --per_device_eval_batch_size 4 \
+    --gradient_accumulation_steps 4 \
+    --preprocessing_num_workers 8 \
+    --lr_scheduler_type cosine \
+    --eval_steps 500 \
+    --logging_steps 1 \
+    --save_steps 1000 \
+    --save_total_limit 5 \
+    --val_size 0.001 \
+    --warmup_ratio 0.1 \
+    --learning_rate 1e-4 \
+    --max_grad_norm 0.5 \
+    --bf16
