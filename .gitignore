@@ -3,9 +3,11 @@ wandb
 .cache
 # .vscode
 data/TigerResearch
-__pycache__
-.ipyn# Byte-compiled / optimized / DLL files
 __pycache__/
+
+
+.ipyn# Byte-compiled / optimized / DLL files
+
 *.py[cod]
 *$py.class
 
