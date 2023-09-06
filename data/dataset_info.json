@@ -307,6 +307,16 @@
     },
     "stage": "pt"
   },
+  "Wudao_health_subset":{
+    "script_url": "/data/datasets/Wudao_health_subset",
+    "columns": {
+      "prompt": "content",
+      "query": "",
+      "response": "",
+      "history": ""
+    },
+    "stage": "pt"
+  },
   "sft_med_multiturn":{
     "script_url":"/data/datasets/sft_med_multiturn",
     "columns": {
