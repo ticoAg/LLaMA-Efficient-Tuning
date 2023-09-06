@@ -2,7 +2,7 @@
 export WANDB_PROJECT=gpt2-proj
 
 deepspeed --include localhost:0,1,2,3,4,5,6,7 \
-    python src/train_bash.py \
+    src/train_bash.py \
     --stage rm \
     --model_name_or_path ticoAg/gpt2-tiger-sft-zh \
     --overwrite_output_dir \
