@@ -12,6 +12,7 @@ deepspeed --include localhost:2,3,4,5,6,7 \
     --finetuning_type full \
     --model_name_or_path $model_name_or_path \
     --output_dir .cache/$exp_id \
+    --overwrite_output_dir \
         --template $template \
         --dataset $dataset \
         --max_source_length 4096 \
