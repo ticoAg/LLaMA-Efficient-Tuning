@@ -316,5 +316,15 @@
       "history": "history"
     },
     "stage": "sft"
+  },
+  "ICare":{
+    "file_name":"/data/datasets/mental_care/data/ICare.json",
+    "columns": {
+      "prompt": "instruction",
+      "query": "input",
+      "response": "output",
+      "history": "history"
+    },
+    "stage": "sft"
   }
 }

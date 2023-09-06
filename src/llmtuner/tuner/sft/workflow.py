@@ -10,11 +10,11 @@ from llmtuner.extras.ploting import plot_loss
 from llmtuner.tuner.core import load_model_and_tokenizer
 from llmtuner.tuner.sft.metric import ComputeMetrics
 from llmtuner.tuner.sft.trainer import Seq2SeqPeftTrainer
+from llmtuner.tuner.sft.custom_loss import TargetLMLoss
 
 if TYPE_CHECKING:
     from transformers import TrainerCallback
     from llmtuner.hparams import ModelArguments, DataArguments, FinetuningArguments, GeneratingArguments
-
 
 def run_sft(
     model_args: "ModelArguments",
@@ -39,7 +39,7 @@ def run_sft(
         generation_num_beams=data_args.eval_num_beams or training_args.generation_num_beams
     ))
     training_args = Seq2SeqTrainingArguments(**training_args_dict)
-
+    loss_func = TargetLMLoss(ignore_index=-100)
     # Initialize our Trainer
     trainer = Seq2SeqPeftTrainer(
         finetuning_args=finetuning_args,
@@ -48,6 +48,7 @@ def run_sft(
         tokenizer=tokenizer,
         data_collator=data_collator,
         callbacks=callbacks,
+        loss_func=loss_func,
         compute_metrics=ComputeMetrics(tokenizer) if training_args.predict_with_generate else None,
         **split_dataset(dataset, data_args, training_args)
     )

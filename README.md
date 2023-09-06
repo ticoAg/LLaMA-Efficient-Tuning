@@ -445,12 +445,7 @@ CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
     --predict_with_generate
 ```
 ### Merge vocab model
-```bash
-python src/utils/merge_tokenizer.py \
-    --llama_tokenizer_dir model/vocab_model/tokenizer.model \
-    --chinese_sp_model_file model/vocab_model/chinese_sp.model \
-    --save_path model/merged_vocab_model
-```
+
 > [sentencepiece 根据文本文件训练词表sp_model](https://github.com/google/sentencepiece/blob/master/python/README.md#model-training)
 
 ### 裁剪模型

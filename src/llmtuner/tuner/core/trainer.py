@@ -102,6 +102,16 @@ class PeftTrainer(PeftModelMixin, Seq2SeqTrainer):
     Inherits Seq2SeqTrainer to support parameter-efficient checkpoints.
     """
 
-    def __init__(self, finetuning_args: "FinetuningArguments", **kwargs):
+    def __init__(self, finetuning_args: "FinetuningArguments", loss_func=None, **kwargs):
         Seq2SeqTrainer.__init__(self, **kwargs)
         self.finetuning_args = finetuning_args
+        self.loss_func = loss_func
+
+    def compute_loss(self, model, inputs, return_outputs=False):
+        """
+        重写loss的计算方式
+        How the loss is computed by Trainer. By default, all models return the loss in the first element.
+
+        Subclass and override for custom behavior.
+        """
+        return self.loss_func(model, inputs, self.args, return_outputs)
