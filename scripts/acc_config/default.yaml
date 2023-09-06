@@ -2,7 +2,7 @@ compute_environment: LOCAL_MACHINE
 distributed_type: MULTI_GPU
 downcast_bf16: 'yes'
 gpu_ids: all
-mixed_precision: 'no'
+mixed_precision: 'yes'
 num_machines: 1
 num_processes: 8
 main_process_port: 29501
