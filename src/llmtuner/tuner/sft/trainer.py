@@ -20,19 +20,9 @@ class Seq2SeqPeftTrainer(PeftTrainer):
     r"""
     Inherits PeftTrainer to compute generative metrics such as BLEU and ROUGE.
     """
-    def __init__(self, finetuning_args: "FinetuningArguments", loss_func=None, **kwargs):
+    def __init__(self, finetuning_args: "FinetuningArguments", **kwargs):
         PeftTrainer.__init__(self, finetuning_args, **kwargs)
         self.finetuning_args = finetuning_args
-        self.loss_func = loss_func
-
-    def compute_loss(self, model, inputs, return_outputs=False):
-        """
-        重写loss的计算方式
-        How the loss is computed by Trainer. By default, all models return the loss in the first element.
-
-        Subclass and override for custom behavior.
-        """
-        return self.loss_func(model, inputs, self.args, return_outputs)
 
     def prediction_step(
         self,
