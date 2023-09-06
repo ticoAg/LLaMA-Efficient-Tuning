@@ -1,7 +1,8 @@
 # %env WANDB_ENTITY=your-username/your-team-name
 export WANDB_PROJECT=gpt2-proj
 
-CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
+deepspeed --include localhost:0,1,2,3,4,5,6,7 \
+    python src/train_bash.py \
     --stage rm \
     --model_name_or_path ticoAg/gpt2-tiger-sft-zh \
     --overwrite_output_dir \
@@ -13,15 +14,15 @@ CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
     --use_fast_tokenizer \
     --template ziya \
     --output_dir .cache/gpt2-tiger-zh-sft-rm \
-    --per_device_train_batch_size 4 \
-    --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps 4 \
+    --per_device_train_batch_size 8 \
+    --per_device_eval_batch_size 8 \
+    --gradient_accumulation_steps 8 \
     --lr_scheduler_type cosine \
     --logging_steps 1 \
     --save_steps 0.5 \
     --learning_rate 1e-5 \
     --warmup_ratio 0.1 \
-    --num_train_epochs 1.0 \
+    --num_train_epochs 3 \
     --plot_loss \
     --run_name gpt2-tiger-zh-sft-rm \
     --fp16
