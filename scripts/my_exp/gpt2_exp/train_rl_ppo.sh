@@ -15,8 +15,7 @@ python src/train_bash.py \
     --preprocessing_num_workers 64 \
     --reward_model .cache/gpt2-tiger-zh-sft-rm \
     --output_dir .cache/gpt2-tiger-zh-sft-ppo \
-    --per_device_train_batch_size 16 \
-    --per_device_eval_batch_size 16 \
+    --per_device_train_batch_size 4 \
     --gradient_accumulation_steps 8 \
     --lr_scheduler_type cosine \
     --logging_steps 5 \
