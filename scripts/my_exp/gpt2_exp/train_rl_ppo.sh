@@ -20,7 +20,7 @@ python src/train_bash.py \
     --gradient_accumulation_steps 8 \
     --lr_scheduler_type cosine \
     --logging_steps 5 \
-    --save_steps 0.5 \
+    --save_steps 2500 \
     --learning_rate 1e-5 \
     --num_train_epochs 3.0 \
     --run_name gpt2-tiger-zh-sft-rm \
