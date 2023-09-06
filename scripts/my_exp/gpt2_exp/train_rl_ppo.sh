@@ -6,11 +6,12 @@ deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port 29501 \
     --model_name_or_path ticoAg/gpt2-tiger-sft-zh \
     --overwrite_output_dir \
     --do_train \
-    --dataset alpaca_gpt4_zh \
-    --template ziya \
     --finetuning_type lora \
     --lora_target c_proj \
     --local_rank 128 \
+    --template ziya \
+    --dataset alpaca_gpt4_zh \
+    --preprocessing_num_workers 64 \
     --reward_model .cache/gpt2-tiger-zh-sft-rm \
     --output_dir .cache/gpt2-tiger-zh-sft-ppo \
     --per_device_train_batch_size 4 \
