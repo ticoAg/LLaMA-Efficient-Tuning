@@ -1,5 +1,4 @@
 export WANDB_PROJECT=gpt2-proj
-export CUDA_VISIBLE_DEVICES=0
 
 deepspeed --include localhost:0,1,2,3,4,5,6,7 \
     src/train_bash.py \
