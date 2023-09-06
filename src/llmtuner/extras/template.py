@@ -137,6 +137,8 @@ class Template:
         token_ids = []
         for elem in context:
             if isinstance(elem, str):
+                if len(elem) == 0:
+                    continue
                 elem = elem.replace("{{system}}", system, 1) if system is not None else elem
                 elem = elem.replace("{{query}}", query, 1) if query is not None else elem
                 elem = elem.replace("{{idx}}", idx, 1) if idx is not None else elem
@@ -488,8 +490,7 @@ register_template(
         {"token": "<reserved_103>"} # assistant token
     ],
     system="",
-    sep=[],
-    stop_words=[]
+    sep=[]
 )
 
 
@@ -511,6 +512,49 @@ register_template(
     sep=[],
     stop_words=[
         "<reserved_102>" # user token
+    ]
+)
+
+
+r"""
+Supports: https://huggingface.co/baichuan-inc/Baichuan2-7B-Chat
+          https://huggingface.co/baichuan-inc/Baichuan2-13B-Chat
+Used for training and inference of the fine-tuned models.
+"""
+register_template(
+    name="baichuan2",
+    prefix=[
+        "{{system}}"
+    ],
+    prompt=[
+        {"token": "<reserved_106>"}, # user token
+        "{{query}}",
+        {"token": "<reserved_107>"} # assistant token
+    ],
+    system="",
+    sep=[]
+)
+
+
+r"""
+Supports: https://huggingface.co/baichuan-inc/Baichuan2-7B-Chat
+          https://huggingface.co/baichuan-inc/Baichuan2-13B-Chat
+Used for inference of the original model.
+"""
+register_template(
+    name="baichuan2_eval",
+    prefix=[
+        "{{system}}",
+        {"token": "<reserved_106>"} # user token
+    ],
+    prompt=[
+        "{{query}}",
+        {"token": "<reserved_107>"} # assistant token
+    ],
+    system="",
+    sep=[],
+    stop_words=[
+        "<reserved_106>" # user token
     ]
 )
 
