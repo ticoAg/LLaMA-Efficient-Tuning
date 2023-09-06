@@ -236,5 +236,77 @@
       "response": "",
       "history": ""
     }
+  },
+  "tiger_sft_zh": {
+    "script_url": "TigerResearch/sft_zh",
+    "columns": {
+      "prompt": "instruction",
+      "query": "input",
+      "response": "output",
+      "history": ""
+    }
+  },
+  "tiger_pretrain_zh": {
+    "hf_hub_url": "TigerResearch/pretrain_zh",
+    "columns": {
+      "prompt": "content",
+      "query": "",
+      "response": "",
+      "history": ""
+    }
+  },
+  "pretrain_med_v0.1_book_wiki_qaConcat": {
+    "script_url": "/data/datasets/pretrain_med_v0.1_book_wiki_qaConcat",
+    "columns": {
+      "prompt": "content",
+      "query": "",
+      "response": "",
+      "history": ""
+    }
+  },
+  "pretrain_common_WanJuan_nlp_zh_textbook": {
+    "script_url": "/data/datasets/pretrain_common_WanJuan_nlp_zh_textbook",
+    "columns": {
+      "prompt": "content",
+      "query": "",
+      "response": "",
+      "history": ""
+    }
+  },
+  "pretrain_common_v0.1_custom_mnbvc_4_subset":{
+    "script_url": "/data/datasets/pretrain_common_v0.1_custom_mnbvc_4_subset",
+    "columns": {
+      "prompt": "content",
+      "query": "",
+      "response": "",
+      "history": ""
+    }
+  },
+  "Wudao_health_subset":{
+    "script_url": "/data/datasets/Wudao_health_subset",
+    "columns": {
+      "prompt": "content",
+      "query": "",
+      "response": "",
+      "history": ""
+    }
+  },
+  "sft_med_multiturn":{
+    "script_url":"/data/datasets/sft_med_multiturn",
+    "columns": {
+      "prompt": "instruction",
+      "query": "input",
+      "response": "output",
+      "history": "history"
+    }
+  },
+  "ICare":{
+    "file_name":"/data/datasets/mental_care/data/ICare.json",
+    "columns": {
+      "prompt": "instruction",
+      "query": "input",
+      "response": "output",
+      "history": "history"
+    }
   }
 }
