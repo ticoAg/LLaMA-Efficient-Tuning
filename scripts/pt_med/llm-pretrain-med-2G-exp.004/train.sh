@@ -2,7 +2,7 @@ export WANDB_PROJECT=huggingface
 
 exp_id=llm-pretrain-med-2G-exp.004
 model_name_or_path=Qwen/Qwen-7B
-dataset=pretrain_med_v0.1_book_wiki_qaConcat
+dataset=pretrain_med_v0.1_book_wiki_qaConcat,Wudao_health_subset
 template=chatml
 
 deepspeed --include localhost:2,3,4,5,6,7 \
