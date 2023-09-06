@@ -1,3 +1,5 @@
+export WANDB_PROJECT=huggingface
+
 exp_id=llm-pretrain-med-2G-exp.004
 model_name_or_path=Qwen/Qwen-7B
 dataset=pretrain_med_v0.1_book_wiki_qaConcat
@@ -31,4 +33,5 @@ deepspeed --include localhost:2,3,4,5,6,7 \
     --logging_steps 10 \
     --plot_loss \
     --bf16 \
+    --run_name $exp_id \
     --deepspeed scripts/ds_config/ds_stage2.json
