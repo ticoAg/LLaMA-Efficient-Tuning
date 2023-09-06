@@ -1,6 +1,6 @@
 export WANDB_PROJECT=gpt2-proj
 
-deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port 295001 \
+deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port 29501 \
     src/train_bash.py \
     --stage ppo \
     --model_name_or_path ticoAg/gpt2-tiger-sft-zh \
