@@ -1,5 +1,5 @@
 # %env WANDB_ENTITY=your-username/your-team-name
-%env WANDB_PROJECT=gpt2-proj
+export WANDB_PROJECT=gpt2-proj
 
 CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
     --stage rm \
