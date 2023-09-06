@@ -5,7 +5,7 @@ model_name_or_path=Qwen/Qwen-7B
 dataset=pretrain_med_v0.1_book_wiki_qaConcat
 template=chatml
 
-deepspeed --include localhost:4,5,6,7 \
+deepspeed --include localhost:2,3,4,5,6,7 \
     src/train_bash.py \
     --stage pt \
     --do_train \
