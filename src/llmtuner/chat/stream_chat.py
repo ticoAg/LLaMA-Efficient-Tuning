@@ -31,7 +31,7 @@ class ChatModel:
         prompt, _ = self.template.encode_oneturn(
             tokenizer=self.tokenizer, query=query, resp="", history=history, system=system
         )
-        print(self.tokenizer.decode(prompt))
+        print(f"Conversation {len(history)}:\n", self.tokenizer.decode(prompt), "\n")
         input_ids = torch.tensor([prompt], device=self.model.device)
         prompt_length = len(input_ids[0])
 
