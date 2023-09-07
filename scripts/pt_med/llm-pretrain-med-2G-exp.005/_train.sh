@@ -2,7 +2,7 @@ export WANDB_PROJECT=huggingface
 
 exp_id=llm-pretrain-med-2G-exp.test.005
 model_name_or_path=THUDM/chatglm2-6b
-dataset=alpaca_gpt4_zh
+dataset=Wudao_health_subset
 template=chatglm2
 
 wandb offline
