@@ -7,7 +7,8 @@ dataset=wiki_demo
 template=chatglm2
 
 wandb offline
-CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
+deepspeed --include localhost:0,1 \
+    src/train_bash.py \
     --stage pt \
     --do_train \
     --finetuning_type full \
