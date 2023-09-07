@@ -15,8 +15,12 @@ from transformers import (
 )
 from transformers.utils import check_min_version
 from transformers.utils.versions import require_version
-from transformers.deepspeed import is_deepspeed_zero3_enabled
 from trl import AutoModelForCausalLMWithValueHead
+
+try:
+    from transformers.deepspeed import is_deepspeed_zero3_enabled
+except ImportError:
+    from transformers.integrations import is_deepspeed_zero3_enabled
 
 from llmtuner.extras.logging import reset_logging, get_logger
 from llmtuner.extras.misc import count_parameters, prepare_model_for_training
@@ -35,7 +39,7 @@ logger = get_logger(__name__)
 check_min_version("4.29.1")
 require_version("datasets>=2.12.0", "To fix: pip install datasets>=2.12.0")
 require_version("accelerate>=0.21.0", "To fix: pip install accelerate>=0.21.0")
-require_version("peft>=0.4.0", "To fix: pip install peft>=0.4.0")
+require_version("peft==0.4.0", "To fix: pip install peft==0.4.0")
 require_version("trl>=0.7.1", "To fix: pip install trl>=0.7.1")
 
 
@@ -75,7 +79,7 @@ def load_model_and_tokenizer(
 
     config = AutoConfig.from_pretrained(model_to_load, **config_kwargs)
 
-    if hasattr(config, "fp16") and hasattr(config, "bf16"): # fix Qwen config
+    if is_trainable and hasattr(config, "fp16") and hasattr(config, "bf16"): # fix Qwen config
         if model_args.compute_dtype == torch.bfloat16:
             setattr(config, "bf16", True)
         else:
@@ -91,7 +95,7 @@ def load_model_and_tokenizer(
                 setattr(config, "use_logn_attn", True)
                 logger.info("Using dynamic NTK scaling.")
 
-        elif hasattr(config, "rope_scaling"): # for LLaMA models
+        elif hasattr(config, "rope_scaling"): # for LLaMA and Falcon models
             require_version("transformers>=4.31.0", "RoPE scaling requires transformers>=4.31.0")
 
             if is_trainable:
