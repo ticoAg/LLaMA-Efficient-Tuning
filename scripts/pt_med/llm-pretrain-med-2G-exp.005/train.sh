@@ -5,6 +5,7 @@ model_name_or_path=THUDM/chatglm2-6b
 dataset=pretrain_med_v0.1_book_wiki_qaConcat,Wudao_health_subset
 template=chatglm2
 
+wandb online
 deepspeed --include localhost:2,3,4,5,6,7 \
     src/train_bash.py \
     --stage pt \
@@ -24,7 +25,6 @@ deepspeed --include localhost:2,3,4,5,6,7 \
         --num_train_epochs 2.0 \
     --save_strategy epoch \
     --eval_steps 500 \
-    --load_best_model_at_end \
     --val_size 0.001 \
     --warmup_ratio 0.1 \
     --evaluation_strategy steps \
