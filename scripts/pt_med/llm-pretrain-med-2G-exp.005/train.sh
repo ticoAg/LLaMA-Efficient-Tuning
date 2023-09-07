@@ -22,8 +22,8 @@ deepspeed --include localhost:2,3,4,5,6,7 \
         --preprocessing_num_workers 64 \
         --use_fast_tokenizer True \
         --num_train_epochs 2.0 \
-    --save_steps 0.3 \
-    --eval_steps 0.3 \
+    --save_strategy epoch \
+    --eval_steps 500 \
     --load_best_model_at_end \
     --val_size 0.001 \
     --warmup_ratio 0.1 \
