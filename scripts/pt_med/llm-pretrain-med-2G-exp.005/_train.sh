@@ -1,13 +1,12 @@
 export WANDB_PROJECT=huggingface
 
-exp_id=llm-pretrain-med-2G-exp.005.test
+exp_id=llm-pretrain-med-2G-exp.test.005
 model_name_or_path=THUDM/chatglm2-6b
-# dataset=pretrain_med_v0.1_book_wiki_qaConcat,Wudao_health_subset
-dataset=wiki_demo
+dataset=alpaca_gpt4_zh
 template=chatglm2
 
 wandb offline
-deepspeed --include localhost:0,1,2,3 \
+deepspeed --include localhost:0,1,2,3,4,5,6,7 \
     src/train_bash.py \
     --stage pt \
     --do_train \
@@ -21,10 +20,12 @@ deepspeed --include localhost:0,1,2,3 \
         --per_device_train_batch_size 2 \
         --per_device_eval_batch_size 2 \
         --gradient_accumulation_steps 8 \
+        --preprocessing_num_workers 64 \
         --use_fast_tokenizer True \
         --num_train_epochs 2.0 \
     --save_strategy epoch \
     --eval_steps 500 \
+    --val_size 0.001 \
     --warmup_ratio 0.1 \
     --evaluation_strategy steps \
         --learning_rate 5e-5 \
