@@ -7,7 +7,7 @@ dataset=wiki_demo
 template=chatglm2
 
 wandb offline
-python src/train_bash.py \
+CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
     --stage pt \
     --do_train \
     --finetuning_type full \
