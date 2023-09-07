@@ -12,6 +12,7 @@ class ChatModel:
 
     def __init__(self, args: Optional[Dict[str, Any]] = None) -> None:
         model_args, data_args, finetuning_args, self.generating_args = get_infer_args(args)
+        print(self.generating_args)
         self.model, self.tokenizer = load_model_and_tokenizer(model_args, finetuning_args)
         self.model = dispatch_model(self.model)
         self.model = self.model.eval() # enable evaluation mode

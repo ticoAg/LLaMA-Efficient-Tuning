@@ -15,7 +15,6 @@ class WebChatModel(ChatModel):
             self.model = None
             self.tokenizer = None
             self.generating_args = GeneratingArguments()
-            print(self.generating_args)
         else:
             super().__init__(args)
 
