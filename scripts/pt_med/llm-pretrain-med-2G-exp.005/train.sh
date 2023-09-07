@@ -6,7 +6,7 @@ dataset=pretrain_med_v0.1_book_wiki_qaConcat,Wudao_health_subset
 template=chatglm2
 
 wandb online
-deepspeed --include localhost:2,3,4,5,6,7 \
+deepspeed --include localhost:0,1,2,3,4,5,6,7 \
     src/train_bash.py \
     --stage pt \
     --do_train \
