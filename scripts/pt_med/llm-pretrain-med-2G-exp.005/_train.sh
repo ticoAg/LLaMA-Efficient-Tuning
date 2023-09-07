@@ -7,7 +7,7 @@ dataset=wiki_demo
 template=chatglm2
 
 wandb offline
-deepspeed --include localhost:0,1 \
+deepspeed --include localhost:0,1,2,3 \
     src/train_bash.py \
     --stage pt \
     --do_train \
