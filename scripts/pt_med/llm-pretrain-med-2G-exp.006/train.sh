@@ -1,10 +1,9 @@
 export WANDB_PROJECT=huggingface
 
-exp_id=llm-pretrain-med-2G-exp.005
-model_name_or_path=THUDM/chatglm2-6b
-dataset=Wudao_health_subset
-# dataset=pretrain_med_v0.1_book_wiki_qaConcat,Wudao_health_subset
-template=chatglm2
+exp_id=llm-pretrain-med-2G-exp.006
+model_name_or_path=baichuan-inc/Baichuan2-7B-Base
+dataset=pretrain_med_v0.1_book_wiki_qaConcat,Wudao_health_subset
+template=baichuan2
 gpu_vis=2,3,4,5,6,7
 MASTER_PORT=2345
 
@@ -24,7 +23,7 @@ deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
         --max_source_length 4096 \
         --per_device_train_batch_size 2 \
         --per_device_eval_batch_size 2 \
-        --gradient_accumulation_steps 2 \
+        --gradient_accumulation_steps 8 \
         --preprocessing_num_workers 128 \
         --use_fast_tokenizer True \
         --num_train_epochs 2.0 \
