@@ -24,7 +24,6 @@ python src/train_bash.py \
         --num_train_epochs 2.0 \
     --save_strategy epoch \
     --eval_steps 500 \
-    --val_size 0.001 \
     --warmup_ratio 0.1 \
     --evaluation_strategy steps \
         --learning_rate 5e-5 \
