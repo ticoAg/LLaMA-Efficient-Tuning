@@ -4,7 +4,7 @@ exp_id=llm-pretrain-med-2G-exp.006
 model_name_or_path=baichuan-inc/Baichuan2-13B-Base
 dataset=pretrain_med_v0.1_book_wiki_qaConcat,Wudao_health_subset
 template=baichuan2
-gpu_vis=2,3,4,5,6,7
+gpu_vis=0,1,2,3,4,5,6,7
 MASTER_PORT=2345
 
 
@@ -28,10 +28,8 @@ deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
         --use_fast_tokenizer True \
         --num_train_epochs 2.0 \
     --save_strategy epoch \
-    --eval_steps 500 \
     --val_size 0.001 \
     --warmup_ratio 0.1 \
-    --evaluation_strategy steps \
         --learning_rate 5e-5 \
         --lr_scheduler_type cosine \
         --max_grad_norm 0.5 \
