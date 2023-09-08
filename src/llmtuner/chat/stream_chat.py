@@ -31,7 +31,7 @@ class ChatModel:
         prompt, _ = self.template.encode_oneturn(
             tokenizer=self.tokenizer, query=query, resp="", history=history, system=system
         )
-        print(self.tokenizer.decode(prompt))
+        print(f"Conversation {len(history)}:\n", self.tokenizer.decode(prompt), "\n")
         input_ids = torch.tensor([prompt], device=self.model.device)
         prompt_length = len(input_ids[0])
 
@@ -51,7 +51,7 @@ class ChatModel:
             top_p=top_p or gen_kwargs["top_p"],
             top_k=top_k or gen_kwargs["top_k"],
             repetition_penalty=repetition_penalty or gen_kwargs["repetition_penalty"],
-            eos_token_id=list(set([self.tokenizer.eos_token_id] + self.tokenizer.additional_special_tokens_ids)),
+            eos_token_id=[self.tokenizer.eos_token_id] + self.tokenizer.additional_special_tokens_ids,
             pad_token_id=self.tokenizer.pad_token_id,
             logits_processor=get_logits_processor()
         ))
