@@ -35,7 +35,8 @@ deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
         --learning_rate 5e-5 \
         --lr_scheduler_type cosine \
         --max_grad_norm 0.5 \
-    --logging_steps 10 \
+        --adam_epsilon 5e-7 \
+    --logging_steps 5 \
     --plot_loss \
     --bf16 \
     --run_name $exp_id
