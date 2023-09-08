@@ -70,6 +70,18 @@
                 "--plot_loss",
                 "--bf16"
             ]
+        },
+        {
+            "name": "debug infer gpt2",
+            "type": "python",
+            "request": "launch",
+            "program": "src/web_demo.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "--model_name_or_path","ticoAg/gpt2-tiger-sft-zh",
+                "--template","baichuan"
+            ]
         }
     ]
 }
