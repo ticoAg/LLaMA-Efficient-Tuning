@@ -2,15 +2,15 @@ export WANDB_PROJECT=gpt2-proj
 
 exp_id=gpt2-sft-mixed
 model_name_or_path=ticoAg/gpt2-tigerbot-pt-zh
-dataset=alpaca_zh
-# dataset=alpaca_zh,alpaca_gpt4_data_zh,tiger_sft_zh_mixed,self_cognition,sft_med_mix_chunked
+# dataset=alpaca_zh
+dataset=alpaca_zh,alpaca_gpt4_data_zh,tiger_sft_zh_mixed,self_cognition,sft_med_mix_chunked
 template=ziya
 gpu_vis=0,1,2,3,4,5,6,7
 MASTER_PORT=2345
 
 
-# wandb online
-wandb offline
+wandb online
+# wandb offline
 deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
     src/train_bash.py \
     --stage sft \
@@ -23,12 +23,12 @@ deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
         --dataset $dataset \
         --max_source_length 512 \
         --max_target_length 512 \
-        --per_device_train_batch_size 2 \
-        --per_device_eval_batch_size 2 \
-        --gradient_accumulation_steps 2 \
+        --per_device_train_batch_size 16 \
+        --per_device_eval_batch_size 16 \
+        --gradient_accumulation_steps 16 \
         --preprocessing_num_workers 128 \
         --use_fast_tokenizer True \
-        --num_train_epochs 2.0 \
+        --num_train_epochs 10 \
     --save_strategy epoch \
     --val_size 0.001 \
     --eval_steps 10 \
