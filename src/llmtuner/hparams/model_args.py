@@ -19,7 +19,7 @@ class ModelArguments:
         default=True,
         metadata={"help": "Whether to use one of the fast tokenizer (backed by the tokenizers library) or not."}
     )
-    use_auth_token: Optional[bool] = field(
+    token: Optional[bool] = field(
         default=False,
         metadata={"help": "Will use the token generated when running `huggingface-cli login`."}
     )
@@ -82,6 +82,6 @@ class ModelArguments:
         if self.quantization_bit is not None:
             assert self.quantization_bit in [4, 8], "We only accept 4-bit or 8-bit quantization."
 
-        if self.use_auth_token == True and self.hf_auth_token is not None:
+        if self.token == True and self.hf_auth_token is not None:
             from huggingface_hub.hf_api import HfFolder # lazy load
             HfFolder.save_token(self.hf_auth_token)
