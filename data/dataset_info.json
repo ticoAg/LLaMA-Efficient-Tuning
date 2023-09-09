@@ -297,7 +297,7 @@
     }
   },
   "ICare":{
-    "file_name":"/data/datasets/mental_care/data/ICare.json",
+    "file_name":"/data/datasets/sft_med_multiturn/data/github_MeChat_smile.json",
     "columns": {
       "prompt": "instruction",
       "query": "input",
