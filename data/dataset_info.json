@@ -315,7 +315,7 @@
     }
   },
   "self_cognition": {
-    "script_url": "datasets/self_cognition/self_cognition.json",
+    "script_url": "/data/datasets/self_cognition/self_cognition.json",
     "columns": {
       "prompt": "instruction",
       "query": "input",
@@ -323,7 +323,7 @@
     }
   },
   "sft_med_mix_chunked":{
-    "script_url": "datasets/sft_med_mix_chunked",
+    "script_url": "/data/datasets/sft_med_mix_chunked",
     "columns": {
       "prompt": "instruction",
       "query": "input",
