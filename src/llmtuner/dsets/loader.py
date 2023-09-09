@@ -62,7 +62,7 @@ def get_dataset(
             split=data_args.split,
             cache_dir=model_args.cache_dir,
             streaming=data_args.streaming,
-            use_auth_token=True if model_args.use_auth_token else None
+            token=True if model_args.token else None
         )
 
         if max_samples is not None:
