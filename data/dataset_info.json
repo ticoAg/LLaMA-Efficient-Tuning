@@ -315,7 +315,7 @@
     }
   },
   "self_cognition": {
-    "script_url": "/data/datasets/self_cognition/self_cognition.json",
+    "file_name": "/data/datasets/self_cognition/self_cognition.json",
     "columns": {
       "prompt": "instruction",
       "query": "input",
