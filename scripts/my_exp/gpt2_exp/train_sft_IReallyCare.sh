@@ -1,12 +1,12 @@
 export WANDB_PROJECT=gpt2-proj
 
-exp_id=gpt2-sft-mixed
+exp_id=IReallyCare
 model_name_or_path=ticoAg/gpt2-tigerbot-pt-zh
 # dataset=alpaca_zh
-dataset=alpaca_zh,alpaca_gpt4_zh,tiger_sft_zh_mixed,self_cognition,sft_med_mix_chunked
+dataset=alpaca_zh,alpaca_gpt4_zh,tiger_sft_zh_mixed,self_cognition,sft_med_mix_chunked,ICare
 template=ziya
 gpu_vis=0,1,2,3,4,5,6,7
-MASTER_PORT=2345
+MASTER_PORT=2346
 
 
 wandb online
@@ -23,8 +23,8 @@ deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
         --dataset $dataset \
         --max_source_length 512 \
         --max_target_length 512 \
-        --per_device_train_batch_size 16 \
-        --per_device_eval_batch_size 16 \
+        --per_device_train_batch_size 8 \
+        --per_device_eval_batch_size 8 \
         --gradient_accumulation_steps 16 \
         --preprocessing_num_workers 128 \
         --use_fast_tokenizer True \
