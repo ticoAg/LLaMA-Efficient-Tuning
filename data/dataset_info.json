@@ -15,10 +15,6 @@
     "file_name": "alpaca_gpt4_data_zh.json",
     "file_sha1": "3eaa3bda364ccdd59925d7448a698256c31ef845"
   },
-  "self_cognition": {
-    "file_name": "self_cognition.json",
-    "file_sha1": "6287a730ada924fc5d9eadc6d8f865e01b7a6f67"
-  },
   "oaast_sft": {
     "file_name": "oaast_sft.json",
     "file_sha1": "7baf5d43e67a91f9bbdf4e400dbe033b87e9757e",
@@ -302,6 +298,32 @@
   },
   "ICare":{
     "file_name":"/data/datasets/mental_care/data/ICare.json",
+    "columns": {
+      "prompt": "instruction",
+      "query": "input",
+      "response": "output",
+      "history": "history"
+    }
+  },
+  "tiger_sft_zh_mixed":{
+    "hf_hub_url": "ticoAg/tiger-sft-zh",
+    "columns": {
+      "prompt": "instruction",
+      "query": "input",
+      "response": "output",
+      "history": "history"
+    }
+  },
+  "self_cognition": {
+    "script_url": "datasets/self_cognition/self_cognition.json",
+    "columns": {
+      "prompt": "instruction",
+      "query": "input",
+      "response": "output"
+    }
+  },
+  "sft_med_mix_chunked":{
+    "script_url": "datasets/sft_med_mix_chunked",
     "columns": {
       "prompt": "instruction",
       "query": "input",
