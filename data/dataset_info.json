@@ -316,6 +316,7 @@
   },
   "self_cognition": {
     "file_name": "/data/datasets/self_cognition/self_cognition.json",
+    "file_sha1": "21e26f2cfcb88f98ed527ff9932716c1a3a78995",
     "columns": {
       "prompt": "instruction",
       "query": "input",
