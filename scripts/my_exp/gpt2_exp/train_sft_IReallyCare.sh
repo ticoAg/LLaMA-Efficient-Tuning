@@ -23,8 +23,8 @@ deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
         --dataset $dataset \
         --max_source_length 512 \
         --max_target_length 512 \
-        --per_device_train_batch_size 8 \
-        --per_device_eval_batch_size 8 \
+        --per_device_train_batch_size 32 \
+        --per_device_eval_batch_size 32 \
         --gradient_accumulation_steps 16 \
         --preprocessing_num_workers 128 \
         --use_fast_tokenizer True \
