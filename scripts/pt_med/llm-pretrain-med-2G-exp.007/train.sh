@@ -38,6 +38,5 @@ deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
     --logging_steps 5 \
     --plot_loss \
     --bf16 \
-    --run_name $exp_id
-
-    # --deepspeed scripts/ds_config/ds_stage2.json
+    --run_name $exp_id \
+    --deepspeed scripts/ds_config/ds_stage2.json
