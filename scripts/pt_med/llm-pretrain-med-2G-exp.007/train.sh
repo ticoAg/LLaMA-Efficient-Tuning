@@ -1,7 +1,7 @@
 export WANDB_PROJECT=huggingface
 
 exp_id=llm-pretrain-med-2G-exp.007
-model_name_or_path=THUDM/chatglm2-6b
+model_name_or_path=THUDM/chatglm2-6b-32k
 dataset=pretrain_med_v0.1_book_wiki_qaConcat,Wudao_health_subset
 template=chatglm2
 gpu_vis=2,3,4,5,6,7
@@ -11,7 +11,6 @@ MASTER_PORT=2345
 wandb online
 deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
     src/train_bash.py \
-    --deepspeed scripts/ds_config/ds_stage2.json \
     --stage pt \
     --do_train \
     --finetuning_type full \
@@ -40,3 +39,5 @@ deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
     --plot_loss \
     --bf16 \
     --run_name $exp_id
+
+    # --deepspeed scripts/ds_config/ds_stage2.json
