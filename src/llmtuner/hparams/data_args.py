@@ -27,7 +27,8 @@ class DataArguments:
     r"""
     Arguments pertaining to what data we are going to input our model for training and evaluation.
     """
-    template: str = field(
+    template: Optional[str] = field(
+        default=None,
         metadata={"help": "Which template to use for constructing prompts in training and inference."}
     )
     dataset: Optional[str] = field(
@@ -47,7 +48,7 @@ class DataArguments:
         metadata={"help": "Enable streaming mode."}
     )
     buffer_size: Optional[int] = field(
-        default=16384,
+        default=1024,
         metadata={"help": "Size of the buffer to randomly sample examples from in streaming mode."}
     )
     mix_strategy: Optional[Literal["concat", "interleave_under", "interleave_over"]] = field(
