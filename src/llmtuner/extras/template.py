@@ -77,13 +77,13 @@ class Template:
     ) -> Tuple[List[int], List[int]]:
         if tokenizer.bos_token_id is not None and getattr(tokenizer, "add_bos_token", True):
             bos_ids = [tokenizer.bos_token_id]
-        else: # baichuan, qwen and gpt2 models has no bos token
+        else: # baichuan, qwen and gpt2 models have no bos token
             bos_ids = []
 
         if tokenizer.eos_token_id is None:
             raise ValueError("EOS token is required.")
 
-        if self.efficient_eos: # used in baichuan, qwen and gpt2 models
+        if self.efficient_eos: # used in baichuan, qwen, chatglm, etc.
             eos_ids = []
         else:
             eos_ids = [tokenizer.eos_token_id]
@@ -206,20 +206,19 @@ def get_template_and_fix_tokenizer(
     name: str,
     tokenizer: "PreTrainedTokenizer"
 ) -> Template:
-    template = templates.get(name, None)
-    assert template is not None, "Template {} does not exist.".format(name)
-
     if tokenizer.eos_token_id is None:
         tokenizer.eos_token = "<|endoftext|>"
         logger.info("Add eos token: {}".format(tokenizer.eos_token))
 
     if tokenizer.pad_token_id is None:
-        if tokenizer.unk_token_id is not None:
-            tokenizer.pad_token = tokenizer.unk_token
-        else:
-            tokenizer.pad_token = tokenizer.eos_token
+        tokenizer.pad_token = tokenizer.eos_token
         logger.info("Add pad token: {}".format(tokenizer.pad_token))
 
+    if name is None:
+        return None
+
+    template = templates.get(name, None)
+    assert template is not None, "Template {} does not exist.".format(name)
     tokenizer.add_special_tokens(
         dict(additional_special_tokens=template.stop_words),
         replace_additional_special_tokens=False
@@ -583,7 +582,8 @@ register_template(
     system="",
     sep=[
         "\n\n"
-    ]
+    ],
+    efficient_eos=True
 )
 
 
