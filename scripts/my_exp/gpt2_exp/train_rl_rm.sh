@@ -5,12 +5,12 @@ model_name_or_path=ticoAg/gpt2-tiger-sft-zh
 dataset=comparison_gpt4_zh
 template=ziya
 # gpu_vis=2,3,4,5,6,7
-gpu_vis=6,7
+gpu_vis=0,1
 MASTER_PORT=2346
 
 
-# wandb online
-wandb offline
+wandb online
+# wandb offline
 deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
     src/train_bash.py \
     --stage rm \
@@ -30,7 +30,7 @@ deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
         --num_train_epochs 2.0 \
     --save_strategy epoch \
     --val_size 400 \
-    --eval_steps 0.1 \
+    --eval_steps 200 \
     --evaluation_strategy steps \
     --warmup_ratio 0.1 \
         --learning_rate 5e-5 \
@@ -40,8 +40,8 @@ deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
     --logging_steps 1 \
     --plot_loss \
     --bf16 \
-    --run_name $exp_id \
-    --deepspeed scripts/ds_config/ds_stage2.json
+    --run_name $exp_id
+    # --deepspeed scripts/ds_config/ds_stage2.json
 
 
 

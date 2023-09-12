@@ -105,8 +105,8 @@ def get_train_args(
     if general_args.stage == "sft" and training_args.do_predict and not training_args.predict_with_generate:
         raise ValueError("Please enable `predict_with_generate` to save model predictions.")
 
-    if general_args.stage in ["rm", "ppo"] and finetuning_args.finetuning_type != "lora":
-        raise ValueError("RM and PPO stages can only be performed with the LoRA method.")
+    # if general_args.stage in ["rm", "ppo"] and finetuning_args.finetuning_type != "lora":
+    #     raise ValueError("RM and PPO stages can only be performed with the LoRA method.")
 
     if general_args.stage in ["rm", "ppo"] and training_args.resume_from_checkpoint is not None:
         raise ValueError("RM and PPO stages do not support `resume_from_checkpoint`.")
