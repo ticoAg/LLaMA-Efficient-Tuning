@@ -16,7 +16,9 @@ CUDA_VISIBLE_DEVICES=$gpu_vis python \
     src/train_bash.py \
     --stage rm \
     --do_train \
-    --finetuning_type full \
+    --finetuning_type lora \
+    --lora_target c_proj \
+    --lora_rank 64 \
     --model_name_or_path $model_name_or_path \
     --output_dir .cache/$exp_id \
     --overwrite_output_dir \
