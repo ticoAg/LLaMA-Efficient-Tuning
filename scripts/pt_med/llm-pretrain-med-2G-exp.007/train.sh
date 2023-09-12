@@ -5,12 +5,12 @@ model_name_or_path=THUDM/chatglm2-6b-32k
 dataset=pretrain_med_v0.1_book_wiki_qaConcat,Wudao_health_subset
 template=chatglm2
 # gpu_vis=2,3,4,5,6,7
-gpu_vis=2,3,4,5
+gpu_vis=2,3,4,5,6,7
 MASTER_PORT=2345
 
 
-# wandb online
-wandb offline
+wandb online
+# wandb offline
 deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
     src/train_bash.py \
     --stage pt \
