@@ -5,13 +5,14 @@ model_name_or_path=ticoAg/gpt2-tiger-sft-zh
 dataset=comparison_gpt4_zh
 template=ziya
 # gpu_vis=2,3,4,5,6,7
-gpu_vis=0,1
+gpu_vis=0
 MASTER_PORT=2346
 
 
 wandb online
 # wandb offline
-deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
+# deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
+CUDA_VISIBLE_DEVICES=$gpu_vis python \
     src/train_bash.py \
     --stage rm \
     --do_train \
