@@ -1,11 +1,12 @@
 export WANDB_PROJECT=huggingface
 
-exp_id=Baichuan2-13B-Base-RM
+exp_id=Baichuan2-13B-Base-PPO-V1
 model_name_or_path=/data/songhaoyang/LLaMA-Efficient-Tuning/.cache/Baichuan2-13B-Base-Sfted-Mixed
+reward_model=/data/songhaoyang/LLaMA-Efficient-Tuning/.cache/Baichuan2-13B-Base-RM
 dataset=comparison_gpt4_zh
 template=baichuan2
 # gpu_vis=2,3,4,5,6,7
-gpu_vis=0
+gpu_vis=2,3,4,5,6,7
 MASTER_PORT=2346
 
 
@@ -21,6 +22,7 @@ CUDA_VISIBLE_DEVICES=$gpu_vis python \
     --lora_rank 64 \
     --resume_lora_training False \
     --model_name_or_path $model_name_or_path \
+    --reward_model $reward_model \
     --output_dir .cache/$exp_id \
     --overwrite_output_dir \
         --template $template \
@@ -29,16 +31,16 @@ CUDA_VISIBLE_DEVICES=$gpu_vis python \
         --per_device_train_batch_size 2 \
         --gradient_accumulation_steps 8 \
         --preprocessing_num_workers 8 \
-        --num_train_epochs 2.0 \
+        --num_train_epochs 3.0 \
     --save_strategy epoch \
-    --warmup_ratio 0.05 \
-        --learning_rate 1e-6 \
+    --warmup_ratio 0.1 \
+        --learning_rate 1e-5 \
         --lr_scheduler_type cosine \
         --max_grad_norm 0.5 \
-        --adam_epsilon 1e-8 \
-    --logging_steps 1 \
+        --adam_epsilon 1e-7 \
+    --logging_steps 5 \
     --plot_loss \
-    --fp16 \
+    --bf16 \
     --run_name $exp_id
     # --deepspeed scripts/ds_config/ds_stage2.json
 
