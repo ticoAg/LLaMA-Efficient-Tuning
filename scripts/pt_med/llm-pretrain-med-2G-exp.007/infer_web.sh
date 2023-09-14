@@ -8,10 +8,10 @@ template=chatglm2
 gpu_vis=1
 MASTER_PORT=2345
 
-CUDA_VISIBLE_DEVICES=0 python src/api_demo.py \
+CUDA_VISIBLE_DEVICES=$gpu_vis python src/api_demo.py \
     --model_name_or_path /data/songhaoyang/LLaMA-Efficient-Tuning/.cache/$exp_id/ \
     --template $template \
-    --max_new_tokens 50 \
+    --max_new_tokens 20 \
     --num_beams 1 \
     --do_sample True \
     --top_p 0.8 \
