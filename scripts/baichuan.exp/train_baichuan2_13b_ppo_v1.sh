@@ -13,8 +13,11 @@ MASTER_PORT=2346
 
 wandb online
 # wandb offline
-# deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
-CUDA_VISIBLE_DEVICES=$gpu_vis python \
+
+# CUDA_VISIBLE_DEVICES=$gpu_vis python \
+# accelerate launch --main_process_port 21000 \
+
+deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
     src/train_bash.py \
     --stage ppo \
     --do_train \
