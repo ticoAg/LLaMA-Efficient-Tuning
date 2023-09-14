@@ -5,8 +5,8 @@ model_name_or_path=.cache/Baichuan2-13B-Base-Sfted-Mixed
 reward_model=.cache/Baichuan2-13B-Base-RM
 dataset=alpaca_gpt4_zh
 template=baichuan2
-gpu_vis=0,1,2,3,4,5
-# gpu_vis=2
+# gpu_vis=0,1,2,3,4,5
+gpu_vis=0
 # MASTER_PORT=2346
 acclerate_config=scripts/acc_config/default_config.yaml
 
@@ -31,9 +31,9 @@ CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config 
         --dataset $dataset \
         --max_source_length 4096 \
         --per_device_train_batch_size 2 \
-        --gradient_accumulation_steps 8 \
+        --gradient_accumulation_steps 2 \
         --preprocessing_num_workers 128 \
-        --num_train_epochs 3.0 \
+        --num_train_epochs 1 \
     --save_strategy epoch \
     --warmup_ratio 0.1 \
         --learning_rate 1e-5 \
