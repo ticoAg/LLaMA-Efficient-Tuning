@@ -2,7 +2,7 @@ export WANDB_PROJECT=huggingface
 
 exp_id=Baichuan2-13B-Base-PPO-V1
 model_name_or_path=/data/songhaoyang/LLaMA-Efficient-Tuning/.cache/Baichuan2-13B-Base-Sfted-Mixed
-reward_model=/data/songhaoyang/LLaMA-Efficient-Tuning/.cache/Baichuan2-13B-Base-RM
+reward_model=/data/songhaoyang/LLaMA-Efficient-Tuning/.cache/Baichuan2-13B-Base-RM-Export
 dataset=comparison_gpt4_zh
 template=baichuan2
 # gpu_vis=2,3,4,5,6,7
