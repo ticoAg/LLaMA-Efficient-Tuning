@@ -5,8 +5,8 @@ model_name_or_path=.cache/Baichuan2-13B-Base-Sfted-Mixed
 reward_model=.cache/Baichuan2-13B-Base-RM
 dataset=alpaca_gpt4_zh
 template=baichuan2
-# gpu_vis=0,1,2,3,4,5
-gpu_vis=0
+gpu_vis=0,1,2,3,4,5
+# gpu_vis=0
 # MASTER_PORT=2346
 acclerate_config=scripts/acc_config/default_config.yaml
 
