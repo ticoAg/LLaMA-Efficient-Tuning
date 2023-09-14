@@ -16,7 +16,7 @@ wandb online
 
 # CUDA_VISIBLE_DEVICES=$gpu_vis python \
 # deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
-accelerate launch src/train_bash.py --config_file $acclerate_config\
+accelerate launch --config_file $acclerate_config src/train_bash.py \
     --stage ppo \
     --do_train \
     --finetuning_type lora \
