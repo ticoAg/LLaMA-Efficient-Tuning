@@ -8,7 +8,7 @@ template=baichuan2
 gpu_vis=0
 MASTER_PORT=2346
 
-
+wandb offline
 python src/export_model.py \
     --model_name_or_path $model_name_or_path \
     --template $template \
