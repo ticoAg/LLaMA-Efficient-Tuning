@@ -115,6 +115,7 @@ def preprocess_dataset(
         model_inputs = {"input_ids": [], "attention_mask": [], "labels": []}
 
         for query, response, history, system in construct_example_ori(examples):
+            print(examples)
             source_ids, target_ids = template.encode_oneturn(tokenizer, query, response, history, system)
 
             if len(source_ids) > data_args.max_source_length:
