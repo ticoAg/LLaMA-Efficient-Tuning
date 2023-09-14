@@ -6,8 +6,8 @@ reward_model=.cache/Baichuan2-13B-Base-RM
 dataset=alpaca_gpt4_zh
 template=baichuan2
 gpu_vis=2,3,4,5,6,7
-# gpu_vis=2
-MASTER_PORT=2346
+gpu_vis=2
+# MASTER_PORT=2346
 acclerate_config=scripts/acc_config/last_6_gpus.yaml
 
 
