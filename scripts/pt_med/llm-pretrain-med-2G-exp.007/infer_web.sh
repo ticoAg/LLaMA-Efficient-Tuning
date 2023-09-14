@@ -8,6 +8,6 @@ template=chatglm2
 gpu_vis=1
 MASTER_PORT=2345
 
-CUDA_VISIBLE_DEVICES=0 python src/web_demo.py \
+CUDA_VISIBLE_DEVICES=0 python src/api_demo.py \
     --model_name_or_path /data/songhaoyang/LLaMA-Efficient-Tuning/.cache/$exp_id/ \
     --template $template
