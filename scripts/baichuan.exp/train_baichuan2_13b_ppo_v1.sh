@@ -35,7 +35,6 @@ CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config 
         --preprocessing_num_workers 128 \
         --num_train_epochs 1 \
     --save_strategy epoch \
-    --save_steps 0.5 \
     --warmup_ratio 0.1 \
         --learning_rate 1e-5 \
         --lr_scheduler_type cosine \
