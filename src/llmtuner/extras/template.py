@@ -147,6 +147,7 @@ class Template:
             elif isinstance(elem, dict):
                 token_ids = token_ids + [tokenizer.convert_tokens_to_ids(elem.get("token"))]
             else:
+                print(elem)
                 raise NotImplementedError
 
         return token_ids
