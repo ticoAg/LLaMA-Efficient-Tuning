@@ -39,6 +39,14 @@ def preprocess_dataset(
             history = examples["history"][i] if "history" in examples else None
             system = examples["system"][i] if "system" in examples else None
             yield query, response, history, system
+    
+    def construct_example_ori(examples: Dict[str, List[Any]]) -> Generator[Any, None, None]:
+        for i in range(len(examples["prompt"])):
+            query, response = examples["prompt"][i], examples["response"][i]
+            query = query + "\n" + examples["query"][i] if "query" in examples and examples["query"][i] else query
+            history = examples["history"][i] if "history" in examples else None
+            system = examples["system"][i] if "system" in examples else None
+            yield query, response, history, system
 
     def preprocess_pretrain_dataset(examples: Dict[str, List[Any]]) -> Dict[str, Any]:
         # build grouped texts with format `X1 X2 X3 ...`
@@ -106,7 +114,7 @@ def preprocess_dataset(
         # build inputs with format `<bos> X` and labels with format `Y <eos>`
         model_inputs = {"input_ids": [], "attention_mask": [], "labels": []}
 
-        for query, response, history, system in construct_example(examples):
+        for query, response, history, system in construct_example_ori(examples):
             source_ids, target_ids = template.encode_oneturn(tokenizer, query, response, history, system)
 
             if len(source_ids) > data_args.max_source_length:
