@@ -5,7 +5,7 @@ model_name_or_path=.cache/Baichuan2-13B-Base-Sfted-Mixed
 reward_model=.cache/Baichuan2-13B-Base-RM
 dataset=alpaca_gpt4_zh
 template=baichuan2
-gpu_vis=2,3,4,5,6,7
+gpu_vis=0,1,2,3,4,5,6,7
 gpu_vis=2
 # MASTER_PORT=2346
 acclerate_config=scripts/acc_config/default_config.yaml
@@ -16,7 +16,7 @@ wandb online
 
 # CUDA_VISIBLE_DEVICES=$gpu_vis python \
 # deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
-accelerate launch --config_file $acclerate_config src/train_bash.py \
+CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config src/train_bash.py \
     --stage ppo \
     --do_train \
     --finetuning_type lora \
