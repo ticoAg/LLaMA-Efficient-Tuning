@@ -17,11 +17,6 @@ if TYPE_CHECKING:
     from transformers import Seq2SeqTrainingArguments, TrainerCallback
     from llmtuner.hparams import ModelArguments, DataArguments, FinetuningArguments, GeneratingArguments
 
-import wandb
-wandb.init(
-    name="Baichuan2-13B-Base-Sfted-Mixed-PPO-V1",
-    project="huggingface"
-)
 
 def run_ppo(
     model_args: "ModelArguments",
