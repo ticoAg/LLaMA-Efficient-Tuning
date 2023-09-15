@@ -28,7 +28,7 @@ deepspeed --include localhost:$gpu_vis --master_port $MASTER_PORT \
         --max_source_length 4096 \
         --per_device_train_batch_size 2 \
         --gradient_accumulation_steps 8 \
-        --preprocessing_num_workers 8 \
+        --preprocessing_num_workers 128 \
         --num_train_epochs 2.0 \
     --save_strategy epoch \
     --warmup_ratio 0.05 \
