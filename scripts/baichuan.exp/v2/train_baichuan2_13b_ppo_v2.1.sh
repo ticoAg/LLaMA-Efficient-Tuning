@@ -14,8 +14,8 @@ gpu_vis=0,1,2,3,4,5
 acclerate_config=scripts/acc_config/default_config.yaml
 
 
-wandb online
-# wandb offline
+# wandb online
+wandb offline
 
 # CUDA_VISIBLE_DEVICES=$gpu_vis python \
 # deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
@@ -32,10 +32,9 @@ CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config 
     --overwrite_output_dir \
         --template $template \
         --dataset $dataset \
-        --max_source_length 1024 \
-        --max_target_length 1024 \
-        --per_device_train_batch_size 4 \
-        --gradient_accumulation_steps 4 \
+        --max_source_length 4096 \
+        --per_device_train_batch_size 2 \
+        --gradient_accumulation_steps 2 \
         --preprocessing_num_workers 128 \
         --num_train_epochs 2 \
     --save_strategy epoch \
