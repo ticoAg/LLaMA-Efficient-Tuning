@@ -1,5 +1,6 @@
 export WANDB_PROJECT=huggingface
 
+proj_dir=.cache/baichuan.exp
 root_dir=.cache/baichuan.exp/v2
 exp_id=Baichuan2-13B-Base-Sfted-Mixed-PPO-V2.1
 model_name_or_path=Baichuan2-13B-Base-Sfted-Mixed
@@ -24,7 +25,7 @@ CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config 
     --lora_target W_pack \
     --lora_rank 64 \
     --resume_lora_training False \
-    --model_name_or_path $root_dir/$model_name_or_path \
+    --model_name_or_path $proj_dir/$model_name_or_path \
     --reward_model $root_dir/$reward_model \
     --output_dir $root_dir/$exp_id \
     --overwrite_output_dir \
