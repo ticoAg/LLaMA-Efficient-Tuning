@@ -188,7 +188,7 @@ def preprocess_dataset(
         preprocess_function = preprocess_pairwise_dataset
         print_function = print_pairwise_dataset_example
     else:
-        dataset = dataset.filter(lambda example: example["prompt"])
+        dataset = dataset.filter(lambda example: example["prompt"] and example["response"])
         preprocess_function = preprocess_unsupervised_dataset
         print_function = print_unsupervised_dataset_example
 
