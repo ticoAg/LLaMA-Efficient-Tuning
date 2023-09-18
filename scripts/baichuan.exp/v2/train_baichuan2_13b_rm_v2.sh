@@ -1,5 +1,6 @@
 export WANDB_PROJECT=huggingface
 
+root_dir=.cache/baichuan.exp/v2
 exp_id=Baichuan2-13B-Base-RM-V2
 model_name_or_path=baichuan-inc/Baichuan2-13B-Base
 dataset=comparison_gpt4_zh
@@ -21,7 +22,7 @@ deepspeed --include localhost:$gpu_vis --master_port $MASTER_PORT \
     --lora_rank 64 \
     --resume_lora_training False \
     --model_name_or_path $model_name_or_path \
-    --output_dir .cache/$exp_id \
+    --output_dir $root_dir/$exp_id \
     --overwrite_output_dir \
         --template $template \
         --dataset $dataset \

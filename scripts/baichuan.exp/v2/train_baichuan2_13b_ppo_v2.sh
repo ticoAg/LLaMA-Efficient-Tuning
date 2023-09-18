@@ -1,6 +1,6 @@
 export WANDB_PROJECT=huggingface
 
-root_dir=.cache
+root_dir=.cache/baichuan.exp/v2
 exp_id=Baichuan2-13B-Base-Sfted-Mixed-PPO-V2
 model_name_or_path=Baichuan2-13B-Base-Sfted-Mixed
 reward_model=Baichuan2-13B-Base-RM-V2
