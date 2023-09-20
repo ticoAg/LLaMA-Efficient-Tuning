@@ -35,8 +35,8 @@ CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config 
         --max_samples 150000 \
         --max_source_length 2048 \
         --max_target_length 2048 \
-        --per_device_train_batch_size 4 \
-        --gradient_accumulation_steps 2 \
+        --per_device_train_batch_size 2 \
+        --gradient_accumulation_steps 1 \
         --preprocessing_num_workers 128 \
         --num_train_epochs 2 \
     --save_strategy epoch \
