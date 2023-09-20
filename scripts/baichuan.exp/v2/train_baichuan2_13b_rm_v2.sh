@@ -8,6 +8,8 @@ template=baichuan2
 gpu_vis=0,1,2,3,4,5
 # gpu_vis=0
 MASTER_PORT=2346
+acclerate_config=scripts/acc_config/default_config.yaml
+
 
 
 wandb online
