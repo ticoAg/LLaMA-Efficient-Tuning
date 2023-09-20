@@ -27,8 +27,8 @@ CUDA_VISIBLE_DEVICES=7 python \
     --output_dir .cache/exp/$exp_id \
     --max_source_length 3000 \
     --max_target_length 512 \
-    --max_samples 100 \
-    --per_device_eval_batch_size 1
+    --max_samples 1000 \
+    --per_device_eval_batch_size 4
 
 
 # CUDA_VISIBLE_DEVICES=7 python \
@@ -43,5 +43,5 @@ CUDA_VISIBLE_DEVICES=7 python \
 #     --output_dir .cache/exp/Baichuan2-13B-Base-RM-v1-valid \
 #     --max_source_length 3000 \
 #     --max_target_length 512 \
-#     --max_samples 100 \
-#     --per_device_eval_batch_size 1
+#     --max_samples 1000 \
+#     --per_device_eval_batch_size 4
