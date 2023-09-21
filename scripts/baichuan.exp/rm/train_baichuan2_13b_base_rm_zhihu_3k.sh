@@ -39,6 +39,6 @@ CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config 
     --max_grad_norm 0.5 \
     --logging_steps 1 \
     --plot_loss \
-    --fp16 \
+    --bf16 \
     --run_name $exp_id
     # --adam_epsilon 1e-7 \
