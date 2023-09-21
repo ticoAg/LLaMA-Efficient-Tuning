@@ -341,7 +341,7 @@
     }
   },
   "zhihu_3k_rlhf_train": {
-    "hf_hub_url": "ticoAg/zhihu_3k_rlhf_train",
+    "script_url": "/data/datasets/zhihu_3k_rlhf_train",
     "columns": {
       "prompt": "prompt",
       "query": "input",
@@ -351,7 +351,7 @@
     "ranking": true
   },
   "zhihu_3k_rlhf_test": {
-    "hf_hub_url": "ticoAg/zhihu_3k_rlhf_test",
+    "script_url": "/data/datasets/zhihu_3k_rlhf_test",
     "columns": {
       "prompt": "prompt",
       "query": "input",
@@ -361,7 +361,7 @@
     "ranking": true
   },
   "hh_rlhf_helpful_cn_train": {
-    "hf_hub_url": "ticoAg/hh_rlhf_helpful_cn_train",
+    "script_url": "/data/datasets/hh_rlhf_helpful_cn_train",
     "columns": {
       "prompt": "prompt",
       "query": "input",
@@ -371,7 +371,7 @@
     "ranking": true
   },
   "hh_rlhf_helpful_cn_test": {
-    "hf_hub_url": "ticoAg/hh_rlhf_helpful_cn_test",
+    "script_url": "/data/datasets/hh_rlhf_helpful_cn_test",
     "columns": {
       "prompt": "prompt",
       "query": "input",
@@ -381,7 +381,7 @@
     "ranking": true
   },
   "hh_rlhf_harmless_cn_train": {
-    "hf_hub_url": "ticoAg/hh_rlhf_harmless_cn_train",
+    "script_url": "/data/datasets/hh_rlhf_harmless_cn_train",
     "columns": {
       "prompt": "prompt",
       "query": "input",
@@ -391,7 +391,7 @@
     "ranking": true
   },
   "hh_rlhf_harmless_cn_test": {
-    "hf_hub_url": "ticoAg/hh_rlhf_harmless_cn_test",
+    "script_url": "/data/datasets/hh_rlhf_harmless_cn_test",
     "columns": {
       "prompt": "prompt",
       "query": "input",
@@ -401,7 +401,7 @@
     "ranking": true
   },
   "rlhf_zh": {
-    "hf_hub_url": "ticoAg/rlhf_zh",
+    "script_url": "/data/datasets/rlhf_zh",
     "columns": {
       "prompt": "prompt",
       "query": "input",
