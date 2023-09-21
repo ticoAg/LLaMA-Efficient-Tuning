@@ -339,5 +339,75 @@
       "response": "output",
       "history": "history"
     }
+  },
+  "zhihu_3k_rlhf_train": {
+    "hf_hub_url": "ticoAg/zhihu_3k_rlhf_train",
+    "columns": {
+      "prompt": "prompt",
+      "query": "input",
+      "response": "output",
+      "history": "history"
+    },
+    "ranking": true
+  },
+  "zhihu_3k_rlhf_test": {
+    "hf_hub_url": "ticoAg/zhihu_3k_rlhf_test",
+    "columns": {
+      "prompt": "prompt",
+      "query": "input",
+      "response": "output",
+      "history": "history"
+    },
+    "ranking": true
+  },
+  "hh_rlhf_helpful_cn_train": {
+    "hf_hub_url": "ticoAg/hh_rlhf_helpful_cn_train",
+    "columns": {
+      "prompt": "prompt",
+      "query": "input",
+      "response": "output",
+      "history": "history"
+    },
+    "ranking": true
+  },
+  "hh_rlhf_helpful_cn_test": {
+    "hf_hub_url": "ticoAg/hh_rlhf_helpful_cn_test",
+    "columns": {
+      "prompt": "prompt",
+      "query": "input",
+      "response": "output",
+      "history": "history"
+    },
+    "ranking": true
+  },
+  "hh_rlhf_harmless_cn_train": {
+    "hf_hub_url": "ticoAg/hh_rlhf_harmless_cn_train",
+    "columns": {
+      "prompt": "prompt",
+      "query": "input",
+      "response": "output",
+      "history": "history"
+    },
+    "ranking": true
+  },
+  "hh_rlhf_harmless_cn_test": {
+    "hf_hub_url": "ticoAg/hh_rlhf_harmless_cn_test",
+    "columns": {
+      "prompt": "prompt",
+      "query": "input",
+      "response": "output",
+      "history": "history"
+    },
+    "ranking": true
+  },
+  "rlhf_zh": {
+    "hf_hub_url": "ticoAg/rlhf_zh",
+    "columns": {
+      "prompt": "prompt",
+      "query": "input",
+      "response": "output",
+      "history": "history"
+    },
+    "ranking": true
   }
 }
