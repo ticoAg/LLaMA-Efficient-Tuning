@@ -29,7 +29,7 @@ CUDA_VISIBLE_DEVICES=$gpu_vis python src/train_bash.py \
     --per_device_train_batch_size 4 \
     --gradient_accumulation_steps 1 \
     --preprocessing_num_workers 128 \
-    --num_train_epochs 5 \
+    --num_train_epochs 1 \
     --save_steps 500 \
     --eval_steps 500 \
     --warmup_ratio 0.1 \
