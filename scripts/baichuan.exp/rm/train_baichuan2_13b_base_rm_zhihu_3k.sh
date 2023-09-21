@@ -21,23 +21,22 @@ CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config 
     --model_name_or_path $model_name_or_path \
     --output_dir $root_dir/$exp_id \
     --overwrite_output_dir \
-        --template $template \
-        --dataset $dataset \
-        --max_source_length 2048 \
-        --max_target_length 2048 \
-        --per_device_train_batch_size 4 \
-        --gradient_accumulation_steps 4 \
-        --preprocessing_num_workers 128 \
-        --num_train_epochs 5 \
+    --template $template \
+    --dataset $dataset \
+    --max_source_length 2048 \
+    --max_target_length 2048 \
+    --per_device_train_batch_size 4 \
+    --gradient_accumulation_steps 1 \
+    --preprocessing_num_workers 128 \
+    --num_train_epochs 5 \
     --save_steps 500 \
     --eval_steps 500 \
     --warmup_ratio 0.1 \
-        --learning_rate 1e-5 \
-        --lr_scheduler_type cosine \
-        --max_grad_norm 0.5 \
+    --learning_rate 1e-5 \
+    --lr_scheduler_type cosine \
     --logging_steps 1 \
     --plot_loss \
     --fp16 \
     --run_name $exp_id
-
+    # --max_grad_norm 0.5 \
     # --adam_epsilon 1e-7 \
