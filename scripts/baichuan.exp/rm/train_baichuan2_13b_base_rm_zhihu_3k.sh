@@ -11,7 +11,8 @@ MASTER_PORT=2345
 acclerate_config=scripts/acc_config/config_3_5.yaml
 
 wandb online
-CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config src/train_bash.py \
+# CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config src/train_bash.py \
+CUDA_VISIBLE_DEVICES=$gpu_vis python src/train_bash.py \
     --stage rm \
     --do_train \
     --finetuning_type lora \
