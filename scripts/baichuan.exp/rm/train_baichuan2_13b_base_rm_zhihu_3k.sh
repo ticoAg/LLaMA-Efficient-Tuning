@@ -39,4 +39,5 @@ CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config 
     --logging_steps 1 \
     --plot_loss \
     --bf16 \
+    --flash_attn \
     --run_name $exp_id
