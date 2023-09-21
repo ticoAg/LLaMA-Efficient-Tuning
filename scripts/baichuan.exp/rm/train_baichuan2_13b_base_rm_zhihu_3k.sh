@@ -37,7 +37,7 @@ CUDA_VISIBLE_DEVICES=$gpu_vis python src/train_bash.py \
     --lr_scheduler_type cosine \
     --logging_steps 1 \
     --plot_loss \
-    --fp16 \
+    --bf16 \
     --run_name $exp_id
     # --max_grad_norm 0.5 \
     # --adam_epsilon 1e-7 \
