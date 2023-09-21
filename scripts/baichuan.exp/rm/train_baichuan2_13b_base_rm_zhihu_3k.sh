@@ -6,7 +6,7 @@ exp_id=Baichuan2-13B-Base-RM-Zhihu3k
 model_name_or_path=baichuan-inc/Baichuan2-13B-Base
 dataset=zhihu_3k_rlhf_train
 template=baichuan2
-gpu_vis=0,1,2,3,4,5
+gpu_vis=3,4,5
 MASTER_PORT=2345
 acclerate_config=scripts/acc_config/config_3_5.yaml
 
@@ -31,7 +31,7 @@ CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config 
         --num_train_epochs 5 \
     --save_steps 500 \
     --eval_steps 500 \
-    --warmup_ratio 0.05 \
+    --warmup_ratio 0.02 \
         --learning_rate 1e-5 \
         --lr_scheduler_type cosine \
         --max_grad_norm 0.5 \
