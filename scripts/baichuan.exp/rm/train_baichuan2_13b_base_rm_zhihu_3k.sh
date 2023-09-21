@@ -11,8 +11,8 @@ MASTER_PORT=2345
 acclerate_config=scripts/acc_config/config_3_5.yaml
 
 wandb offline
-# CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config src/train_bash.py \
-CUDA_VISIBLE_DEVICES=$gpu_vis python src/train_bash.py \
+# CUDA_VISIBLE_DEVICES=$gpu_vis python src/train_bash.py \
+CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config src/train_bash.py \
     --stage rm \
     --do_train \
     --finetuning_type lora \
@@ -24,11 +24,11 @@ CUDA_VISIBLE_DEVICES=$gpu_vis python src/train_bash.py \
     --overwrite_output_dir \
     --template $template \
     --dataset $dataset \
-    --max_samples 100 \
+    --max_samples 1000 \
     --max_source_length 2048 \
     --max_target_length 2048 \
-    --per_device_train_batch_size 4 \
-    --gradient_accumulation_steps 1 \
+    --per_device_train_batch_size 2 \
+    --gradient_accumulation_steps 2 \
     --preprocessing_num_workers 128 \
     --num_train_epochs 1 \
     --save_steps 500 \
