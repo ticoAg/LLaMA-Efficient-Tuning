@@ -24,6 +24,7 @@ CUDA_VISIBLE_DEVICES=$gpu_vis python src/train_bash.py \
     --overwrite_output_dir \
     --template $template \
     --dataset $dataset \
+    --max_samples 100 \
     --max_source_length 2048 \
     --max_target_length 2048 \
     --per_device_train_batch_size 4 \
