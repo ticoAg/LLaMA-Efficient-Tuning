@@ -6,13 +6,12 @@ exp_id=Baichuan2-13B-Base-RM-Zhihu3k
 model_name_or_path=baichuan-inc/Baichuan2-13B-Base
 dataset=zhihu_3k_rlhf_train
 template=baichuan2
-gpu_vis=3,4,5
+gpu_vis=0,1,2,3,4,5
 MASTER_PORT=2345
 acclerate_config=scripts/acc_config/config_3_5.yaml
 
 wandb online
-# CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config src/train_bash.py \
-accelerate launch --config_file $acclerate_config src/train_bash.py \
+CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config src/train_bash.py \
     --stage rm \
     --do_train \
     --finetuning_type lora \
