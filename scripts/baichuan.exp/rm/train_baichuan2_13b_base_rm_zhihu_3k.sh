@@ -35,11 +35,10 @@ CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config 
     --eval_steps 500 \
     --warmup_ratio 0.1 \
     --learning_rate 1e-5 \
-    --adam_epsilon 1e-7 \
     --lr_scheduler_type cosine \
     --max_grad_norm 0.5 \
     --logging_steps 1 \
     --plot_loss \
     --fp16 \
     --run_name $exp_id
-    
+    # --adam_epsilon 1e-7 \
