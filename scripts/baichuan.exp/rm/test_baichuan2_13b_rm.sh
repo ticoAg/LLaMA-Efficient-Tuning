@@ -29,3 +29,19 @@ CUDA_VISIBLE_DEVICES=7 python \
     --max_target_length 512 \
     --max_samples 1000 \
     --per_device_eval_batch_size 4
+
+
+# CUDA_VISIBLE_DEVICES=7 python \
+#     src/train_bash.py \
+#     --stage rm \
+#     --do_predict \
+#     --dataset comparison_gpt4_zh \
+#     --finetuning_type lora \
+#     --model_name_or_path .cache/baichuan.exp/Baichuan2-13B-Base-Sfted-Mixed \
+#     --checkpoint_dir .cache/baichuan.exp/v1/Baichuan2-13B-Base-RM \
+#     --template baichuan2 \
+#     --output_dir .cache/exp/Baichuan2-13B-Base-RM-V1 \
+#     --max_source_length 3000 \
+#     --max_target_length 512 \
+#     --max_samples 1000 \
+#     --per_device_eval_batch_size 4

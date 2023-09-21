@@ -8,7 +8,7 @@ dataset=zhihu_3k_rlhf_train
 template=baichuan2
 gpu_vis=0,1,2
 MASTER_PORT=2346
-acclerate_config=scripts/acc_config/default_config.yaml
+acclerate_config=scripts/acc_config/config_0_2.yaml
 
 wandb online
 CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config src/train_bash.py \

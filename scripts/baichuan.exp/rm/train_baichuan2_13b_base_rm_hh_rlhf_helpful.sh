@@ -7,8 +7,8 @@ model_name_or_path=baichuan-inc/Baichuan2-13B-Base
 dataset=hh_rlhf_helpful_cn_train
 template=baichuan2
 gpu_vis=3,4,5
-MASTER_PORT=2346
-acclerate_config=scripts/acc_config/default_config.yaml
+MASTER_PORT=2345
+acclerate_config=scripts/acc_config/config_3_5.yaml
 
 wandb online
 CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config src/train_bash.py \
