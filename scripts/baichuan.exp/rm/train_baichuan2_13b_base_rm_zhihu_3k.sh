@@ -36,7 +36,7 @@ CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config 
         --lr_scheduler_type cosine \
         --max_grad_norm 0.5 \
         --adam_epsilon 1e-7 \
-    --logging_steps 1 \
+    --logging_steps 10 \
     --plot_loss \
     --bf16 \
     --flash_attn \

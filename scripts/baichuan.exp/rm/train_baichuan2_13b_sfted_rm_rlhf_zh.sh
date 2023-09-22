@@ -2,9 +2,9 @@ export WANDB_PROJECT=huggingface
 
 proj_dir=.cache/baichuan.exp
 root_dir=.cache/baichuan.exp/rm
-exp_id=Baichuan2-13B-Sfted-RM-Zhihu3k
+exp_id=Baichuan2-13B-Sfted-RM-rlhf-zh
 model_name_or_path=Baichuan2-13B-Base-Sfted-Mixed
-dataset=zhihu_3k_rlhf_train
+dataset=zhihu_3k_rlhf_train,hh_rlhf_helpful_cn_train,hh_rlhf_harmless_cn_train
 template=baichuan2
 gpu_vis=0,1,2
 MASTER_PORT=2346
@@ -26,11 +26,13 @@ CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config 
         --max_source_length 2048 \
         --max_target_length 2048 \
         --per_device_train_batch_size 4 \
+        --per_device_eval_batch_size 4 \
         --gradient_accumulation_steps 4 \
         --preprocessing_num_workers 128 \
         --num_train_epochs 5 \
-    --save_steps 500 \
-    --eval_steps 500 \
+    --save_steps 2000 \
+    --eval_steps 2000 \
+    --val_size 0.005 \
     --warmup_ratio 0.1 \
         --learning_rate 1e-5 \
         --lr_scheduler_type cosine \
