@@ -19,5 +19,5 @@ CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
     --val_size 3000 \
     --evaluation_strategy steps \
     --plot_loss \
-    --max_source_length 1024 \
+    --cutoff_len 1024 \
     --bf16

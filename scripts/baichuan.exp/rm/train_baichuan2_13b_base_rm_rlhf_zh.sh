@@ -23,8 +23,7 @@ CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config 
     --overwrite_output_dir \
         --template $template \
         --dataset $dataset \
-        --max_source_length 2048 \
-        --max_target_length 2048 \
+        --cutoff_len 4096 \
         --per_device_train_batch_size 4 \
         --per_device_eval_batch_size 4 \
         --gradient_accumulation_steps 4 \

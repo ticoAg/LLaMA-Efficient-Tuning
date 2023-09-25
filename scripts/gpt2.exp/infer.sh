@@ -5,7 +5,7 @@
 # python src/cli_demo.py ^
 #     --model_name_or_path ticoAg/gpt2-tigerbot-pt-zh ^
 #     --template ziya ^
-#     --max_source_length 1024 ^
+#     --cutoff_len 1024 ^
 #     --do_sample True ^
 #     --temperature 0.2 ^
 #     --top_p 0.7 ^
@@ -17,8 +17,7 @@
 CUDA_VISIBLE_DEVICES=1 python src/web_demo.py \
     --model_name_or_path .cache/gpt2-sft-mixed/checkpoint-541 \
     --template ziya \
-    --max_source_length 512 \
-    --max_target_length 512 \
+    --cutoff_len 1024 \
     --do_sample True \
     --temperature 0.2 \
     --top_p 0.7 \

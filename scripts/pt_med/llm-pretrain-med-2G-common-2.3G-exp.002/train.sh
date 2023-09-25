@@ -7,7 +7,7 @@ deepspeed --include localhost:4,5,6,7 \
     --output_dir .cache/llm-pretrain-med-2G-common-2.3G-exp.002 \
     --template baichuan \
     --dataset pretrain_med_v0.1_book_wiki_qaConcat,pretrain_common_WanJuan_nlp_zh_textbook \
-    --max_source_length 4096 \
+    --cutoff_len 4096 \
     --per_device_train_batch_size 2 \
     --per_device_eval_batch_size 2 \
     --gradient_accumulation_steps 8 \

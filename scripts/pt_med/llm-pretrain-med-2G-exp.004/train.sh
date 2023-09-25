@@ -15,7 +15,7 @@ deepspeed --include localhost:2,3,4,5,6,7 \
     --overwrite_output_dir \
         --template $template \
         --dataset $dataset \
-        --max_source_length 4096 \
+        --cutoff_len 4096 \
         --per_device_train_batch_size 2 \
         --per_device_eval_batch_size 2 \
         --gradient_accumulation_steps 8 \

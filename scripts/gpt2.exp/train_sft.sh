@@ -21,8 +21,7 @@ deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
     --overwrite_output_dir \
         --template $template \
         --dataset $dataset \
-        --max_source_length 512 \
-        --max_target_length 512 \
+        --cutoff_len 1024 \
         --per_device_train_batch_size 32 \
         --per_device_eval_batch_size 32 \
         --gradient_accumulation_steps 16 \

@@ -7,7 +7,7 @@ deepspeed --include localhost:0,1,2,3,4,5,6,7 \
     --output_dir .cache/baichuan7b_sft_multimed \
         --template baichuan \
         --dataset sft_med_multiturn \
-        --max_source_length 2048 \
+        --cutoff_len 2048 \
         --per_device_train_batch_size 4 \
         --per_device_eval_batch_size 4 \
         --gradient_accumulation_steps 8 \

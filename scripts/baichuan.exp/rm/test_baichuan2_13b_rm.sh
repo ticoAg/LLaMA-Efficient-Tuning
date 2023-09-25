@@ -25,8 +25,7 @@ CUDA_VISIBLE_DEVICES=7 python \
     --checkpoint_dir $CHECKPOINT_DIR \
     --template $template \
     --output_dir .cache/exp/$exp_id \
-    --max_source_length 3000 \
-    --max_target_length 512 \
+    --cutoff_len 4096 \
     --max_samples 1000 \
     --per_device_eval_batch_size 4
 
@@ -41,7 +40,7 @@ CUDA_VISIBLE_DEVICES=7 python \
 #     --checkpoint_dir .cache/baichuan.exp/v1/Baichuan2-13B-Base-RM \
 #     --template baichuan2 \
 #     --output_dir .cache/exp/Baichuan2-13B-Base-RM-V1 \
-#     --max_source_length 3000 \
+#     --cutoff_len 2048 \
 #     --max_target_length 512 \
 #     --max_samples 1000 \
 #     --per_device_eval_batch_size 4
