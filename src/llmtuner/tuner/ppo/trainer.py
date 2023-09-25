@@ -1,7 +1,6 @@
 import os
 import math
 import torch
-import wandb
 from tqdm import tqdm
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
@@ -124,8 +123,7 @@ class CustomPPOTrainer(PPOTrainer, Trainer):
                     learning_rate=stats["ppo/learning_rate"],
                     epoch=round(step / len_dataloader, 2)
                 )
-                # tqdm.write(str(logs))
-                wandb.log(logs)
+                tqdm.write(str(logs))
                 logs["step"] = step
                 self.state.log_history.append(logs)
                 self.log_callback.on_log(self.args, self.state, self.control)

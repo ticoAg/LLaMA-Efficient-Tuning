@@ -1,7 +1,6 @@
 # Inspired by: https://github.com/lvwerra/trl/blob/main/examples/research_projects/stack_llama/scripts/rl_training.py
 
 import math
-import wandb
 from trl import PPOConfig
 from torch.optim import AdamW
 from typing import TYPE_CHECKING, Optional, List
@@ -18,7 +17,6 @@ if TYPE_CHECKING:
     from transformers import Seq2SeqTrainingArguments, TrainerCallback
     from llmtuner.hparams import ModelArguments, DataArguments, FinetuningArguments, GeneratingArguments
 
-wandb.init(project="huggingface")
 
 def run_ppo(
     model_args: "ModelArguments",
