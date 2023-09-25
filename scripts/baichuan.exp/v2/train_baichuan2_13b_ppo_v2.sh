@@ -41,4 +41,5 @@ CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config 
     --flash_attn \
     --plot_loss \
     --bf16 \
+    --report_to wandb \
     --run_name $exp_id
