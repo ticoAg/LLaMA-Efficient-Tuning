@@ -4,21 +4,15 @@ proj_dir=.cache/baichuan.exp
 root_dir=.cache/baichuan.exp/v2
 exp_id=Baichuan2-13B-Base-Sfted-Mixed-PPO-V2.1
 model_name_or_path=Baichuan2-13B-Base-Sfted-Mixed
-reward_model=Baichuan2-13B-Base-RM
-dataset=alpaca_zh,alpaca_gpt4_zh,tiger_sft_zh_mixed,sft_med_mix_chunked,self_cognition
-# dataset=alpaca_zh
+reward_model=Baichuan2-13B-Base-RM-HH-RLHF
+dataset=alpaca_gpt4_zh
 template=baichuan2
 gpu_vis=0,1,2,3,4,5
-# gpu_vis=0
-# MASTER_PORT=2346
 acclerate_config=scripts/acc_config/default_config.yaml
 
+wandb online
+# wandb offline
 
-# wandb online
-wandb offline
-
-# CUDA_VISIBLE_DEVICES=$gpu_vis python \
-# deepspeed  --include localhost:$gpu_vis --master_port $MASTER_PORT \
 CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config src/train_bash.py \
     --stage ppo \
     --do_train \
@@ -27,24 +21,27 @@ CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config 
     --lora_rank 64 \
     --resume_lora_training False \
     --model_name_or_path $proj_dir/$model_name_or_path \
-    --reward_model $proj_dir/v1/$reward_model \
+    --reward_model $proj_dir/rm/$reward_model \
     --output_dir $root_dir/$exp_id \
     --overwrite_output_dir \
         --template $template \
         --dataset $dataset \
-        --max_samples 100000 \
         --cutoff_len 4096 \
-        --per_device_train_batch_size 4 \
+        --per_device_train_batch_size 2 \
         --gradient_accumulation_steps 1 \
         --preprocessing_num_workers 128 \
-        --num_train_epochs 2 \
+        --num_train_epochs 5 \
     --save_strategy epoch \
     --warmup_ratio 0.05 \
-        --learning_rate 1e-5 \
+    --eval_steps 500 \
+    --dev_ratio 0.001 \
+        --learning_rate 3e-6 \
         --lr_scheduler_type cosine \
         --max_grad_norm 0.5 \
-        --adam_epsilon 1e-7 \
+        --adam_epsilon 1e-8 \
     --logging_steps 5 \
+    --flash_attn \
     --plot_loss \
     --bf16 \
+    --report_to wandb \
     --run_name $exp_id
