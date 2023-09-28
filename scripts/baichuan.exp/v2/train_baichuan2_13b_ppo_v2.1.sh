@@ -13,8 +13,7 @@ acclerate_config=scripts/acc_config/default_config.yaml
 wandb online
 # wandb offline
 
-# CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config src/train_bash.py \
-CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
+CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config src/train_bash.py \
     --stage ppo \
     --do_train \
     --finetuning_type lora \
@@ -28,8 +27,8 @@ CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
         --template $template \
         --dataset $dataset \
         --cutoff_len 4096 \
-        --per_device_train_batch_size 2 \
-        --gradient_accumulation_steps 1 \
+        --per_device_train_batch_size 4 \
+        --gradient_accumulation_steps 4 \
         --preprocessing_num_workers 128 \
         --num_train_epochs 5 \
     --save_strategy epoch \
