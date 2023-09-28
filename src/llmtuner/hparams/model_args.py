@@ -45,7 +45,11 @@ class ModelArguments:
     )
     flash_attn: Optional[bool] = field(
         default=False,
-        metadata={"help": "Enable flash attention for faster training."}
+        metadata={"help": "Enable FlashAttention-2 for faster training."}
+    )
+    shift_attn: Optional[bool] = field(
+        default=False,
+        metadata={"help": "Enable shift short attention (S^2-Attn) proposed by LongLoRA."}
     )
     checkpoint_dir: Optional[str] = field(
         default=None,
@@ -62,6 +66,10 @@ class ModelArguments:
     hf_auth_token: Optional[str] = field(
         default=None,
         metadata={"help": "Auth token to log in with Hugging Face Hub."}
+    )
+    layernorm_dtype: Optional[Literal["auto", "fp16", "bf16", "fp32"]] = field(
+        default="auto",
+        metadata={"help": "Data type of the layer norm weights."}
     )
 
     def __post_init__(self):
