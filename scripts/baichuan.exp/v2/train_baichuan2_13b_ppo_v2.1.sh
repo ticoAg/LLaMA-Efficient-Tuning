@@ -13,7 +13,8 @@ acclerate_config=scripts/acc_config/default_config.yaml
 wandb online
 # wandb offline
 
-CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config src/train_bash.py \
+# CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config src/train_bash.py \
+CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
     --stage ppo \
     --do_train \
     --finetuning_type lora \
@@ -34,7 +35,7 @@ CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config 
     --save_strategy epoch \
     --warmup_ratio 0.05 \
     --eval_steps 500 \
-    --dev_ratio 0.001 \
+    --val_size 0.001 \
         --learning_rate 3e-6 \
         --lr_scheduler_type cosine \
         --max_grad_norm 0.5 \
