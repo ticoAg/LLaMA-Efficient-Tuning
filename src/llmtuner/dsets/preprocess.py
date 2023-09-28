@@ -24,26 +24,8 @@ def preprocess_dataset(
 
     if template is not None and template.efficient_eos and data_args.sft_packing:
         raise ValueError("Current template is incompatible with packing.")
-
-    def construct_example(examples: Dict[str, List[Any]]) -> Generator[Any, None, None]:
-        for i in range(len(examples["response"])):
-            # Don't care whether input in prompt or query 
-            prompt = examples["prompt"][i] if "prompt" in examples and examples["prompt"][i] else ""
-            inputs = examples["query"][i] if "query" in examples and examples["query"][i] else ""
-            response = examples['response'][i]
-            query = ""
-            if prompt: 
-                query += prompt
-            if inputs: 
-                if prompt:
-                    query = query + '\n' + inputs
-                else:
-                    query = inputs
-            history = examples["history"][i] if "history" in examples else None
-            system = examples["system"][i] if "system" in examples else None
-            yield query, response, history, system
     
-    def construct_example_ori(examples: Dict[str, List[Any]]) -> Generator[Any, None, None]:
+    def construct_example(examples: Dict[str, List[Any]]) -> Generator[Any, None, None]:
         for i in range(len(examples["prompt"])):
             query, response = examples["prompt"][i], examples["response"][i]
             query = query + "\n" + examples["query"][i] if "query" in examples and examples["query"][i] else query
