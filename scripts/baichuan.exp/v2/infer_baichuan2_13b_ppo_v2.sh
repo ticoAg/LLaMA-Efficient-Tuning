@@ -14,9 +14,12 @@ CUDA_VISIBLE_DEVICES=0 python src/web_demo.py \
   --checkpoint_dir $root_dir/$exp_id \
   --finetuning_type lora \
   --template baichuan2 \
-  --do_sample \
-  --top_k 5 \
-  --temperature 0.3 \
-  --top_p 0.85 \
-  --repetition_penalty 1.05 \
+  --flash_attn \
   --cutoff_len 4096
+
+
+#   --do_sample \
+#   --top_k 5 \
+#   --temperature 0.3 \
+#   --top_p 0.85 \
+#   --repetition_penalty 1.05 \
