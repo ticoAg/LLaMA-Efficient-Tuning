@@ -16,7 +16,7 @@ CUDA_VISIBLE_DEVICES=$gpu_vis accelerate launch --config_file $acclerate_config 
     --stage sft \
     --do_train \
     --finetuning_type lora \
-    --lora_target full \
+    --lora_target all \
     --lora_rank 64 \
     --resume_lora_training False \
     --model_name_or_path $model_name_or_path \
