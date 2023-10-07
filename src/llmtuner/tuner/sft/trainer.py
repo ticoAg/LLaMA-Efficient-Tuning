@@ -20,9 +20,6 @@ class CustomSeq2SeqTrainer(Seq2SeqTrainer):
     r"""
     Inherits PeftTrainer to compute generative metrics such as BLEU and ROUGE.
     """
-    def __init__(self, finetuning_args: "FinetuningArguments", **kwargs):
-        PeftTrainer.__init__(self, finetuning_args, **kwargs)
-        self.finetuning_args = finetuning_args
 
     def prediction_step(
         self,
