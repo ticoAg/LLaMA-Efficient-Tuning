@@ -36,8 +36,20 @@ CUDA_VISIBLE_DEVICES=0 python src/web_demo.py \
 #     --batch_size 16
 
 # CUDA_VISIBLE_DEVICES=0 python src/export_model.py \
-#     --model_name_or_path baichuan-inc/Baichuan2-13B-Base \
+#     --model_name_or_path .cache/baichuan.exp/v3/Baichuan2-13B-Base-Sfted-V3-Mixed \
 #     --template baichuan2 \
 #     --finetuning_type lora \
-#     --checkpoint_dir .cache/baichuan.exp/v3/Baichuan2-13B-Base-Sfted-V3 \
-#     --output_dir .cache/baichuan.exp/v3/Baichuan2-13B-Base-Sfted-V3-Mixed
+#     --checkpoint_dir .cache/baichuan.exp/v3/Baichuan2-13B-Base-Sfted-Chat-V3.1/checkpoint-3000 \
+#     --output_dir .cache/baichuan.exp/v3/Baichuan2-13B-Base-Sfted-Chat-V3.1-Mixed
+
+CUDA_VISIBLE_DEVICES=0 python src/web_demo.py \
+    --finetuning_type lora \
+    --model_name_or_path .cache/baichuan.exp/v3/Baichuan2-13B-Base-Sfted-V3-Mixed \
+    --checkpoint_dir .cache/baichuan.exp/v3/Baichuan2-13B-Base-Sfted-Chat-V3.1/checkpoint-3000 \
+    --template baichuan2 \
+    --cutoff_len 4096 \
+    --do_sample \
+    --top_k 5 \
+    --temperature 0.3 \
+    --top_p 0.85 \
+    --repetition_penalty 1.1
