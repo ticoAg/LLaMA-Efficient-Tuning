@@ -1,26 +1,34 @@
-# LLaMA Efficient Tuning
+# LLaMA Factory: 轻松的大模型训练与评估
 
-[![GitHub Repo stars](https://img.shields.io/github/stars/hiyouga/LLaMA-Efficient-Tuning?style=social)](https://github.com/hiyouga/LLaMA-Efficient-Tuning/stargazers)
-[![GitHub Code License](https://img.shields.io/github/license/hiyouga/LLaMA-Efficient-Tuning)](LICENSE)
-[![GitHub last commit](https://img.shields.io/github/last-commit/hiyouga/LLaMA-Efficient-Tuning)](https://github.com/hiyouga/LLaMA-Efficient-Tuning/commits/main)
+[![GitHub Repo stars](https://img.shields.io/github/stars/hiyouga/LLaMA-Factory?style=social)](https://github.com/hiyouga/LLaMA-Factory/stargazers)
+[![GitHub Code License](https://img.shields.io/github/license/hiyouga/LLaMA-Factory)](LICENSE)
+[![GitHub last commit](https://img.shields.io/github/last-commit/hiyouga/LLaMA-Factory)](https://github.com/hiyouga/LLaMA-Factory/commits/main)
 [![PyPI](https://img.shields.io/pypi/v/llmtuner)](https://pypi.org/project/llmtuner/)
 [![Downloads](https://static.pepy.tech/badge/llmtuner)](https://pypi.org/project/llmtuner/)
-[![GitHub pull request](https://img.shields.io/badge/PRs-welcome-blue)](https://github.com/hiyouga/LLaMA-Efficient-Tuning/pulls)
-[![Discord](https://dcbadge.vercel.app/api/server/7HGMsdxqJ?compact=true&style=flat)](https://discord.gg/7HGMsdxqJ)
+[![GitHub pull request](https://img.shields.io/badge/PRs-welcome-blue)](https://github.com/hiyouga/LLaMA-Factory/pulls)
+[![Discord](https://dcbadge.vercel.app/api/server/e73gccsSd?compact=true&style=flat)](https://discord.gg/e73gccsSd)
 
 👋 加入我们的[微信群](assets/wechat.jpg)。
 
 \[ [English](README.md) | 中文 \]
 
+## LLaMA Board: 通过一站式网页界面快速上手 LLaMA Factory
+
+使用 `CUDA_VISIBLE_DEVICES=0 python src/train_web.py` 启动 **LLaMA Board**。（该界面目前仅支持单卡训练）
+
+下面是使用单张 GPU 在 10 分钟内更改对话式大型语言模型自我认知的示例。
+
+https://github.com/hiyouga/LLaMA-Factory/assets/16256802/6ba60acc-e2e2-4bec-b846-2d88920d5ba1
+
 ## 更新日志
+
+[23/10/21] 我们支持了 **[NEFTune](https://arxiv.org/abs/2310.05914)** 训练技巧。请使用 `--neft_alpha` 参数启用 NEFTune，例如 `--neft_alpha 5`。
 
 [23/09/27] 我们针对 LLaMA 模型支持了 [LongLoRA](https://github.com/dvlab-research/LongLoRA) 提出的 **$S^2$-Attn**。请使用 `--shift_attn` 参数以启用该功能。
 
 [23/09/23] 我们在项目中集成了 MMLU、C-Eval 和 CMMLU 评估集。使用方法请参阅[此示例](#模型评估)。
 
-[23/09/10] 我们针对 LLaMA 模型支持了 **[FlashAttention-2](https://github.com/Dao-AILab/flash-attention)**。如果您使用的是 RTX4090、A100 或 H100 GPU，请使用 `--flash_attn` 参数以启用 FlashAttention-2（实验性功能）。
-
-[23/08/18] 我们支持了**训练状态恢复**，请将 `transformers` 升级至 `4.31.0` 以启用此功能。
+[23/09/10] 我们针对 LLaMA 模型支持了 **[FlashAttention-2](https://github.com/Dao-AILab/flash-attention)**。如果您使用的是 RTX4090、A100 或 H100 GPU，请使用 `--flash_attn` 参数以启用 FlashAttention-2。
 
 [23/08/12] 我们支持了 **RoPE 插值**来扩展 LLaMA 模型的上下文长度。请使用 `--rope_scaling linear` 参数训练模型或使用 `--rope_scaling dynamic` 参数评估模型。
 
@@ -30,7 +38,7 @@
 
 [23/07/29] 我们在 Hugging Face 发布了两个 13B 指令微调模型。详细内容请查阅我们的 Hugging Face 项目（[LLaMA-2](https://huggingface.co/hiyouga/Llama-2-Chinese-13b-chat) / [Baichuan](https://huggingface.co/hiyouga/Baichuan-13B-sft)）。
 
-[23/07/18] 我们开发了支持训练和测试的**浏览器一体化界面**。请尝试使用 `train_web.py` 在您的浏览器中微调模型。感谢 [@KanadeSiina](https://github.com/KanadeSiina) 和 [@codemayq](https://github.com/codemayq) 在该功能开发中付出的努力。
+[23/07/18] 我们开发了支持训练和测试的**浏览器一体化界面**。请使用 `train_web.py` 在您的浏览器中微调模型。感谢 [@KanadeSiina](https://github.com/KanadeSiina) 和 [@codemayq](https://github.com/codemayq) 在该功能开发中付出的努力。
 
 [23/07/09] 我们开源了 **[FastEdit](https://github.com/hiyouga/FastEdit)** ⚡🩹，一个简单易用的、能迅速编辑大模型事实记忆的工具包。如果您感兴趣请关注我们的 [FastEdit](https://github.com/hiyouga/FastEdit) 项目。
 
@@ -38,7 +46,7 @@
 
 [23/06/22] 我们对齐了[示例 API](src/api_demo.py) 与 [OpenAI API](https://platform.openai.com/docs/api-reference/chat) 的格式，您可以将微调模型接入**任意基于 ChatGPT 的应用**中。
 
-[23/06/03] 我们实现了 4 比特的 LoRA 训练（也称 **[QLoRA](https://github.com/artidoro/qlora)**）。请尝试使用 `--quantization_bit 4` 参数进行 4 比特量化微调。
+[23/06/03] 我们实现了 4 比特的 LoRA 训练（也称 **[QLoRA](https://github.com/artidoro/qlora)**）。请使用 `--quantization_bit 4` 参数进行 4 比特量化微调。
 
 ## 模型
 
@@ -53,14 +61,15 @@
 | [Baichuan2](https://github.com/baichuan-inc/Baichuan2)   | 7B/13B                      | W_pack            | baichuan2 |
 | [InternLM](https://github.com/InternLM/InternLM)         | 7B/20B                      | q_proj,v_proj     | intern    |
 | [Qwen](https://github.com/QwenLM/Qwen-7B)                | 7B/14B                      | c_attn            | chatml    |
-| [XVERSE](https://github.com/xverse-ai/XVERSE-13B)        | 13B                         | q_proj,v_proj     | xverse    |
 | [ChatGLM2](https://github.com/THUDM/ChatGLM2-6B)         | 6B                          | query_key_value   | chatglm2  |
 | [Phi-1.5](https://huggingface.co/microsoft/phi-1_5)      | 1.3B                        | Wqkv              | -         |
 
 > [!NOTE]
 > **默认模块**应作为 `--lora_target` 参数的默认值，可使用 `--lora_target all` 参数指定全部模块。
 >
-> 对于所有“基座”（Base）模型，`--template` 参数可以是 `default`, `alpaca`, `vicuna` 等任意值。但“对话”（Chat）模型请务必使用对应的模板。
+> 对于所有“基座”（Base）模型，`--template` 参数可以是 `default`, `alpaca`, `vicuna` 等任意值。但“对话”（Chat）模型请务必使用**对应的模板**。
+>
+> 项目所支持模型的完整列表请参阅 [template.py](src/llmtuner/extras/template.py)。
 
 ## 训练方法
 
@@ -125,7 +134,7 @@ huggingface-cli login
 - Python 3.8+ 和 PyTorch 1.13.1+
 - 🤗Transformers, Datasets, Accelerate, PEFT 和 TRL
 - sentencepiece, protobuf 和 tiktoken
-- jieba, rouge-chinese 和 nltk (用于评估)
+- fire, jieba, rouge-chinese 和 nltk (用于评估及预测)
 - gradio 和 matplotlib (用于网页端交互)
 - uvicorn, fastapi 和 sse-starlette (用于 API)
 
@@ -143,10 +152,10 @@ huggingface-cli login
 ### 环境搭建（可跳过）
 
 ```bash
-git clone https://github.com/hiyouga/LLaMA-Efficient-Tuning.git
-conda create -n llama_etuning python=3.10
-conda activate llama_etuning
-cd LLaMA-Efficient-Tuning
+git clone https://github.com/hiyouga/LLaMA-Factory.git
+conda create -n llama_factory python=3.10
+conda activate llama_factory
+cd LLaMA-Factory
 pip install -r requirements.txt
 ```
 
@@ -155,17 +164,6 @@ pip install -r requirements.txt
 ```bash
 pip install https://github.com/jllllll/bitsandbytes-windows-webui/releases/download/wheels/bitsandbytes-0.39.1-py3-none-win_amd64.whl
 ```
-
-### 浏览器一体化界面
-
-```bash
-CUDA_VISIBLE_DEVICES=0 python src/train_web.py
-```
-
-我们**极力推荐**新手使用浏览器一体化界面，因为它还可以不依赖 GPU 环境自动生成在 GPU 上运行的命令行脚本。
-
-> [!WARNING]
-> 目前网页 UI 仅支持**单卡训练**。
 
 ### 单 GPU 训练
 
@@ -372,8 +370,7 @@ python src/export_model.py \
     --template default \
     --finetuning_type lora \
     --checkpoint_dir path_to_checkpoint \
-    --output_dir path_to_export \
-    --fp16
+    --export_dir path_to_export
 ```
 
 ### API 服务
@@ -448,37 +445,25 @@ CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
 
 本仓库的代码依照 [Apache-2.0](LICENSE) 协议开源。
 
-使用模型权重时，请遵循对应的模型协议：
-
-- [LLaMA](https://github.com/facebookresearch/llama/blob/main/MODEL_CARD.md)
-- [LLaMA-2](https://ai.meta.com/llama/license/)
-- [BLOOM](https://huggingface.co/spaces/bigscience/license)
-- [Falcon](LICENSE)
-- [Baichuan](https://huggingface.co/baichuan-inc/baichuan-7B/resolve/main/baichuan-7B%20%E6%A8%A1%E5%9E%8B%E8%AE%B8%E5%8F%AF%E5%8D%8F%E8%AE%AE.pdf)
-- [Baichuan2](https://huggingface.co/baichuan-inc/Baichuan2-7B-Base/resolve/main/Baichuan%202%E6%A8%A1%E5%9E%8B%E7%A4%BE%E5%8C%BA%E8%AE%B8%E5%8F%AF%E5%8D%8F%E8%AE%AE.pdf)
-- [InternLM](https://github.com/InternLM/InternLM#open-source-license)
-- [Qwen](https://huggingface.co/Qwen/Qwen-7B-Chat/blob/main/LICENSE)
-- [XVERSE](https://github.com/xverse-ai/XVERSE-13B/blob/main/MODEL_LICENSE.pdf)
-- [ChatGLM2](https://github.com/THUDM/ChatGLM2-6B/blob/main/MODEL_LICENSE)
-- [Phi-1.5](https://huggingface.co/microsoft/phi-1_5/resolve/main/Research%20License.docx)
+使用模型权重时，请遵循对应的模型协议：[LLaMA](https://github.com/facebookresearch/llama/blob/main/MODEL_CARD.md) / [LLaMA-2](https://ai.meta.com/llama/license/) / [BLOOM](https://huggingface.co/spaces/bigscience/license) / [Falcon](LICENSE) / [Baichuan](https://huggingface.co/baichuan-inc/baichuan-7B/resolve/main/baichuan-7B%20%E6%A8%A1%E5%9E%8B%E8%AE%B8%E5%8F%AF%E5%8D%8F%E8%AE%AE.pdf) / [Baichuan2](https://huggingface.co/baichuan-inc/Baichuan2-7B-Base/resolve/main/Baichuan%202%E6%A8%A1%E5%9E%8B%E7%A4%BE%E5%8C%BA%E8%AE%B8%E5%8F%AF%E5%8D%8F%E8%AE%AE.pdf) / [InternLM](https://github.com/InternLM/InternLM#open-source-license) / [Qwen](https://huggingface.co/Qwen/Qwen-7B-Chat/blob/main/LICENSE) / [ChatGLM2](https://github.com/THUDM/ChatGLM2-6B/blob/main/MODEL_LICENSE) / [Phi-1.5](https://huggingface.co/microsoft/phi-1_5/resolve/main/Research%20License.docx)
 
 ## 引用
 
 如果您觉得此项目有帮助，请考虑以下列格式引用
 
 ```bibtex
-@Misc{llama-efficient-tuning,
-  title = {LLaMA Efficient Tuning},
+@Misc{llama-factory,
+  title = {LLaMA Factory},
   author = {hiyouga},
-  howpublished = {\url{https://github.com/hiyouga/LLaMA-Efficient-Tuning}},
+  howpublished = {\url{https://github.com/hiyouga/LLaMA-Factory}},
   year = {2023}
 }
 ```
 
 ## 致谢
 
-本项目受益于 [PEFT](https://github.com/huggingface/peft)、[QLoRA](https://github.com/artidoro/qlora)、[FastChat](https://github.com/lm-sys/FastChat) 和 [OpenChatKit](https://github.com/togethercomputer/OpenChatKit)，感谢以上诸位作者的付出。
+本项目受益于 [PEFT](https://github.com/huggingface/peft)、[QLoRA](https://github.com/artidoro/qlora) 和 [FastChat](https://github.com/lm-sys/FastChat)，感谢以上诸位作者的付出。
 
 ## Star History
 
-![Star History Chart](https://api.star-history.com/svg?repos=hiyouga/LLaMA-Efficient-Tuning&type=Date)
+![Star History Chart](https://api.star-history.com/svg?repos=hiyouga/LLaMA-Factory&type=Date)

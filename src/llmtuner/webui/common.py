@@ -1,12 +1,17 @@
-import json
 import os
-from typing import Any, Dict, Optional
-
+import json
 import gradio as gr
-from peft.utils import WEIGHTS_NAME as PEFT_WEIGHTS_NAME
-from transformers.trainer import WEIGHTS_NAME, WEIGHTS_INDEX_NAME
+from typing import Any, Dict, Optional
+from transformers.utils import (
+    WEIGHTS_NAME,
+    WEIGHTS_INDEX_NAME,
+    SAFE_WEIGHTS_NAME,
+    SAFE_WEIGHTS_INDEX_NAME,
+    ADAPTER_WEIGHTS_NAME,
+    ADAPTER_SAFE_WEIGHTS_NAME
+)
 
-from llmtuner.extras.constants import DEFAULT_TEMPLATE, SUPPORTED_MODELS, TRAINING_STAGES
+from llmtuner.extras.constants import DEFAULT_MODULE, DEFAULT_TEMPLATE, SUPPORTED_MODELS, TRAINING_STAGES
 
 
 DEFAULT_CACHE_DIR = "cache"
@@ -14,6 +19,14 @@ DEFAULT_DATA_DIR = "data"
 DEFAULT_SAVE_DIR = "saves"
 USER_CONFIG = "user.config"
 DATA_CONFIG = "dataset_info.json"
+CKPT_NAMES = [
+    WEIGHTS_NAME,
+    WEIGHTS_INDEX_NAME,
+    SAFE_WEIGHTS_NAME,
+    SAFE_WEIGHTS_INDEX_NAME,
+    ADAPTER_WEIGHTS_NAME,
+    ADAPTER_SAFE_WEIGHTS_NAME
+]
 
 
 def get_save_dir(*args) -> os.PathLike:
@@ -32,7 +45,7 @@ def load_config() -> Dict[str, Any]:
         return {"lang": None, "last_model": None, "path_dict": {}, "cache_dir": None}
 
 
-def save_config(lang: str, model_name: str, model_path: str) -> None:
+def save_config(lang: str, model_name: Optional[str] = None, model_path: Optional[str] = None) -> None:
     os.makedirs(DEFAULT_CACHE_DIR, exist_ok=True)
     user_config = load_config()
     user_config["lang"] = lang or user_config["lang"]
@@ -45,7 +58,11 @@ def save_config(lang: str, model_name: str, model_path: str) -> None:
 
 def get_model_path(model_name: str) -> str:
     user_config = load_config()
-    return user_config["path_dict"].get(model_name, SUPPORTED_MODELS.get(model_name, ""))
+    return user_config["path_dict"].get(model_name, None) or SUPPORTED_MODELS.get(model_name, "")
+
+
+def get_module(model_name: str) -> str:
+    return DEFAULT_MODULE.get(model_name.split("-")[0], "q_proj,v_proj")
 
 
 def get_template(model_name: str) -> str:
@@ -61,10 +78,7 @@ def list_checkpoint(model_name: str, finetuning_type: str) -> Dict[str, Any]:
         for checkpoint in os.listdir(save_dir):
             if (
                 os.path.isdir(os.path.join(save_dir, checkpoint))
-                and any([
-                    os.path.isfile(os.path.join(save_dir, checkpoint, name))
-                    for name in (WEIGHTS_NAME, WEIGHTS_INDEX_NAME, PEFT_WEIGHTS_NAME)
-                ])
+                and any([os.path.isfile(os.path.join(save_dir, checkpoint, name)) for name in CKPT_NAMES])
             ):
                 checkpoints.append(checkpoint)
     return gr.update(value=[], choices=checkpoints)
@@ -75,6 +89,7 @@ def load_dataset_info(dataset_dir: str) -> Dict[str, Any]:
         with open(os.path.join(dataset_dir, DATA_CONFIG), "r", encoding="utf-8") as f:
             return json.load(f)
     except:
+        print("Cannot find {} in {}.".format(DATA_CONFIG, dataset_dir))
         return {}
 
 

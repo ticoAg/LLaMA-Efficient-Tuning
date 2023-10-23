@@ -8,7 +8,7 @@ from datetime import datetime
 
 from llmtuner.extras.ploting import smooth
 from llmtuner.tuner import export_model
-from llmtuner.webui.common import get_model_path, get_save_dir, DATA_CONFIG
+from llmtuner.webui.common import get_save_dir, DATA_CONFIG
 from llmtuner.webui.locales import ALERTS
 
 if TYPE_CHECKING:
@@ -72,8 +72,8 @@ def can_quantize(finetuning_type: str) -> Dict[str, Any]:
 
 
 def gen_cmd(args: Dict[str, Any]) -> str:
-    if args.get("do_train", None):
-        args["plot_loss"] = True
+    args.pop("disable_tqdm", None)
+    args["plot_loss"] = args.get("do_train", None)
     cmd_lines = ["CUDA_VISIBLE_DEVICES=0 python src/train_bash.py "]
     for k, v in args.items():
         if v is not None and v != "":
@@ -119,18 +119,18 @@ def gen_plot(base_model: str, finetuning_type: str, output_dir: str) -> matplotl
 def save_model(
     lang: str,
     model_name: str,
+    model_path: str,
     checkpoints: List[str],
     finetuning_type: str,
     template: str,
     max_shard_size: int,
-    save_dir: str
+    export_dir: str
 ) -> Generator[str, None, None]:
     if not model_name:
         yield ALERTS["err_no_model"][lang]
         return
 
-    model_name_or_path = get_model_path(model_name)
-    if not model_name_or_path:
+    if not model_path:
         yield ALERTS["err_no_path"][lang]
         return
 
@@ -138,20 +138,16 @@ def save_model(
         yield ALERTS["err_no_checkpoint"][lang]
         return
 
-    checkpoint_dir = ",".join(
-            [get_save_dir(model_name, finetuning_type, ckpt) for ckpt in checkpoints]
-        )
-
-    if not save_dir:
-        yield ALERTS["err_no_save_dir"][lang]
+    if not export_dir:
+        yield ALERTS["err_no_export_dir"][lang]
         return
 
     args = dict(
-        model_name_or_path=model_name_or_path,
-        checkpoint_dir=checkpoint_dir,
+        model_name_or_path=model_path,
+        checkpoint_dir=",".join([get_save_dir(model_name, finetuning_type, ckpt) for ckpt in checkpoints]),
         finetuning_type=finetuning_type,
         template=template,
-        output_dir=save_dir
+        export_dir=export_dir
     )
 
     yield ALERTS["info_exporting"][lang]

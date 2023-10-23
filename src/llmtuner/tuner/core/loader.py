@@ -24,7 +24,7 @@ except ImportError: # https://github.com/huggingface/transformers/releases/tag/v
     from transformers.deepspeed import is_deepspeed_zero3_enabled
 
 from llmtuner.extras.logging import reset_logging, get_logger
-from llmtuner.extras.misc import count_parameters
+from llmtuner.extras.misc import count_parameters, infer_optim_dtype
 from llmtuner.extras.patches import llama_patch as LlamaPatches
 from llmtuner.extras.save_and_load import load_valuehead_params
 from llmtuner.hparams import FinetuningArguments
@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 logger = get_logger(__name__)
 
 
-check_min_version("4.30.0")
+check_min_version("4.31.0")
 require_version("datasets>=2.12.0", "To fix: pip install datasets>=2.12.0")
 require_version("accelerate>=0.21.0", "To fix: pip install accelerate>=0.21.0")
 require_version("peft>=0.4.0", "To fix: pip install peft>=0.4.0")
@@ -71,6 +71,7 @@ def load_model_and_tokenizer(
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.model_name_or_path,
         use_fast=model_args.use_fast_tokenizer,
+        split_special_tokens=model_args.split_special_tokens,
         padding_side="right", # training with left-padded tensors in fp16 precision may cause overflow
         **config_kwargs
     )
@@ -86,11 +87,16 @@ def load_model_and_tokenizer(
     if getattr(config, "model_type", None) == "chatglm":
         tokenizer._pad = MethodType(PreTrainedTokenizerBase._pad, tokenizer)
 
+    # Set model dtype
+    if model_args.compute_dtype is not None: # for training
+        setattr(config, "torch_dtype", model_args.compute_dtype)
+    else: # for evaluation, priority: bf16 > fp16 > fp32
+        model_args.compute_dtype = infer_optim_dtype(model_dtype=getattr(config, "torch_dtype", None))
+
     # Fix config (for Qwen)
     if getattr(config, "model_type", None) == "qwen":
-        setattr(config, "fp16", model_args.compute_dtype == torch.float16)
-        setattr(config, "bf16", model_args.compute_dtype == torch.bfloat16)
-        setattr(config, "fp32", model_args.compute_dtype == torch.float32)
+        for dtype_name, dtype in [("fp16", torch.float16), ("bf16", torch.bfloat16), ("fp32", torch.float32)]:
+            setattr(config, dtype_name, getattr(config, "torch_dtype", None) == dtype)
 
     # Set RoPE scaling
     if model_args.rope_scaling is not None:
@@ -103,7 +109,6 @@ def load_model_and_tokenizer(
                 logger.info("Using dynamic NTK scaling.")
 
         elif hasattr(config, "rope_scaling"): # for LLaMA and Falcon models
-            require_version("transformers>=4.31.0", "RoPE scaling requires transformers>=4.31.0")
             if is_trainable:
                 if model_args.rope_scaling == "dynamic":
                     logger.warning(
@@ -132,15 +137,23 @@ def load_model_and_tokenizer(
     if model_args.flash_attn:
         if getattr(config, "model_type", None) == "llama":
             LlamaModule.LlamaAttention = LlamaPatches.LlamaFlashAttention2
-            LlamaModule.LlamaModel._prepare_decoder_attention_mask = (
-                LlamaPatches._prepare_decoder_attention_mask
-            )
+            LlamaModule.LlamaModel._prepare_decoder_attention_mask = LlamaPatches._prepare_decoder_attention_mask
             logger.info("Using FlashAttention-2 for faster training and inference.")
+        elif getattr(config, "model_type", None) == "qwen":
+            logger.info("Qwen models automatically enable FlashAttention if installed.")
         else:
             logger.warning("Current model does not support FlashAttention-2.")
     elif is_trainable and model_args.shift_attn and getattr(config, "model_type", None) == "llama":
         LlamaModule.LlamaAttention = LlamaPatches.LlamaShiftShortAttention
         logger.warning("Using `--flash_attn` for faster training in large context length.")
+
+    # Set shift short attention (S^2-Attn)
+    if is_trainable and model_args.shift_attn:
+        if getattr(config, "model_type", None) == "llama":
+            setattr(config, "group_size_ratio", 0.25)
+            logger.info("Using shift short attention with group_size_ratio=1/4.")
+        else:
+            logger.warning("Current model does not support shift short attention.")
 
     # Quantization configurations (using bitsandbytes library).
     is_mergeable = True
@@ -176,14 +189,6 @@ def load_model_and_tokenizer(
         **config_kwargs
     )
 
-    # Set shift short attention (S^2-Attn)
-    if is_trainable and model_args.shift_attn:
-        if getattr(config, "model_type", None) == "llama":
-            setattr(model, "shift_ratio", 0.25)
-            logger.info("Using shift short attention proposed by LongLoRA.")
-        else:
-            logger.warning("Current model does not support shift short attention.")
-
     # Disable custom generate method (for Qwen and Baichuan2)
     if isinstance(model, PreTrainedModel) and "GenerationMixin" not in str(model.generate.__func__):
         model.generate = MethodType(PreTrainedModel.generate, model)
@@ -201,8 +206,7 @@ def load_model_and_tokenizer(
         tokenizer.__class__.register_for_auto_class()
 
     # Initialize adapters
-    if is_trainable:
-        model = prepare_model_for_training(model, model_args.layernorm_dtype, finetuning_args.finetuning_type)
+    model = prepare_model_for_training(model=model, finetuning_args=finetuning_args) if is_trainable else model
     model = init_adapter(model, model_args, finetuning_args, is_trainable, is_mergeable)
     model = model.train() if is_trainable else model.eval()
 
@@ -234,5 +238,8 @@ def load_model_and_tokenizer(
     logger.info("trainable params: {:d} || all params: {:d} || trainable%: {:.4f}".format(
         trainable_params, all_param, 100 * trainable_params / all_param
     ))
+
+    if not is_trainable:
+        logger.info("This IS expected that the trainable params is 0 if you are using model for inference only.")
 
     return model, tokenizer

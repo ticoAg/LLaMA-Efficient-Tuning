@@ -42,14 +42,13 @@ def run_ppo(
         ppo_epochs=1,
         max_grad_norm=training_args.max_grad_norm,
         seed=training_args.seed,
-        log_with=training_args.report_to,
         optimize_cuda_cache=True,
+        target=finetuning_args.ppo_target,
+        log_with=finetuning_args.ppo_logger,
+        use_score_scaling=finetuning_args.ppo_score_norm,
+        use_score_norm=finetuning_args.ppo_score_norm,
         accelerator_kwargs={"step_scheduler_with_optimizer": False}
     )
-
-    if finetuning_args.ppo_score_norm:
-        ppo_config.use_score_scaling = True
-        ppo_config.use_score_norm = True
 
     optimizer = AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=training_args.learning_rate)
     total_train_batch_size = (
@@ -65,10 +64,10 @@ def run_ppo(
 
     # Initialize our Trainer
     ppo_trainer = CustomPPOTrainer(
+        model_args=model_args,
         training_args=training_args,
         generating_args=generating_args,
         callbacks=callbacks + [SavePeftModelCallback()],
-        compute_dtype=model_args.compute_dtype,
         config=ppo_config,
         model=model,
         ref_model=None,

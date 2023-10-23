@@ -1,26 +1,34 @@
-# LLaMA Efficient Tuning
+# LLaMA Factory: Training and Evaluating Large Language Models with Minimal Effort
 
-[![GitHub Repo stars](https://img.shields.io/github/stars/hiyouga/LLaMA-Efficient-Tuning?style=social)](https://github.com/hiyouga/LLaMA-Efficient-Tuning/stargazers)
-[![GitHub Code License](https://img.shields.io/github/license/hiyouga/LLaMA-Efficient-Tuning)](LICENSE)
-[![GitHub last commit](https://img.shields.io/github/last-commit/hiyouga/LLaMA-Efficient-Tuning)](https://github.com/hiyouga/LLaMA-Efficient-Tuning/commits/main)
+[![GitHub Repo stars](https://img.shields.io/github/stars/hiyouga/LLaMA-Factory?style=social)](https://github.com/hiyouga/LLaMA-Factory/stargazers)
+[![GitHub Code License](https://img.shields.io/github/license/hiyouga/LLaMA-Factory)](LICENSE)
+[![GitHub last commit](https://img.shields.io/github/last-commit/hiyouga/LLaMA-Factory)](https://github.com/hiyouga/LLaMA-Factory/commits/main)
 [![PyPI](https://img.shields.io/pypi/v/llmtuner)](https://pypi.org/project/llmtuner/)
 [![Downloads](https://static.pepy.tech/badge/llmtuner)](https://pypi.org/project/llmtuner/)
-[![GitHub pull request](https://img.shields.io/badge/PRs-welcome-blue)](https://github.com/hiyouga/LLaMA-Efficient-Tuning/pulls)
-[![Discord](https://dcbadge.vercel.app/api/server/7HGMsdxqJ?compact=true&style=flat)](https://discord.gg/7HGMsdxqJ)
+[![GitHub pull request](https://img.shields.io/badge/PRs-welcome-blue)](https://github.com/hiyouga/LLaMA-Factory/pulls)
+[![Discord](https://dcbadge.vercel.app/api/server/e73gccsSd?compact=true&style=flat)](https://discord.gg/e73gccsSd)
 
 👋 Join our [WeChat](assets/wechat.jpg).
 
 \[ English | [中文](README_zh.md) \]
 
+## LLaMA Board: A One-stop Web UI for Getting Started with LLaMA Factory
+
+Launch **LLaMA Board** via `CUDA_VISIBLE_DEVICES=0 python src/train_web.py`. (multiple GPUs are not supported yet)
+
+Here is an example of altering the self-cognition of an instruction-tuned language model within 10 minutes on a single GPU.
+
+https://github.com/hiyouga/LLaMA-Factory/assets/16256802/6ba60acc-e2e2-4bec-b846-2d88920d5ba1
+
 ## Changelog
+
+[23/10/21] We supported **[NEFTune](https://arxiv.org/abs/2310.05914)** trick for fine-tuning. Try `--neft_alpha` argument to activate NEFTune, e.g., `--neft_alpha 5`.
 
 [23/09/27] We supported **$S^2$-Attn** proposed by [LongLoRA](https://github.com/dvlab-research/LongLoRA) for the LLaMA models. Try `--shift_attn` argument to enable shift short attention.
 
 [23/09/23] We integrated MMLU, C-Eval and CMMLU benchmarks in this repo. See [this example](#evaluation) to evaluate your models.
 
 [23/09/10] We supported using **[FlashAttention-2](https://github.com/Dao-AILab/flash-attention)** for the LLaMA models. Try `--flash_attn` argument to enable FlashAttention-2 if you are using RTX4090, A100 or H100 GPUs.
-
-[23/08/18] We supported **resuming training**, upgrade `transformers` to `4.31.0` to enjoy this feature.
 
 [23/08/12] We supported **RoPE scaling** to extend the context length of the LLaMA models. Try `--rope_scaling linear` argument in training and `--rope_scaling dynamic` argument at inference to extrapolate the position embeddings.
 
@@ -53,14 +61,15 @@
 | [Baichuan2](https://github.com/baichuan-inc/Baichuan2)   | 7B/13B                      | W_pack            | baichuan2 |
 | [InternLM](https://github.com/InternLM/InternLM)         | 7B/20B                      | q_proj,v_proj     | intern    |
 | [Qwen](https://github.com/QwenLM/Qwen-7B)                | 7B/14B                      | c_attn            | chatml    |
-| [XVERSE](https://github.com/xverse-ai/XVERSE-13B)        | 13B                         | q_proj,v_proj     | xverse    |
 | [ChatGLM2](https://github.com/THUDM/ChatGLM2-6B)         | 6B                          | query_key_value   | chatglm2  |
 | [Phi-1.5](https://huggingface.co/microsoft/phi-1_5)      | 1.3B                        | Wqkv              | -         |
 
 > [!NOTE]
 > **Default module** is used for the `--lora_target` argument, you can use `--lora_target all` to specify all the available modules.
 >
-> For the "base" models, the `--template` argument can be chosen from `default`, `alpaca`, `vicuna` etc. But make sure to use the corresponding template for the "chat" models.
+> For the "base" models, the `--template` argument can be chosen from `default`, `alpaca`, `vicuna` etc. But make sure to use the **corresponding template** for the "chat" models.
+>
+> Please refer to [template.py](src/llmtuner/extras/template.py) for a full list of models we supported.
 
 ## Supported Training Approaches
 
@@ -125,7 +134,7 @@ huggingface-cli login
 - Python 3.8+ and PyTorch 1.13.1+
 - 🤗Transformers, Datasets, Accelerate, PEFT and TRL
 - sentencepiece, protobuf and tiktoken
-- jieba, rouge-chinese and nltk (used at evaluation)
+- fire, jieba, rouge-chinese and nltk (used at evaluation and predict)
 - gradio and matplotlib (used in web_demo.py)
 - uvicorn, fastapi and sse-starlette (used in api_demo.py)
 
@@ -143,10 +152,10 @@ Please refer to `data/example_dataset` for checking the details about the format
 ### Dependence Installation (optional)
 
 ```bash
-git clone https://github.com/hiyouga/LLaMA-Efficient-Tuning.git
-conda create -n llama_etuning python=3.10
-conda activate llama_etuning
-cd LLaMA-Efficient-Tuning
+git clone https://github.com/hiyouga/LLaMA-Factory.git
+conda create -n llama_factory python=3.10
+conda activate llama_factory
+cd LLaMA-Factory
 pip install -r requirements.txt
 ```
 
@@ -155,17 +164,6 @@ If you want to enable the quantized LoRA (QLoRA) on the Windows platform, you wi
 ```bash
 pip install https://github.com/jllllll/bitsandbytes-windows-webui/releases/download/wheels/bitsandbytes-0.39.1-py3-none-win_amd64.whl
 ```
-
-### All-in-one Web UI
-
-```bash
-CUDA_VISIBLE_DEVICES=0 python src/train_web.py
-```
-
-We **strongly recommend** using the all-in-one Web UI for newcomers since it can also generate training scripts automatically, even without a GPU environment.
-
-> [!WARNING]
-> Currently the web UI only supports training on **a single GPU**.
 
 ### Train on a single GPU
 
@@ -373,8 +371,7 @@ python src/export_model.py \
     --template default \
     --finetuning_type lora \
     --checkpoint_dir path_to_checkpoint \
-    --output_dir path_to_export \
-    --fp16
+    --export_dir path_to_export
 ```
 
 ### API Demo
@@ -449,37 +446,25 @@ CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
 
 This repository is licensed under the [Apache-2.0 License](LICENSE).
 
-Please follow the model licenses to use the corresponding model weights:
-
-- [LLaMA](https://github.com/facebookresearch/llama/blob/main/MODEL_CARD.md)
-- [LLaMA-2](https://ai.meta.com/llama/license/)
-- [BLOOM](https://huggingface.co/spaces/bigscience/license)
-- [Falcon](LICENSE)
-- [Baichuan](https://huggingface.co/baichuan-inc/baichuan-7B/resolve/main/baichuan-7B%20%E6%A8%A1%E5%9E%8B%E8%AE%B8%E5%8F%AF%E5%8D%8F%E8%AE%AE.pdf)
-- [Baichuan2](https://huggingface.co/baichuan-inc/Baichuan2-7B-Base/resolve/main/Baichuan%202%E6%A8%A1%E5%9E%8B%E7%A4%BE%E5%8C%BA%E8%AE%B8%E5%8F%AF%E5%8D%8F%E8%AE%AE.pdf)
-- [InternLM](https://github.com/InternLM/InternLM#open-source-license)
-- [Qwen](https://huggingface.co/Qwen/Qwen-7B-Chat/blob/main/LICENSE)
-- [XVERSE](https://github.com/xverse-ai/XVERSE-13B/blob/main/MODEL_LICENSE.pdf)
-- [ChatGLM2](https://github.com/THUDM/ChatGLM2-6B/blob/main/MODEL_LICENSE)
-- [Phi-1.5](https://huggingface.co/microsoft/phi-1_5/resolve/main/Research%20License.docx)
+Please follow the model licenses to use the corresponding model weights: [LLaMA](https://github.com/facebookresearch/llama/blob/main/MODEL_CARD.md) / [LLaMA-2](https://ai.meta.com/llama/license/) / [BLOOM](https://huggingface.co/spaces/bigscience/license) / [Falcon](LICENSE) / [Baichuan](https://huggingface.co/baichuan-inc/baichuan-7B/resolve/main/baichuan-7B%20%E6%A8%A1%E5%9E%8B%E8%AE%B8%E5%8F%AF%E5%8D%8F%E8%AE%AE.pdf) / [Baichuan2](https://huggingface.co/baichuan-inc/Baichuan2-7B-Base/resolve/main/Baichuan%202%E6%A8%A1%E5%9E%8B%E7%A4%BE%E5%8C%BA%E8%AE%B8%E5%8F%AF%E5%8D%8F%E8%AE%AE.pdf) / [InternLM](https://github.com/InternLM/InternLM#open-source-license) / [Qwen](https://huggingface.co/Qwen/Qwen-7B-Chat/blob/main/LICENSE) / [ChatGLM2](https://github.com/THUDM/ChatGLM2-6B/blob/main/MODEL_LICENSE) / [Phi-1.5](https://huggingface.co/microsoft/phi-1_5/resolve/main/Research%20License.docx)
 
 ## Citation
 
 If this work is helpful, please kindly cite as:
 
 ```bibtex
-@Misc{llama-efficient-tuning,
-  title = {LLaMA Efficient Tuning},
+@Misc{llama-factory,
+  title = {LLaMA Factory},
   author = {hiyouga},
-  howpublished = {\url{https://github.com/hiyouga/LLaMA-Efficient-Tuning}},
+  howpublished = {\url{https://github.com/hiyouga/LLaMA-Factory}},
   year = {2023}
 }
 ```
 
 ## Acknowledgement
 
-This repo benefits from [PEFT](https://github.com/huggingface/peft), [QLoRA](https://github.com/artidoro/qlora), [FastChat](https://github.com/lm-sys/FastChat) and [OpenChatKit](https://github.com/togethercomputer/OpenChatKit). Thanks for their wonderful works.
+This repo benefits from [PEFT](https://github.com/huggingface/peft), [QLoRA](https://github.com/artidoro/qlora) and [FastChat](https://github.com/lm-sys/FastChat). Thanks for their wonderful works.
 
 ## Star History
 
-![Star History Chart](https://api.star-history.com/svg?repos=hiyouga/LLaMA-Efficient-Tuning&type=Date)
+![Star History Chart](https://api.star-history.com/svg?repos=hiyouga/LLaMA-Factory&type=Date)
