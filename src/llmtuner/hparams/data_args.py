@@ -11,11 +11,17 @@ class DatasetAttr:
     dataset_name: Optional[str] = None
     dataset_sha1: Optional[str] = None
     system_prompt: Optional[str] = None
+    subset: Optional[str] = None
     ranking: Optional[bool] = False
+    formatting: Optional[Literal["alpaca", "sharegpt"]] = "alpaca"
+
     prompt: Optional[str] = "instruction"
     query: Optional[str] = "input"
     response: Optional[str] = "output"
     history: Optional[str] = None
+    messages: Optional[str] = "conversations"
+    role: Optional[str] = "from"
+    content: Optional[str] = "value"
 
     def __repr__(self) -> str:
         return self.dataset_name
@@ -98,6 +104,10 @@ class DataArguments:
         default=False,
         metadata={"help": "Packing the questions and answers in the supervised fine-tuning stage."}
     )
+    cache_path: Optional[str] = field(
+        default=None,
+        metadata={"help": "Path to save or load the preprocessed datasets."}
+    )
 
     def __post_init__(self):
         if self.streaming and self.val_size > 1e-6 and self.val_size < 1:
@@ -105,6 +115,9 @@ class DataArguments:
 
         if self.streaming and self.max_samples is not None:
             raise ValueError("`max_samples` is incompatible with `streaming`.")
+
+        if self.streaming and self.cache_path:
+            raise ValueError("`cache_path` is incompatible with `streaming`.")
 
     def init_for_training(self, seed: int): # support mixing multiple datasets
         self.seed = seed
@@ -145,7 +158,12 @@ class DataArguments:
                 dataset_attr.query = dataset_info[name]["columns"].get("query", None)
                 dataset_attr.response = dataset_info[name]["columns"].get("response", None)
                 dataset_attr.history = dataset_info[name]["columns"].get("history", None)
+                dataset_attr.messages = dataset_info[name]["columns"].get("messages", None)
+                dataset_attr.role = dataset_info[name]["columns"].get("role", None)
+                dataset_attr.content = dataset_info[name]["columns"].get("content", None)
 
+            dataset_attr.subset = dataset_info[name].get("subset", None)
             dataset_attr.ranking = dataset_info[name].get("ranking", False)
+            dataset_attr.formatting = dataset_info[name].get("formatting", "alpaca")
             dataset_attr.system_prompt = prompt_list[i]
             self.dataset_list.append(dataset_attr)

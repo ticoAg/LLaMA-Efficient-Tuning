@@ -61,15 +61,15 @@ https://github.com/hiyouga/LLaMA-Factory/assets/16256802/6ba60acc-e2e2-4bec-b846
 | [Baichuan2](https://github.com/baichuan-inc/Baichuan2)   | 7B/13B                      | W_pack            | baichuan2 |
 | [InternLM](https://github.com/InternLM/InternLM)         | 7B/20B                      | q_proj,v_proj     | intern    |
 | [Qwen](https://github.com/QwenLM/Qwen-7B)                | 7B/14B                      | c_attn            | chatml    |
-| [ChatGLM2](https://github.com/THUDM/ChatGLM2-6B)         | 6B                          | query_key_value   | chatglm2  |
+| [ChatGLM3](https://github.com/THUDM/ChatGLM3)            | 6B                          | query_key_value   | chatglm3  |
 | [Phi-1.5](https://huggingface.co/microsoft/phi-1_5)      | 1.3B                        | Wqkv              | -         |
 
 > [!NOTE]
 > **Default module** is used for the `--lora_target` argument, you can use `--lora_target all` to specify all the available modules.
 >
 > For the "base" models, the `--template` argument can be chosen from `default`, `alpaca`, `vicuna` etc. But make sure to use the **corresponding template** for the "chat" models.
->
-> Please refer to [template.py](src/llmtuner/extras/template.py) for a full list of models we supported.
+
+Please refer to [template.py](src/llmtuner/extras/template.py) for a full list of models we supported.
 
 ## Supported Training Approaches
 
@@ -86,39 +86,61 @@ https://github.com/hiyouga/LLaMA-Factory/assets/16256802/6ba60acc-e2e2-4bec-b846
 
 ## Provided Datasets
 
-- For pre-training:
-  - [Wiki Demo (en)](data/wiki_demo.txt)
-  - [RefinedWeb (en)](https://huggingface.co/datasets/tiiuae/falcon-refinedweb)
-  - [StarCoder (en)](https://huggingface.co/datasets/bigcode/starcoderdata)
-  - [Wikipedia (en)](https://huggingface.co/datasets/olm/olm-wikipedia-20221220)
-  - [Wikipedia (zh)](https://huggingface.co/datasets/pleisto/wikipedia-cn-20230720-filtered)
-- For supervised fine-tuning:
-  - [Stanford Alpaca (en)](https://github.com/tatsu-lab/stanford_alpaca)
-  - [Stanford Alpaca (zh)](https://github.com/ymcui/Chinese-LLaMA-Alpaca)
-  - [GPT-4 Generated Data (en&zh)](https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM)
-  - [Open Assistant (multilingual)](https://huggingface.co/datasets/OpenAssistant/oasst1)
-  - [Self-cognition (zh)](data/self_cognition.json)
-  - [ShareGPT (zh)](https://huggingface.co/datasets/QingyiSi/Alpaca-CoT/tree/main/Chinese-instruction-collection)
-  - [Guanaco Dataset (multilingual)](https://huggingface.co/datasets/JosephusCheung/GuanacoDataset)
-  - [BELLE 2M (zh)](https://huggingface.co/datasets/BelleGroup/train_2M_CN)
-  - [BELLE 1M (zh)](https://huggingface.co/datasets/BelleGroup/train_1M_CN)
-  - [BELLE 0.5M (zh)](https://huggingface.co/datasets/BelleGroup/train_0.5M_CN)
-  - [BELLE Dialogue 0.4M (zh)](https://huggingface.co/datasets/BelleGroup/generated_chat_0.4M)
-  - [BELLE School Math 0.25M (zh)](https://huggingface.co/datasets/BelleGroup/school_math_0.25M)
-  - [BELLE Multiturn Chat 0.8M (zh)](https://huggingface.co/datasets/BelleGroup/multiturn_chat_0.8M)
-  - [LIMA (en)](https://huggingface.co/datasets/GAIR/lima)
-  - [CodeAlpaca 20k (en)](https://huggingface.co/datasets/sahil2801/CodeAlpaca-20k)
-  - [Alpaca CoT (multilingual)](https://huggingface.co/datasets/QingyiSi/Alpaca-CoT)
-  - [MathInstruct (en)](https://huggingface.co/datasets/TIGER-Lab/MathInstruct)
-  - [Firefly 1.1M (zh)](https://huggingface.co/datasets/YeungNLP/firefly-train-1.1M)
-  - [Web QA (zh)](https://huggingface.co/datasets/suolyer/webqa)
-  - [UltraChat (en)](https://github.com/thunlp/UltraChat)
-  - [WebNovel (zh)](https://huggingface.co/datasets/zxbsmk/webnovel_cn)
-  - [Ad Gen (zh)](https://huggingface.co/datasets/HasturOfficial/adgen)
-- For reward modeling or DPO training:
-  - [HH-RLHF (en)](https://huggingface.co/datasets/Anthropic/hh-rlhf)
-  - [Open Assistant (multilingual)](https://huggingface.co/datasets/OpenAssistant/oasst1)
-  - [GPT-4 Generated Data (en&zh)](https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM)
+<details><summary>Pre-training datasets</summary>
+
+- [Wiki Demo (en)](data/wiki_demo.txt)
+- [RefinedWeb (en)](https://huggingface.co/datasets/tiiuae/falcon-refinedweb)
+- [RedPajama V2 (en)](https://huggingface.co/datasets/togethercomputer/RedPajama-Data-V2)
+- [Wikipedia (en)](https://huggingface.co/datasets/olm/olm-wikipedia-20221220)
+- [Wikipedia (zh)](https://huggingface.co/datasets/pleisto/wikipedia-cn-20230720-filtered)
+- [Pile (en)](https://huggingface.co/datasets/EleutherAI/pile)
+- [SkyPile (zh)](https://huggingface.co/datasets/Skywork/SkyPile-150B)
+- [The Stack (en)](https://huggingface.co/datasets/bigcode/the-stack)
+- [StarCoder (en)](https://huggingface.co/datasets/bigcode/starcoderdata)
+
+</details>
+
+<details><summary>Supervised fine-tuning datasets</summary>
+
+- [Stanford Alpaca (en)](https://github.com/tatsu-lab/stanford_alpaca)
+- [Stanford Alpaca (zh)](https://github.com/ymcui/Chinese-LLaMA-Alpaca)
+- [GPT-4 Generated Data (en&zh)](https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM)
+- [Self-cognition (zh)](data/self_cognition.json)
+- [Open Assistant (multilingual)](https://huggingface.co/datasets/OpenAssistant/oasst1)
+- [ShareGPT (zh)](https://huggingface.co/datasets/QingyiSi/Alpaca-CoT/tree/main/Chinese-instruction-collection)
+- [Guanaco Dataset (multilingual)](https://huggingface.co/datasets/JosephusCheung/GuanacoDataset)
+- [BELLE 2M (zh)](https://huggingface.co/datasets/BelleGroup/train_2M_CN)
+- [BELLE 1M (zh)](https://huggingface.co/datasets/BelleGroup/train_1M_CN)
+- [BELLE 0.5M (zh)](https://huggingface.co/datasets/BelleGroup/train_0.5M_CN)
+- [BELLE Dialogue 0.4M (zh)](https://huggingface.co/datasets/BelleGroup/generated_chat_0.4M)
+- [BELLE School Math 0.25M (zh)](https://huggingface.co/datasets/BelleGroup/school_math_0.25M)
+- [BELLE Multiturn Chat 0.8M (zh)](https://huggingface.co/datasets/BelleGroup/multiturn_chat_0.8M)
+- [UltraChat (en)](https://github.com/thunlp/UltraChat)
+- [LIMA (en)](https://huggingface.co/datasets/GAIR/lima)
+- [OpenPlatypus (en)](https://huggingface.co/datasets/garage-bAInd/Open-Platypus)
+- [CodeAlpaca 20k (en)](https://huggingface.co/datasets/sahil2801/CodeAlpaca-20k)
+- [Alpaca CoT (multilingual)](https://huggingface.co/datasets/QingyiSi/Alpaca-CoT)
+- [MathInstruct (en)](https://huggingface.co/datasets/TIGER-Lab/MathInstruct)
+- [Firefly 1.1M (zh)](https://huggingface.co/datasets/YeungNLP/firefly-train-1.1M)
+- [Web QA (zh)](https://huggingface.co/datasets/suolyer/webqa)
+- [WebNovel (zh)](https://huggingface.co/datasets/zxbsmk/webnovel_cn)
+- [Ad Gen (zh)](https://huggingface.co/datasets/HasturOfficial/adgen)
+- [ShareGPT Hyperfiltered (en)](https://huggingface.co/datasets/totally-not-an-llm/sharegpt-hyperfiltered-3k)
+- [ShareGPT4 (en&zh)](https://huggingface.co/datasets/shibing624/sharegpt_gpt4)
+- [UltraChat 200k (en)](https://huggingface.co/datasets/HuggingFaceH4/ultrachat_200k)
+- [AgentInstruct (en)](https://huggingface.co/datasets/THUDM/AgentInstruct)
+- [LMSYS Chat 1M (en)](https://huggingface.co/datasets/lmsys/lmsys-chat-1m)
+- [Evol Instruct V2 (en)](https://huggingface.co/datasets/WizardLM/WizardLM_evol_instruct_V2_196k)
+
+</details>
+
+<details><summary>Preference datasets</summary>
+
+- [HH-RLHF (en)](https://huggingface.co/datasets/Anthropic/hh-rlhf)
+- [Open Assistant (multilingual)](https://huggingface.co/datasets/OpenAssistant/oasst1)
+- [GPT-4 Generated Data (en&zh)](https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM)
+
+</details>
 
 Please refer to [data/README.md](data/README.md) for details.
 
@@ -135,8 +157,8 @@ huggingface-cli login
 - 🤗Transformers, Datasets, Accelerate, PEFT and TRL
 - sentencepiece, protobuf and tiktoken
 - fire, jieba, rouge-chinese and nltk (used at evaluation and predict)
-- gradio and matplotlib (used in web_demo.py)
-- uvicorn, fastapi and sse-starlette (used in api_demo.py)
+- gradio and matplotlib (used in web UI)
+- uvicorn, fastapi and sse-starlette (used in API)
 
 And **powerful GPUs**!
 
@@ -144,7 +166,7 @@ And **powerful GPUs**!
 
 ### Data Preparation (optional)
 
-Please refer to `data/example_dataset` for checking the details about the format of dataset files. You can either use a single `.json` file or a [dataset loading script](https://huggingface.co/docs/datasets/dataset_script) with multiple files to create a custom dataset.
+Please refer to [data/README.md](data/README.md) for checking the details about the format of dataset files. You can either use a single `.json` file or a [dataset loading script](https://huggingface.co/docs/datasets/dataset_script) with multiple files to create a custom dataset.
 
 > [!NOTE]
 > Please update `data/dataset_info.json` to use your custom dataset. About the format of this file, please refer to `data/README.md`.
@@ -442,11 +464,18 @@ CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
 > [!NOTE]
 > We recommend using `--per_device_eval_batch_size=1` and `--max_target_length 128` at 4/8-bit predict.
 
+## Projects using LLaMA Factory
+
+- **[StarWhisper](https://github.com/Yu-Yang-Li/StarWhisper)**: A large language model for Astronomy, based on ChatGLM2-6B and Qwen-14B.
+- **[DISC-LawLLM](https://github.com/FudanDISC/DISC-LawLLM)**: A large language model specialized in Chinese legal domain, based on Baichuan-13B, is capable of retrieving and reasoning on legal knowledge.
+- **[Sunsimiao](https://github.com/thomas-yanxin/Sunsimiao)**: A large language model specialized in Chinese medical domain, based on Baichuan-7B and ChatGLM-6B.
+- **[CareGPT](https://github.com/WangRongsheng/CareGPT)**: A series of large language models for Chinese medical domain, based on LLaMA2-7B and Baichuan-13B.
+
 ## License
 
 This repository is licensed under the [Apache-2.0 License](LICENSE).
 
-Please follow the model licenses to use the corresponding model weights: [LLaMA](https://github.com/facebookresearch/llama/blob/main/MODEL_CARD.md) / [LLaMA-2](https://ai.meta.com/llama/license/) / [BLOOM](https://huggingface.co/spaces/bigscience/license) / [Falcon](LICENSE) / [Baichuan](https://huggingface.co/baichuan-inc/baichuan-7B/resolve/main/baichuan-7B%20%E6%A8%A1%E5%9E%8B%E8%AE%B8%E5%8F%AF%E5%8D%8F%E8%AE%AE.pdf) / [Baichuan2](https://huggingface.co/baichuan-inc/Baichuan2-7B-Base/resolve/main/Baichuan%202%E6%A8%A1%E5%9E%8B%E7%A4%BE%E5%8C%BA%E8%AE%B8%E5%8F%AF%E5%8D%8F%E8%AE%AE.pdf) / [InternLM](https://github.com/InternLM/InternLM#open-source-license) / [Qwen](https://huggingface.co/Qwen/Qwen-7B-Chat/blob/main/LICENSE) / [ChatGLM2](https://github.com/THUDM/ChatGLM2-6B/blob/main/MODEL_LICENSE) / [Phi-1.5](https://huggingface.co/microsoft/phi-1_5/resolve/main/Research%20License.docx)
+Please follow the model licenses to use the corresponding model weights: [LLaMA](https://github.com/facebookresearch/llama/blob/main/MODEL_CARD.md) / [LLaMA-2](https://ai.meta.com/llama/license/) / [BLOOM](https://huggingface.co/spaces/bigscience/license) / [Falcon](LICENSE) / [Baichuan](https://huggingface.co/baichuan-inc/baichuan-7B/resolve/main/baichuan-7B%20%E6%A8%A1%E5%9E%8B%E8%AE%B8%E5%8F%AF%E5%8D%8F%E8%AE%AE.pdf) / [Baichuan2](https://huggingface.co/baichuan-inc/Baichuan2-7B-Base/resolve/main/Baichuan%202%E6%A8%A1%E5%9E%8B%E7%A4%BE%E5%8C%BA%E8%AE%B8%E5%8F%AF%E5%8D%8F%E8%AE%AE.pdf) / [InternLM](https://github.com/InternLM/InternLM#open-source-license) / [Qwen](https://huggingface.co/Qwen/Qwen-7B-Chat/blob/main/LICENSE) / [ChatGLM3](https://github.com/THUDM/ChatGLM3/blob/main/MODEL_LICENSE) / [Phi-1.5](https://huggingface.co/microsoft/phi-1_5/resolve/main/Research%20License.docx)
 
 ## Citation
 

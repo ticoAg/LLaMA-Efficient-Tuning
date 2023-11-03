@@ -61,15 +61,15 @@ https://github.com/hiyouga/LLaMA-Factory/assets/16256802/6ba60acc-e2e2-4bec-b846
 | [Baichuan2](https://github.com/baichuan-inc/Baichuan2)   | 7B/13B                      | W_pack            | baichuan2 |
 | [InternLM](https://github.com/InternLM/InternLM)         | 7B/20B                      | q_proj,v_proj     | intern    |
 | [Qwen](https://github.com/QwenLM/Qwen-7B)                | 7B/14B                      | c_attn            | chatml    |
-| [ChatGLM2](https://github.com/THUDM/ChatGLM2-6B)         | 6B                          | query_key_value   | chatglm2  |
+| [ChatGLM3](https://github.com/THUDM/ChatGLM3)            | 6B                          | query_key_value   | chatglm3  |
 | [Phi-1.5](https://huggingface.co/microsoft/phi-1_5)      | 1.3B                        | Wqkv              | -         |
 
 > [!NOTE]
 > **默认模块**应作为 `--lora_target` 参数的默认值，可使用 `--lora_target all` 参数指定全部模块。
 >
 > 对于所有“基座”（Base）模型，`--template` 参数可以是 `default`, `alpaca`, `vicuna` 等任意值。但“对话”（Chat）模型请务必使用**对应的模板**。
->
-> 项目所支持模型的完整列表请参阅 [template.py](src/llmtuner/extras/template.py)。
+
+项目所支持模型的完整列表请参阅 [template.py](src/llmtuner/extras/template.py)。
 
 ## 训练方法
 
@@ -86,41 +86,63 @@ https://github.com/hiyouga/LLaMA-Factory/assets/16256802/6ba60acc-e2e2-4bec-b846
 
 ## 数据集
 
-- 用于预训练：
-  - [Wiki Demo (en)](data/wiki_demo.txt)
-  - [RefinedWeb (en)](https://huggingface.co/datasets/tiiuae/falcon-refinedweb)
-  - [StarCoder (en)](https://huggingface.co/datasets/bigcode/starcoderdata)
-  - [Wikipedia (en)](https://huggingface.co/datasets/olm/olm-wikipedia-20221220)
-  - [Wikipedia (zh)](https://huggingface.co/datasets/pleisto/wikipedia-cn-20230720-filtered)
-- 用于指令监督微调：
-  - [Stanford Alpaca (en)](https://github.com/tatsu-lab/stanford_alpaca)
-  - [Stanford Alpaca (zh)](https://github.com/ymcui/Chinese-LLaMA-Alpaca)
-  - [GPT-4 Generated Data (en&zh)](https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM)
-  - [Open Assistant (multilingual)](https://huggingface.co/datasets/OpenAssistant/oasst1)
-  - [Self-cognition (zh)](data/self_cognition.json)
-  - [ShareGPT (zh)](https://huggingface.co/datasets/QingyiSi/Alpaca-CoT/tree/main/Chinese-instruction-collection)
-  - [Guanaco Dataset (multilingual)](https://huggingface.co/datasets/JosephusCheung/GuanacoDataset)
-  - [BELLE 2M (zh)](https://huggingface.co/datasets/BelleGroup/train_2M_CN)
-  - [BELLE 1M (zh)](https://huggingface.co/datasets/BelleGroup/train_1M_CN)
-  - [BELLE 0.5M (zh)](https://huggingface.co/datasets/BelleGroup/train_0.5M_CN)
-  - [BELLE Dialogue 0.4M (zh)](https://huggingface.co/datasets/BelleGroup/generated_chat_0.4M)
-  - [BELLE School Math 0.25M (zh)](https://huggingface.co/datasets/BelleGroup/school_math_0.25M)
-  - [BELLE Multiturn Chat 0.8M (zh)](https://huggingface.co/datasets/BelleGroup/multiturn_chat_0.8M)
-  - [LIMA (en)](https://huggingface.co/datasets/GAIR/lima)
-  - [CodeAlpaca 20k (en)](https://huggingface.co/datasets/sahil2801/CodeAlpaca-20k)
-  - [Alpaca CoT (multilingual)](https://huggingface.co/datasets/QingyiSi/Alpaca-CoT)
-  - [MathInstruct (en)](https://huggingface.co/datasets/TIGER-Lab/MathInstruct)
-  - [Firefly 1.1M (zh)](https://huggingface.co/datasets/YeungNLP/firefly-train-1.1M)
-  - [Web QA (zh)](https://huggingface.co/datasets/suolyer/webqa)
-  - [UltraChat (en)](https://github.com/thunlp/UltraChat)
-  - [WebNovel (zh)](https://huggingface.co/datasets/zxbsmk/webnovel_cn)
-  - [Ad Gen (zh)](https://huggingface.co/datasets/HasturOfficial/adgen)
-- 用于训练奖励模型或 DPO 训练：
-  - [HH-RLHF (en)](https://huggingface.co/datasets/Anthropic/hh-rlhf)
-  - [Open Assistant (multilingual)](https://huggingface.co/datasets/OpenAssistant/oasst1)
-  - [GPT-4 Generated Data (en&zh)](https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM)
+<details><summary>预训练数据集</summary>
 
-使用方法请参考 [data/README.md](data/README_zh.md) 文件。
+- [Wiki Demo (en)](data/wiki_demo.txt)
+- [RefinedWeb (en)](https://huggingface.co/datasets/tiiuae/falcon-refinedweb)
+- [RedPajama V2 (en)](https://huggingface.co/datasets/togethercomputer/RedPajama-Data-V2)
+- [Wikipedia (en)](https://huggingface.co/datasets/olm/olm-wikipedia-20221220)
+- [Wikipedia (zh)](https://huggingface.co/datasets/pleisto/wikipedia-cn-20230720-filtered)
+- [Pile (en)](https://huggingface.co/datasets/EleutherAI/pile)
+- [SkyPile (zh)](https://huggingface.co/datasets/Skywork/SkyPile-150B)
+- [The Stack (en)](https://huggingface.co/datasets/bigcode/the-stack)
+- [StarCoder (en)](https://huggingface.co/datasets/bigcode/starcoderdata)
+
+</details>
+
+<details><summary>指令微调数据集</summary>
+
+- [Stanford Alpaca (en)](https://github.com/tatsu-lab/stanford_alpaca)
+- [Stanford Alpaca (zh)](https://github.com/ymcui/Chinese-LLaMA-Alpaca)
+- [GPT-4 Generated Data (en&zh)](https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM)
+- [Self-cognition (zh)](data/self_cognition.json)
+- [Open Assistant (multilingual)](https://huggingface.co/datasets/OpenAssistant/oasst1)
+- [ShareGPT (zh)](https://huggingface.co/datasets/QingyiSi/Alpaca-CoT/tree/main/Chinese-instruction-collection)
+- [Guanaco Dataset (multilingual)](https://huggingface.co/datasets/JosephusCheung/GuanacoDataset)
+- [BELLE 2M (zh)](https://huggingface.co/datasets/BelleGroup/train_2M_CN)
+- [BELLE 1M (zh)](https://huggingface.co/datasets/BelleGroup/train_1M_CN)
+- [BELLE 0.5M (zh)](https://huggingface.co/datasets/BelleGroup/train_0.5M_CN)
+- [BELLE Dialogue 0.4M (zh)](https://huggingface.co/datasets/BelleGroup/generated_chat_0.4M)
+- [BELLE School Math 0.25M (zh)](https://huggingface.co/datasets/BelleGroup/school_math_0.25M)
+- [BELLE Multiturn Chat 0.8M (zh)](https://huggingface.co/datasets/BelleGroup/multiturn_chat_0.8M)
+- [UltraChat (en)](https://github.com/thunlp/UltraChat)
+- [LIMA (en)](https://huggingface.co/datasets/GAIR/lima)
+- [OpenPlatypus (en)](https://huggingface.co/datasets/garage-bAInd/Open-Platypus)
+- [CodeAlpaca 20k (en)](https://huggingface.co/datasets/sahil2801/CodeAlpaca-20k)
+- [Alpaca CoT (multilingual)](https://huggingface.co/datasets/QingyiSi/Alpaca-CoT)
+- [MathInstruct (en)](https://huggingface.co/datasets/TIGER-Lab/MathInstruct)
+- [Firefly 1.1M (zh)](https://huggingface.co/datasets/YeungNLP/firefly-train-1.1M)
+- [Web QA (zh)](https://huggingface.co/datasets/suolyer/webqa)
+- [WebNovel (zh)](https://huggingface.co/datasets/zxbsmk/webnovel_cn)
+- [Ad Gen (zh)](https://huggingface.co/datasets/HasturOfficial/adgen)
+- [ShareGPT Hyperfiltered (en)](https://huggingface.co/datasets/totally-not-an-llm/sharegpt-hyperfiltered-3k)
+- [ShareGPT4 (en&zh)](https://huggingface.co/datasets/shibing624/sharegpt_gpt4)
+- [UltraChat 200k (en)](https://huggingface.co/datasets/HuggingFaceH4/ultrachat_200k)
+- [AgentInstruct (en)](https://huggingface.co/datasets/THUDM/AgentInstruct)
+- [LMSYS Chat 1M (en)](https://huggingface.co/datasets/lmsys/lmsys-chat-1m)
+- [Evol Instruct V2 (en)](https://huggingface.co/datasets/WizardLM/WizardLM_evol_instruct_V2_196k)
+
+</details>
+
+<details><summary>偏好数据集</summary>
+
+- [HH-RLHF (en)](https://huggingface.co/datasets/Anthropic/hh-rlhf)
+- [Open Assistant (multilingual)](https://huggingface.co/datasets/OpenAssistant/oasst1)
+- [GPT-4 Generated Data (en&zh)](https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM)
+
+</details>
+
+使用方法请参考 [data/README_zh.md](data/README_zh.md) 文件。
 
 部分数据集的使用需要确认，我们推荐使用下述命令登录您的 Hugging Face 账户。
 
@@ -144,10 +166,10 @@ huggingface-cli login
 
 ### 数据准备（可跳过）
 
-关于数据集文件的格式，请参考 `data/example_dataset` 文件夹的内容。构建自定义数据集时，既可以使用单个 `.json` 文件，也可以使用一个[数据加载脚本](https://huggingface.co/docs/datasets/dataset_script)和多个文件。
+关于数据集文件的格式，请参考 [data/README_zh.md](data/README_zh.md) 的内容。构建自定义数据集时，既可以使用单个 `.json` 文件，也可以使用一个[数据加载脚本](https://huggingface.co/docs/datasets/dataset_script)和多个文件。
 
 > [!NOTE]
-> 使用自定义数据集时，请更新 `data/dataset_info.json` 文件，该文件的格式请参考 `data/README.md`。
+> 使用自定义数据集时，请更新 `data/dataset_info.json` 文件，该文件的格式请参考 `data/README_zh.md`。
 
 ### 环境搭建（可跳过）
 
@@ -441,11 +463,18 @@ CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
 > [!NOTE]
 > 我们建议在量化模型的预测中使用 `--per_device_eval_batch_size=1` 和 `--max_target_length 128`。
 
+## 使用了 LLaMA Factory 的项目
+
+- **[StarWhisper](https://github.com/Yu-Yang-Li/StarWhisper)**: 天文大模型 StarWhisper，基于 ChatGLM2-6B 和 Qwen-14B 在天文数据上微调而得。
+- **[DISC-LawLLM](https://github.com/FudanDISC/DISC-LawLLM)**: 中文法律领域大模型 DISC-LawLLM，基于 Baichuan-13B 微调而得，具有法律推理和知识检索能力。
+- **[Sunsimiao](https://github.com/thomas-yanxin/Sunsimiao)**: 孙思邈中文医疗大模型 Sumsimiao，基于 Baichuan-7B 和 ChatGLM-6B 在中文医疗数据上微调而得。
+- **[CareGPT](https://github.com/WangRongsheng/CareGPT)**: 医疗大模型项目 CareGPT，基于 LLaMA2-7B 和 Baichuan-13B 在中文医疗数据上微调而得。
+
 ## 协议
 
 本仓库的代码依照 [Apache-2.0](LICENSE) 协议开源。
 
-使用模型权重时，请遵循对应的模型协议：[LLaMA](https://github.com/facebookresearch/llama/blob/main/MODEL_CARD.md) / [LLaMA-2](https://ai.meta.com/llama/license/) / [BLOOM](https://huggingface.co/spaces/bigscience/license) / [Falcon](LICENSE) / [Baichuan](https://huggingface.co/baichuan-inc/baichuan-7B/resolve/main/baichuan-7B%20%E6%A8%A1%E5%9E%8B%E8%AE%B8%E5%8F%AF%E5%8D%8F%E8%AE%AE.pdf) / [Baichuan2](https://huggingface.co/baichuan-inc/Baichuan2-7B-Base/resolve/main/Baichuan%202%E6%A8%A1%E5%9E%8B%E7%A4%BE%E5%8C%BA%E8%AE%B8%E5%8F%AF%E5%8D%8F%E8%AE%AE.pdf) / [InternLM](https://github.com/InternLM/InternLM#open-source-license) / [Qwen](https://huggingface.co/Qwen/Qwen-7B-Chat/blob/main/LICENSE) / [ChatGLM2](https://github.com/THUDM/ChatGLM2-6B/blob/main/MODEL_LICENSE) / [Phi-1.5](https://huggingface.co/microsoft/phi-1_5/resolve/main/Research%20License.docx)
+使用模型权重时，请遵循对应的模型协议：[LLaMA](https://github.com/facebookresearch/llama/blob/main/MODEL_CARD.md) / [LLaMA-2](https://ai.meta.com/llama/license/) / [BLOOM](https://huggingface.co/spaces/bigscience/license) / [Falcon](LICENSE) / [Baichuan](https://huggingface.co/baichuan-inc/baichuan-7B/resolve/main/baichuan-7B%20%E6%A8%A1%E5%9E%8B%E8%AE%B8%E5%8F%AF%E5%8D%8F%E8%AE%AE.pdf) / [Baichuan2](https://huggingface.co/baichuan-inc/Baichuan2-7B-Base/resolve/main/Baichuan%202%E6%A8%A1%E5%9E%8B%E7%A4%BE%E5%8C%BA%E8%AE%B8%E5%8F%AF%E5%8D%8F%E8%AE%AE.pdf) / [InternLM](https://github.com/InternLM/InternLM#open-source-license) / [Qwen](https://huggingface.co/Qwen/Qwen-7B-Chat/blob/main/LICENSE) / [ChatGLM3](https://github.com/THUDM/ChatGLM3/blob/main/MODEL_LICENSE) / [Phi-1.5](https://huggingface.co/microsoft/phi-1_5/resolve/main/Research%20License.docx)
 
 ## 引用
 

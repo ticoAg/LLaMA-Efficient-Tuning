@@ -51,10 +51,14 @@ def run_ppo(
     )
 
     optimizer = AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=training_args.learning_rate)
-    total_train_batch_size = (
-        training_args.per_device_train_batch_size * training_args.gradient_accumulation_steps * training_args.world_size
-    )
-    num_training_steps = training_args.num_train_epochs * math.ceil(len(dataset) / total_train_batch_size)
+    if training_args.max_steps > 0:
+        num_training_steps = training_args.max_steps
+    else:
+        total_train_batch_size = (
+            training_args.per_device_train_batch_size * training_args.gradient_accumulation_steps * training_args.world_size
+        )
+        num_training_steps = training_args.num_train_epochs * math.ceil(len(dataset) / total_train_batch_size)
+
     lr_scheduler = get_scheduler(
         training_args.lr_scheduler_type,
         optimizer=optimizer,
@@ -66,6 +70,7 @@ def run_ppo(
     ppo_trainer = CustomPPOTrainer(
         model_args=model_args,
         training_args=training_args,
+        finetuning_args=finetuning_args,
         generating_args=generating_args,
         callbacks=callbacks + [SavePeftModelCallback()],
         config=ppo_config,
