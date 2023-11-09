@@ -47,9 +47,13 @@ def preprocess_dataset(
             kwargs = dict(add_special_tokens=True)
 
         if hasattr(tokenizer, "add_eos_token"): # for LLaMA tokenizer
+            add_eos_token_flag = getattr(tokenizer, "add_eos_token")
             setattr(tokenizer, "add_eos_token", True)
 
         tokenized_examples = tokenizer(examples["prompt"], **kwargs)
+        # Make sure the saved tokenizer is the same as the original
+        if hasattr(tokenizer, "add_eos_token"):  # for Baichuan2 tokenizer
+            setattr(tokenizer, "add_eos_token", add_eos_token_flag)
         concatenated_examples = {k: list(chain(*tokenized_examples[k])) for k in tokenized_examples.keys()}
         total_length = len(concatenated_examples[list(concatenated_examples.keys())[0]])
         block_size = data_args.cutoff_len
@@ -257,7 +261,7 @@ def preprocess_dataset(
         if data_args.cache_path is not None and not os.path.exists(data_args.cache_path):
             if training_args.should_save:
                 dataset.save_to_disk(data_args.cache_path)
-            raise SystemExit("Dataset saved, rerun this script with the same `--cache_file`.")
+            raise SystemExit("Dataset saved, rerun this script with the same `--cache_path`.")
 
         if training_args.should_log:
             try:
