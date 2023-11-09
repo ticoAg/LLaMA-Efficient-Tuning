@@ -5,41 +5,18 @@ import datasets
 import transformers
 from typing import Any, Dict, Optional, Tuple
 from transformers import HfArgumentParser, Seq2SeqTrainingArguments
-from transformers.utils.versions import require_version
 from transformers.trainer_utils import get_last_checkpoint
-
-try:
-    from transformers.utils import is_torch_bf16_gpu_available, is_torch_npu_available, is_torch_cuda_available
-    is_fp16_available = is_torch_cuda_available()
-    is_bf16_available = is_torch_bf16_gpu_available()
-    is_npu_available = is_torch_npu_available()
-except ImportError:
-    is_fp16_available = torch.cuda.is_available()
-    is_bf16_available = torch.cuda.is_bf16_supported()
-    is_npu_available = False
 
 from llmtuner.extras.logging import get_logger
 from llmtuner.hparams import (
     ModelArguments,
     DataArguments,
     FinetuningArguments,
-    GeneratingArguments,
-    GeneralArguments
+    GeneratingArguments
 )
 
 
 logger = get_logger(__name__)
-
-
-def _infer_dtype() -> torch.dtype:
-    if is_npu_available:
-        return torch.float16
-    elif is_bf16_available:
-        return torch.bfloat16
-    elif is_fp16_available:
-        return torch.float16
-    else:
-        return torch.float32
 
 
 def _parse_args(parser: HfArgumentParser, args: Optional[Dict[str, Any]] = None) -> Tuple[Any]:
@@ -60,16 +37,14 @@ def parse_train_args(
     DataArguments,
     Seq2SeqTrainingArguments,
     FinetuningArguments,
-    GeneratingArguments,
-    GeneralArguments
+    GeneratingArguments
 ]:
     parser = HfArgumentParser((
         ModelArguments,
         DataArguments,
         Seq2SeqTrainingArguments,
         FinetuningArguments,
-        GeneratingArguments,
-        GeneralArguments
+        GeneratingArguments
     ))
     return _parse_args(parser, args)
 
@@ -98,10 +73,9 @@ def get_train_args(
     DataArguments,
     Seq2SeqTrainingArguments,
     FinetuningArguments,
-    GeneratingArguments,
-    GeneralArguments
+    GeneratingArguments
 ]:
-    model_args, data_args, training_args, finetuning_args, generating_args, general_args = parse_train_args(args)
+    model_args, data_args, training_args, finetuning_args, generating_args = parse_train_args(args)
 
     # Setup logging
     if training_args.should_log:
@@ -114,46 +88,42 @@ def get_train_args(
     transformers.utils.logging.enable_default_handler()
     transformers.utils.logging.enable_explicit_format()
 
-    # Check arguments (do not check finetuning_args since it may be loaded from checkpoints)
-    data_args.init_for_training()
+    # Check arguments
+    data_args.init_for_training(training_args.seed)
 
-    if general_args.stage != "pt" and data_args.template is None:
+    if finetuning_args.stage != "pt" and data_args.template is None:
         raise ValueError("Please specify which `template` to use.")
 
-    if general_args.stage != "sft" and training_args.predict_with_generate:
+    if finetuning_args.stage != "sft" and training_args.predict_with_generate:
         raise ValueError("`predict_with_generate` cannot be set as True except SFT.")
 
-    if general_args.stage == "sft" and training_args.do_predict and not training_args.predict_with_generate:
+    if finetuning_args.stage == "sft" and training_args.do_predict and not training_args.predict_with_generate:
         raise ValueError("Please enable `predict_with_generate` to save model predictions.")
 
-    if general_args.stage in ["rm", "ppo"] and finetuning_args.finetuning_type != "lora":
-        raise ValueError("RM and PPO stages can only be performed with the LoRA method.")
+    if finetuning_args.stage in ["rm", "ppo"]:
+        if finetuning_args.finetuning_type != "lora":
+            raise ValueError("RM and PPO stages can only be performed with the LoRA method.")
+        if training_args.resume_from_checkpoint is not None:
+            raise ValueError("RM and PPO stages do not support `resume_from_checkpoint`.")
+        if training_args.load_best_model_at_end:
+            raise ValueError("RM and PPO stages do not support `load_best_model_at_end`.")
 
-    if general_args.stage in ["rm", "ppo"] and training_args.resume_from_checkpoint is not None:
-        raise ValueError("RM and PPO stages do not support `resume_from_checkpoint`.")
+    if finetuning_args.stage == "ppo" and not training_args.do_train:
+        raise ValueError("PPO training does not support evaluation.")
 
-    if general_args.stage in ["ppo", "dpo"] and not training_args.do_train:
-        raise ValueError("PPO and DPO stages can only be performed at training.")
-
-    if general_args.stage in ["rm", "dpo"]:
+    if finetuning_args.stage in ["rm", "dpo"]:
         for dataset_attr in data_args.dataset_list:
             if not dataset_attr.ranking:
                 raise ValueError("Please use ranked datasets for reward modeling or DPO training.")
 
-    if general_args.stage == "ppo" and model_args.reward_model is None:
+    if finetuning_args.stage == "ppo" and model_args.reward_model is None:
         raise ValueError("Reward model is necessary for PPO training.")
 
-    if general_args.stage == "ppo" and training_args.deepspeed is not None:
-        raise ValueError("PPO training is incompatible with DeepSpeed, use Accelerate instead.")
-
-    if general_args.stage == "ppo" and data_args.streaming:
-        raise ValueError("Streaming mode does not suppport PPO training currently.")
+    if finetuning_args.stage == "ppo" and model_args.shift_attn:
+        raise ValueError("PPO training is incompatible with S^2-Attn.")
 
     if training_args.max_steps == -1 and data_args.streaming:
         raise ValueError("Please specify `max_steps` in streaming mode.")
-
-    if data_args.val_size > 1e-6 and data_args.val_size < 1 and data_args.streaming:
-        raise ValueError("Streaming mode should have an integer val size.")
 
     if training_args.do_train and training_args.predict_with_generate:
         raise ValueError("`predict_with_generate` cannot be set as True while training.")
@@ -164,27 +134,21 @@ def get_train_args(
     if model_args.quantization_bit is not None and finetuning_args.finetuning_type != "lora":
         raise ValueError("Quantization is only compatible with the LoRA method.")
 
-    if model_args.checkpoint_dir is not None:
-        if finetuning_args.finetuning_type != "lora" and len(model_args.checkpoint_dir) != 1:
-            raise ValueError("Only LoRA tuning accepts multiple checkpoints.")
+    if (
+        model_args.checkpoint_dir is not None
+        and len(model_args.checkpoint_dir) != 1
+        and finetuning_args.finetuning_type != "lora"
+    ):
+        raise ValueError("Only LoRA tuning accepts multiple checkpoints.")
 
-        if model_args.quantization_bit is not None:
-            if len(model_args.checkpoint_dir) != 1:
-                raise ValueError("Quantized model only accepts a single checkpoint. Merge them first.")
-            
-            if not finetuning_args.resume_lora_training:
-                raise ValueError("Quantized model cannot create new LoRA weight. Merge them first.")
-
-    if model_args.quantization_bit is not None and (not training_args.do_train):
-        logger.warning("Evaluating model in 4/8-bit mode may cause lower scores.")
+    if training_args.do_train and model_args.quantization_bit is not None and (not finetuning_args.upcast_layernorm):
+        logger.warning("We recommend enable `upcast_layernorm` in quantized training.")
 
     if training_args.do_train and (not training_args.fp16) and (not training_args.bf16):
         logger.warning("We recommend enable mixed precision training.")
 
-    # postprocess data_args
-    if data_args.max_samples is not None and data_args.streaming:
-        logger.warning("`max_samples` is incompatible with `streaming`. Disabling max_samples.")
-        data_args.max_samples = None
+    if (not training_args.do_train) and model_args.quantization_bit is not None:
+        logger.warning("Evaluating model in 4/8-bit mode may cause lower scores.")
 
     # postprocess training_args
     if (
@@ -203,10 +167,9 @@ def get_train_args(
         and os.path.isdir(training_args.output_dir)
         and not training_args.overwrite_output_dir
     ):
-        require_version("transformers>=4.31.0", "Resuming training requires transformers>=4.31.0.")
         last_checkpoint = get_last_checkpoint(training_args.output_dir)
         if last_checkpoint is None and len(os.listdir(training_args.output_dir)) > 0:
-            raise ValueError("Output directory already exists and is not empty. Use `overwrite_output_dir`.")
+            raise ValueError("Output directory already exists and is not empty. Please set `overwrite_output_dir`.")
 
         if last_checkpoint is not None:
             training_args_dict = training_args.to_dict()
@@ -217,26 +180,9 @@ def get_train_args(
             )
 
     # postprocess model_args
-    if training_args.bf16:
-        if not is_bf16_available:
-            raise ValueError("Current device does not support bf16 training.")
-        model_args.compute_dtype = torch.bfloat16
-    elif training_args.fp16:
-        model_args.compute_dtype = torch.float16
-    else:
-        model_args.compute_dtype = _infer_dtype()
-
-    if model_args.layernorm_dtype == "bf16":
-        if not is_bf16_available:
-            raise ValueError("Current device does not support bf16 type.")
-        model_args.layernorm_dtype = torch.bfloat16
-    elif model_args.layernorm_dtype == "fp16":
-        model_args.layernorm_dtype = torch.float16
-    elif model_args.layernorm_dtype == "fp32":
-        model_args.layernorm_dtype = torch.float32
-    else:
-        model_args.layernorm_dtype = model_args.compute_dtype
-
+    model_args.compute_dtype = (
+        torch.bfloat16 if training_args.bf16 else (torch.float16 if training_args.fp16 else None)
+    )
     model_args.model_max_length = data_args.cutoff_len
 
     # Log on each process the small summary:
@@ -249,7 +195,7 @@ def get_train_args(
     # Set seed before initializing model.
     transformers.set_seed(training_args.seed)
 
-    return model_args, data_args, training_args, finetuning_args, generating_args, general_args
+    return model_args, data_args, training_args, finetuning_args, generating_args
 
 
 def get_infer_args(
@@ -268,14 +214,11 @@ def get_infer_args(
     if model_args.quantization_bit is not None and finetuning_args.finetuning_type != "lora":
         raise ValueError("Quantization is only compatible with the LoRA method.")
 
-    if model_args.checkpoint_dir is not None:
-        if finetuning_args.finetuning_type != "lora" and len(model_args.checkpoint_dir) != 1:
-            raise ValueError("Only LoRA tuning accepts multiple checkpoints.")
-
-        if model_args.quantization_bit is not None and len(model_args.checkpoint_dir) != 1:
-            raise ValueError("Quantized model only accepts a single checkpoint. Merge them first.")
-
-    # auto-detect cuda capability
-    model_args.compute_dtype = _infer_dtype()
+    if (
+        model_args.checkpoint_dir is not None
+        and len(model_args.checkpoint_dir) != 1
+        and finetuning_args.finetuning_type != "lora"
+    ):
+        raise ValueError("Only LoRA tuning accepts multiple checkpoints.")
 
     return model_args, data_args, finetuning_args, generating_args

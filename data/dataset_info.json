@@ -67,14 +67,14 @@
   "guanaco": {
     "hf_hub_url": "JosephusCheung/GuanacoDataset"
   },
-  "belle_0.5m": {
-    "hf_hub_url": "BelleGroup/train_0.5M_CN"
+  "belle_2m": {
+    "hf_hub_url": "BelleGroup/train_2M_CN"
   },
   "belle_1m": {
     "hf_hub_url": "BelleGroup/train_1M_CN"
   },
-  "belle_2m": {
-    "hf_hub_url": "BelleGroup/train_2M_CN"
+  "belle_0.5m": {
+    "hf_hub_url": "BelleGroup/train_0.5M_CN"
   },
   "belle_dialog": {
     "hf_hub_url": "BelleGroup/generated_chat_0.4M"
@@ -86,10 +86,20 @@
     "script_url": "belle_multiturn",
     "columns": {
       "prompt": "instruction",
-      "query": "",
       "response": "output",
       "history": "history"
     }
+  },
+  "ultra_chat": {
+    "script_url": "ultra_chat",
+    "columns": {
+      "prompt": "instruction",
+      "response": "output",
+      "history": "history"
+    }
+  },
+  "open_platypus": {
+    "hf_hub_url": "garage-bAInd/Open-Platypus"
   },
   "codealpaca": {
     "hf_hub_url": "sahil2801/CodeAlpaca-20k"
@@ -97,69 +107,75 @@
   "alpaca_cot": {
     "hf_hub_url": "QingyiSi/Alpaca-CoT"
   },
-  "firefly": {
-    "hf_hub_url": "YeungNLP/firefly-train-1.1M",
-    "columns": {
-      "prompt": "",
-      "query": "input",
-      "response": "target",
-      "history": ""
-    }
-  },
   "mathinstruct": {
     "hf_hub_url": "TIGER-Lab/MathInstruct",
     "columns": {
       "prompt": "instruction",
-      "query": "",
-      "response": "output",
-      "history": ""
+      "response": "output"
+    }
+  },
+  "firefly": {
+    "hf_hub_url": "YeungNLP/firefly-train-1.1M",
+    "columns": {
+      "prompt": "input",
+      "response": "target"
     }
   },
   "webqa": {
     "hf_hub_url": "suolyer/webqa",
     "columns": {
-      "prompt": "",
-      "query": "input",
-      "response": "output",
-      "history": ""
+      "prompt": "input",
+      "response": "output"
     }
   },
-  "ultra_chat": {
-    "script_url": "ultra_chat",
-    "columns": {
-      "prompt": "instruction",
-      "query": "",
-      "response": "output",
-      "history": "history"
-    }
-  },
-  "novel_tokens512_50k": {
+  "webnovel": {
     "hf_hub_url": "zxbsmk/webnovel_cn"
   },
   "adgen": {
     "hf_hub_url": "HasturOfficial/adgen",
     "columns": {
       "prompt": "content",
-      "query": "",
-      "response": "summary",
-      "history": ""
+      "response": "summary"
     }
   },
-  "comparison_gpt4_en": {
-    "file_name": "comparison_gpt4_data_en.json",
-    "file_sha1": "96fa18313544e22444fe20eead7754b17da452ae",
-    "ranking": true
+  "sharegpt_hyper": {
+    "hf_hub_url": "totally-not-an-llm/sharegpt-hyperfiltered-3k",
+    "formatting": "sharegpt"
   },
-  "comparison_gpt4_zh": {
-    "file_name": "comparison_gpt4_data_zh.json",
-    "file_sha1": "515b18ed497199131ddcc1af950345c11dc5c7fd",
-    "ranking": true
+  "sharegpt4": {
+    "hf_hub_url": "shibing624/sharegpt_gpt4",
+    "formatting": "sharegpt"
+  },
+  "ultrachat_200k": {
+    "hf_hub_url": "HuggingFaceH4/ultrachat_200k",
+    "columns": {
+      "prompt": "messages",
+      "query": "role",
+      "response": "content"
+    },
+    "formatting": "sharegpt"
+  },
+  "agent_instruct": {
+    "hf_hub_url": "THUDM/AgentInstruct",
+    "formatting": "sharegpt"
+  },
+  "lmsys_chat": {
+    "hf_hub_url": "lmsys/lmsys-chat-1m",
+    "columns": {
+      "prompt": "conversation",
+      "query": "role",
+      "response": "content"
+    },
+    "formatting": "sharegpt"
+  },
+  "evol_instruct": {
+    "hf_hub_url": "WizardLM/WizardLM_evol_instruct_V2_196k",
+    "formatting": "sharegpt"
   },
   "hh_rlhf_en": {
     "script_url": "hh_rlhf_en",
     "columns": {
       "prompt": "instruction",
-      "query": "",
       "response": "output",
       "history": "history"
     },
@@ -187,24 +203,35 @@
     },
     "ranking": true
   },
+  "comparison_gpt4_en": {
+    "file_name": "comparison_gpt4_data_en.json",
+    "file_sha1": "96fa18313544e22444fe20eead7754b17da452ae",
+    "ranking": true
+  },
+  "comparison_gpt4_zh": {
+    "file_name": "comparison_gpt4_data_zh.json",
+    "file_sha1": "515b18ed497199131ddcc1af950345c11dc5c7fd",
+    "ranking": true
+  },
   "wiki_demo": {
     "file_name": "wiki_demo.txt",
     "file_sha1": "b2288edb05b233e5b35250fd4b308a5fa21fa66d",
     "columns": {
-      "prompt": "text",
-      "query": "",
-      "response": "",
-      "history": ""
+      "prompt": "text"
     }
   },
   "refinedweb": {
     "hf_hub_url": "tiiuae/falcon-refinedweb",
     "columns": {
-      "prompt": "content",
-      "query": "",
-      "response": "",
-      "history": ""
+      "prompt": "content"
     }
+  },
+  "redpajama_v2": {
+    "hf_hub_url": "togethercomputer/RedPajama-Data-V2",
+    "columns": {
+      "prompt": "raw_content"
+    },
+    "subset": "default"
   },
   "wikipedia_en": {
     "hf_hub_url": "olm/olm-wikipedia-20221220",
@@ -227,19 +254,13 @@
   "the_stack": {
     "hf_hub_url": "bigcode/the-stack",
     "columns": {
-      "prompt": "content",
-      "query": "",
-      "response": "",
-      "history": ""
+      "prompt": "content"
     }
   },
   "starcoder": {
     "hf_hub_url": "bigcode/starcoderdata",
     "columns": {
-      "prompt": "content",
-      "query": "",
-      "response": "",
-      "history": ""
+      "prompt": "content"
     }
   },
   "tiger_sft_zh": {
@@ -278,7 +299,7 @@
       "history": ""
     }
   },
-  "pretrain_common_v0.1_custom_mnbvc_4_subset":{
+  "pretrain_common_v0.1_custom_mnbvc_4_subset": {
     "script_url": "/data/datasets/pretrain_common_v0.1_custom_mnbvc_4_subset",
     "columns": {
       "prompt": "content",
@@ -287,7 +308,7 @@
       "history": ""
     }
   },
-  "Wudao_health_subset":{
+  "Wudao_health_subset": {
     "script_url": "/data/datasets/Wudao_health_subset",
     "columns": {
       "prompt": "content",
@@ -296,8 +317,8 @@
       "history": ""
     }
   },
-  "sft_med_multiturn":{
-    "script_url":"/data/datasets/sft_med_multiturn",
+  "sft_med_multiturn": {
+    "script_url": "/data/datasets/sft_med_multiturn",
     "columns": {
       "prompt": "instruction",
       "query": "input",
@@ -305,8 +326,8 @@
       "history": "history"
     }
   },
-  "ICare":{
-    "file_name":"/data/datasets/sft_med_multiturn/data/github_MeChat_smile.json",
+  "ICare": {
+    "file_name": "/data/datasets/sft_med_multiturn/data/github_MeChat_smile.json",
     "columns": {
       "prompt": "instruction",
       "query": "input",
@@ -314,7 +335,7 @@
       "history": "history"
     }
   },
-  "tiger_sft_zh_mixed":{
+  "tiger_sft_zh_mixed": {
     "hf_hub_url": "ticoAg/tiger-sft-zh",
     "columns": {
       "prompt": "instruction",
@@ -331,7 +352,7 @@
       "response": "output"
     }
   },
-  "sft_med_mix_chunked":{
+  "sft_med_mix_chunked": {
     "script_url": "/data/datasets/sft_med_mix_chunked",
     "columns": {
       "prompt": "instruction",

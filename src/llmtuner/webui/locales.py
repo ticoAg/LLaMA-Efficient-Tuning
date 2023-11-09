@@ -59,12 +59,12 @@ LOCALES = {
     },
     "quantization_bit": {
         "en": {
-            "label": "Quantization bit (optional)",
-            "info": "Enable 4/8-bit model quantization."
+            "label": "Quantization bit",
+            "info": "Enable 4/8-bit model quantization (QLoRA)."
         },
         "zh": {
-            "label": "量化等级（非必填）",
-            "info": "启用 4/8 比特模型量化。"
+            "label": "量化等级",
+            "info": "启用 4/8 比特模型量化（QLoRA）。"
         }
     },
     "template": {
@@ -85,6 +85,38 @@ LOCALES = {
         "zh": {
             "label": "系统提示词（非必填）",
             "info": "默认使用的系统提示词"
+        }
+    },
+    "llama_tab": {
+        "en": {
+            "label": "Model configurations (LLaMA only)"
+        },
+        "zh": {
+            "label": "模型设置（仅LLaMA）"
+        }
+    },
+    "flash_attn": {
+        "en": {
+            "label": "Use FlashAttention-2"
+        },
+        "zh": {
+            "label": "使用 FlashAttention-2"
+        }
+    },
+    "shift_attn": {
+        "en": {
+            "label": "Use shift short attention (S^2-Attn)"
+        },
+        "zh": {
+            "label": "使用 shift short attention (S^2-Attn)"
+        }
+    },
+    "rope_scaling": {
+        "en": {
+            "label": "RoPE scaling"
+        },
+        "zh": {
+            "label": "RoPE 插值方法"
         }
     },
     "training_stage": {
@@ -131,12 +163,28 @@ LOCALES = {
             "label": "数量"
         }
     },
-    "preview_samples": {
+    "page_index": {
         "en": {
-            "label": "Samples"
+            "label": "Page"
         },
         "zh": {
-            "label": "样例"
+            "label": "页数"
+        }
+    },
+    "prev_btn": {
+        "en": {
+            "value": "Prev"
+        },
+        "zh": {
+            "value": "上一页"
+        }
+    },
+    "next_btn": {
+        "en": {
+            "value": "Next"
+        },
+        "zh": {
+            "value": "下一页"
         }
     },
     "close_btn": {
@@ -145,6 +193,14 @@ LOCALES = {
         },
         "zh": {
             "value": "关闭"
+        }
+    },
+    "preview_samples": {
+        "en": {
+            "label": "Samples"
+        },
+        "zh": {
+            "label": "样例"
         }
     },
     "cutoff_len": {
@@ -277,20 +333,34 @@ LOCALES = {
             "info": "学习率预热采用的步数。"
         }
     },
-    "flash_attn": {
+    "neft_alpha": {
         "en": {
-            "label": "Use FlashAttention-2"
+            "label": "NEFTune Alpha",
+            "info": "Magnitude of noise adding to embedding vectors."
         },
         "zh": {
-            "label": "使用 FlashAttention-2"
+            "label": "NEFTune 噪声参数",
+            "info": "嵌入向量所添加的噪声大小。"
         }
     },
-    "rope_scaling": {
+    "train_on_prompt": {
         "en": {
-            "label": "Use RoPE scaling"
+            "label": "Train on prompt",
+            "info": "Compute loss on the prompt tokens in supervised fine-tuning."
         },
         "zh": {
-            "label": "使用 RoPE 插值"
+            "label": "计算输入损失",
+            "info": "在监督微调时候计算输入序列的损失。"
+        }
+    },
+    "upcast_layernorm": {
+        "en": {
+            "label": "Upcast LayerNorm",
+            "info": "Upcast weights of layernorm in float32."
+        },
+        "zh": {
+            "label": "缩放归一化层",
+            "info": "将归一化层权重缩放至 32 位浮点数。"
         }
     },
     "lora_tab": {
@@ -324,11 +394,21 @@ LOCALES = {
     "lora_target": {
         "en": {
             "label": "LoRA modules (optional)",
-            "info": "The name(s) of target modules to apply LoRA. Use commas to separate multiple modules."
+            "info": "Name(s) of target modules to apply LoRA. Use commas to separate multiple modules."
         },
         "zh": {
-            "label": "LoRA 作用层（非必填）",
-            "info": "应用 LoRA 的线性层名称。使用英文逗号分隔多个名称。"
+            "label": "LoRA 作用模块（非必填）",
+            "info": "应用 LoRA 的目标模块名称。使用英文逗号分隔多个名称。"
+        }
+    },
+    "additional_target": {
+        "en": {
+            "label": "Additional modules (optional)",
+            "info": "Name(s) of modules apart from LoRA layers to be set as trainable. Use commas to separate multiple modules."
+        },
+        "zh": {
+            "label": "附加模块（非必填）",
+            "info": "除 LoRA 层以外的可训练模块名称。使用英文逗号分隔多个名称。"
         }
     },
     "resume_lora_training": {
@@ -362,11 +442,11 @@ LOCALES = {
     "reward_model": {
         "en": {
             "label": "Reward model",
-            "info": "Checkpoint of the reward model for PPO training."
+            "info": "Checkpoint of the reward model for PPO training. (Needs to refresh checkpoints)"
         },
         "zh": {
             "label": "奖励模型",
-            "info": "PPO 训练中奖励模型的断点路径。"
+            "info": "PPO 训练中奖励模型的断点路径。（需要刷新断点）"
         }
     },
     "cmd_preview_btn": {
@@ -515,7 +595,7 @@ LOCALES = {
             "label": "温度系数"
         }
     },
-    "save_dir": {
+    "export_dir": {
         "en": {
             "label": "Export dir",
             "info": "Directory to save exported model."
@@ -571,7 +651,7 @@ ALERTS = {
         "en": "Please select a checkpoint.",
         "zh": "请选择断点。"
     },
-    "err_no_save_dir": {
+    "err_no_export_dir": {
         "en": "Please provide export dir.",
         "zh": "请填写导出目录"
     },

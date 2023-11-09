@@ -8,6 +8,7 @@ def main():
     app = create_app(chat_model)
     uvicorn.run(app, host="0.0.0.0", port=26923, workers=1)
     print("Visit http://localhost:8000/docs for API document.")
+    uvicorn.run(app, host="0.0.0.0", port=8000, workers=1)
 
 
 if __name__ == "__main__":
