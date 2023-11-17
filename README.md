@@ -6,7 +6,8 @@
 [![PyPI](https://img.shields.io/pypi/v/llmtuner)](https://pypi.org/project/llmtuner/)
 [![Downloads](https://static.pepy.tech/badge/llmtuner)](https://pypi.org/project/llmtuner/)
 [![GitHub pull request](https://img.shields.io/badge/PRs-welcome-blue)](https://github.com/hiyouga/LLaMA-Factory/pulls)
-[![Discord](https://dcbadge.vercel.app/api/server/e73gccsSd?compact=true&style=flat)](https://discord.gg/e73gccsSd)
+[![Discord](https://dcbadge.vercel.app/api/server/c2EPEt5NU?compact=true&style=flat)](https://discord.gg/c2EPEt5NU)
+[![Spaces](https://img.shields.io/badge/🤗-Open%20In%20Spaces-blue)](https://huggingface.co/spaces/hiyouga/LLaMA-Board)
 
 👋 Join our [WeChat](assets/wechat.jpg).
 
@@ -14,7 +15,9 @@
 
 ## LLaMA Board: A One-stop Web UI for Getting Started with LLaMA Factory
 
-Launch **LLaMA Board** via `CUDA_VISIBLE_DEVICES=0 python src/train_web.py`. (multiple GPUs are not supported yet)
+Preview LLaMA Board at **[🤗 Spaces](https://huggingface.co/spaces/hiyouga/LLaMA-Board)**.
+
+Launch LLaMA Board via `CUDA_VISIBLE_DEVICES=0 python src/train_web.py`. (multiple GPUs are not supported yet)
 
 Here is an example of altering the self-cognition of an instruction-tuned language model within 10 minutes on a single GPU.
 
@@ -57,13 +60,13 @@ https://github.com/hiyouga/LLaMA-Factory/assets/16256802/6ba60acc-e2e2-4bec-b846
 | [BLOOM](https://huggingface.co/bigscience/bloom)         | 560M/1.1B/1.7B/3B/7.1B/176B | query_key_value   | -         |
 | [BLOOMZ](https://huggingface.co/bigscience/bloomz)       | 560M/1.1B/1.7B/3B/7.1B/176B | query_key_value   | -         |
 | [ChatGLM3](https://github.com/THUDM/ChatGLM3)            | 6B                          | query_key_value   | chatglm3  |
-| [Falcon](https://huggingface.co/tiiuae/falcon-7b)        | 7B/40B/180B                 | query_key_value   | -         |
+| [Falcon](https://huggingface.co/tiiuae/falcon-7b)        | 7B/40B/180B                 | query_key_value   | falcon    |
 | [InternLM](https://github.com/InternLM/InternLM)         | 7B/20B                      | q_proj,v_proj     | intern    |
 | [LLaMA](https://github.com/facebookresearch/llama)       | 7B/13B/33B/65B              | q_proj,v_proj     | -         |
 | [LLaMA-2](https://huggingface.co/meta-llama)             | 7B/13B/70B                  | q_proj,v_proj     | llama2    |
 | [Mistral](https://huggingface.co/mistralai)              | 7B                          | q_proj,v_proj     | mistral   |
 | [Phi-1.5](https://huggingface.co/microsoft/phi-1_5)      | 1.3B                        | Wqkv              | -         |
-| [Qwen](https://github.com/QwenLM/Qwen-7B)                | 7B/14B                      | c_attn            | qwen      |
+| [Qwen](https://github.com/QwenLM/Qwen)                   | 7B/14B                      | c_attn            | qwen      |
 | [XVERSE](https://github.com/xverse-ai)                   | 7B/13B/65B                  | q_proj,v_proj     | xverse    |
 
 > [!NOTE]
@@ -71,7 +74,7 @@ https://github.com/hiyouga/LLaMA-Factory/assets/16256802/6ba60acc-e2e2-4bec-b846
 >
 > For the "base" models, the `--template` argument can be chosen from `default`, `alpaca`, `vicuna` etc. But make sure to use the **corresponding template** for the "chat" models.
 
-Please refer to [template.py](src/llmtuner/extras/template.py) for a full list of models we supported.
+Please refer to [constants.py](src/llmtuner/extras/constants.py) for a full list of models we supported.
 
 ## Supported Training Approaches
 
@@ -79,9 +82,9 @@ Please refer to [template.py](src/llmtuner/extras/template.py) for a full list o
 | ---------------------- | ------------------ | ------------------ | ------------------ | ------------------ |
 | Pre-Training           | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | Supervised Fine-Tuning | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-| Reward Modeling        |                    |                    | :white_check_mark: | :white_check_mark: |
-| PPO Training           |                    |                    | :white_check_mark: | :white_check_mark: |
-| DPO Training           | :white_check_mark: |                    | :white_check_mark: | :white_check_mark: |
+| Reward Modeling        | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| PPO Training           | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| DPO Training           | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 
 > [!NOTE]
 > Use `--quantization_bit 4/8` argument to enable QLoRA.
@@ -122,6 +125,7 @@ Please refer to [template.py](src/llmtuner/extras/template.py) for a full list o
 - [OpenPlatypus (en)](https://huggingface.co/datasets/garage-bAInd/Open-Platypus)
 - [CodeAlpaca 20k (en)](https://huggingface.co/datasets/sahil2801/CodeAlpaca-20k)
 - [Alpaca CoT (multilingual)](https://huggingface.co/datasets/QingyiSi/Alpaca-CoT)
+- [OpenOrca (en)](https://huggingface.co/datasets/Open-Orca/OpenOrca)
 - [MathInstruct (en)](https://huggingface.co/datasets/TIGER-Lab/MathInstruct)
 - [Firefly 1.1M (zh)](https://huggingface.co/datasets/YeungNLP/firefly-train-1.1M)
 - [Web QA (zh)](https://huggingface.co/datasets/suolyer/webqa)
@@ -158,7 +162,7 @@ huggingface-cli login
 - Python 3.8+ and PyTorch 1.13.1+
 - 🤗Transformers, Datasets, Accelerate, PEFT and TRL
 - sentencepiece, protobuf and tiktoken
-- fire, jieba, rouge-chinese and nltk (used at evaluation and predict)
+- jieba, rouge-chinese and nltk (used at evaluation and predict)
 - gradio and matplotlib (used in web UI)
 - uvicorn, fastapi and sse-starlette (used in API)
 
@@ -477,7 +481,7 @@ CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
 
 This repository is licensed under the [Apache-2.0 License](LICENSE).
 
-Please follow the model licenses to use the corresponding model weights: [Baichuan](https://huggingface.co/baichuan-inc/Baichuan-13B-Base/resolve/main/Community%20License%20for%20Baichuan-13B%20Model.pdf) / [Baichuan2](https://huggingface.co/baichuan-inc/Baichuan2-13B-Chat/resolve/main/Community%20License%20for%20Baichuan2%20Model.pdf) / [BLOOM](https://huggingface.co/spaces/bigscience/license) / [ChatGLM3](https://github.com/THUDM/ChatGLM3/blob/main/MODEL_LICENSE) / [Falcon](https://huggingface.co/tiiuae/falcon-180B/blob/main/LICENSE.txt) / [InternLM](https://github.com/InternLM/InternLM#license) / [LLaMA](https://github.com/facebookresearch/llama/blob/main/MODEL_CARD.md) / [LLaMA-2](https://ai.meta.com/llama/license/) / [Mistral](LICENSE) / [Phi-1.5](https://huggingface.co/microsoft/phi-1_5/resolve/main/Research%20License.docx) / [Qwen](https://huggingface.co/Qwen/Qwen-7B-Chat/blob/main/LICENSE) / [XVERSE](https://github.com/xverse-ai/XVERSE-13B/blob/main/MODEL_LICENSE.pdf)
+Please follow the model licenses to use the corresponding model weights: [Baichuan](https://huggingface.co/baichuan-inc/Baichuan-13B-Base/resolve/main/Community%20License%20for%20Baichuan-13B%20Model.pdf) / [Baichuan2](https://huggingface.co/baichuan-inc/Baichuan2-13B-Chat/resolve/main/Community%20License%20for%20Baichuan2%20Model.pdf) / [BLOOM](https://huggingface.co/spaces/bigscience/license) / [ChatGLM3](https://github.com/THUDM/ChatGLM3/blob/main/MODEL_LICENSE) / [Falcon](https://huggingface.co/tiiuae/falcon-180B/blob/main/LICENSE.txt) / [InternLM](https://github.com/InternLM/InternLM#license) / [LLaMA](https://github.com/facebookresearch/llama/blob/main/MODEL_CARD.md) / [LLaMA-2](https://ai.meta.com/llama/license/) / [Mistral](LICENSE) / [Phi-1.5](https://huggingface.co/microsoft/phi-1_5/resolve/main/Research%20License.docx) / [Qwen](https://github.com/QwenLM/Qwen/blob/main/LICENSE) / [XVERSE](https://github.com/xverse-ai/XVERSE-13B/blob/main/MODEL_LICENSE.pdf)
 
 ## Citation
 
