@@ -1,5 +1,12 @@
-import readline
 from llmtuner import ChatModel
+from llmtuner.extras.misc import torch_gc
+
+try:
+    import platform
+    if platform.system() != "Windows":
+        import readline
+except ImportError:
+    print("Install `readline` for a better experience.")
 
 
 def main():
@@ -21,6 +28,7 @@ def main():
 
         if query.strip() == "clear":
             history = []
+            torch_gc()
             print("History has been removed.")
             continue
 
