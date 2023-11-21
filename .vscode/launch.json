@@ -13,6 +13,37 @@
             "justMyCode": true
         },
         {
+            "name": "debug train gpt2",
+            "type": "python",
+            "request": "launch",
+            "program": "src/train_bash.py",
+            "console": "integratedTerminal",
+            "args": [
+                        "--stage",  "pt",
+                        "--model_name_or_path",  "/home/tico/models/gpt2-tigerbot-pt-zh",
+                        "--do_train",
+                        "--finetuning_type", "full",
+                        "--dataset", "wiki_demo",
+                        "--template", "ziya",
+                        "--use_fast_tokenizer",
+                        "--preprocessing_num_workers",  "1",
+                        "--per_device_train_batch_size",  "2",
+                        "--gradient_accumulation_steps",  "2",
+                        "--output_dir",  ".cache/gpt2-pt-test",
+                        "--lr_scheduler_type", "cosine",
+                        "--logging_steps", "5",
+                        "--save_steps",  "100",
+                        "--eval_steps",  "500",
+                        "--learning_rate",  "1e-5",
+                        "--num_train_epochs",  "3.0",
+                        "--val_size",  "200",
+                        "--evaluation_strategy",  "steps",
+                        "--plot_loss", 
+                        "--max_length", "1024",
+                        "--bf16"
+                ]
+        },
+        {
             "name": "debug train rm",
             "type": "python",
             "request": "launch",

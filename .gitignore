@@ -1,7 +1,8 @@
 wandb
 *.pyc
 .cache
-# .vscode
+.vscode
+.github
 data/TigerResearch
 __pycache__/
 

@@ -1,6 +1,5 @@
-import torch
-from typing import Literal, Optional
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
+from typing import Any, Dict, Literal, Optional
 
 
 @dataclass
@@ -19,9 +18,9 @@ class ModelArguments:
         default=True,
         metadata={"help": "Whether to use one of the fast tokenizer (backed by the tokenizers library) or not."}
     )
-    token: Optional[bool] = field(
+    split_special_tokens: Optional[bool] = field(
         default=False,
-        metadata={"help": "Will use the token generated when running `huggingface-cli login`."}
+        metadata={"help": "Whether or not the special tokens should be split during the tokenization process."}
     )
     model_revision: Optional[str] = field(
         default="main",
@@ -43,6 +42,10 @@ class ModelArguments:
         default=None,
         metadata={"help": "Adopt scaled rotary positional embeddings."}
     )
+    checkpoint_dir: Optional[str] = field(
+        default=None,
+        metadata={"help": "Path to the directory(s) containing the model checkpoints as well as the configurations."}
+    )
     flash_attn: Optional[bool] = field(
         default=False,
         metadata={"help": "Enable FlashAttention-2 for faster training."}
@@ -51,37 +54,22 @@ class ModelArguments:
         default=False,
         metadata={"help": "Enable shift short attention (S^2-Attn) proposed by LongLoRA."}
     )
-    checkpoint_dir: Optional[str] = field(
-        default=None,
-        metadata={"help": "Path to the directory(s) containing the delta model checkpoints as well as the configurations."}
-    )
-    reward_model: Optional[str] = field(
-        default=None,
-        metadata={"help": "Path to the directory containing the checkpoints of the reward model."}
-    )
-    plot_loss: Optional[bool] = field(
-        default=False,
-        metadata={"help": "Whether to plot the training loss after fine-tuning or not."}
-    )
-    hf_auth_token: Optional[str] = field(
+    hf_hub_token: Optional[str] = field(
         default=None,
         metadata={"help": "Auth token to log in with Hugging Face Hub."}
-    )
-    layernorm_dtype: Optional[Literal["auto", "fp16", "bf16", "fp32"]] = field(
-        default="auto",
-        metadata={"help": "Data type of the layer norm weights."}
     )
 
     def __post_init__(self):
         self.compute_dtype = None
         self.model_max_length = None
 
+        if self.split_special_tokens and self.use_fast_tokenizer:
+            raise ValueError("`split_special_tokens` is only supported for slow tokenizers.")
+
         if self.checkpoint_dir is not None: # support merging multiple lora weights
             self.checkpoint_dir = [cd.strip() for cd in self.checkpoint_dir.split(",")]
 
-        if self.quantization_bit is not None:
-            assert self.quantization_bit in [4, 8], "We only accept 4-bit or 8-bit quantization."
+        assert self.quantization_bit in [None, 8, 4], "We only accept 4-bit or 8-bit quantization."
 
-        if self.token == True and self.hf_auth_token is not None:
-            from huggingface_hub.hf_api import HfFolder # lazy load
-            HfFolder.save_token(self.hf_auth_token)
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)

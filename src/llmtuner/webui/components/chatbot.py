@@ -1,20 +1,19 @@
-from typing import TYPE_CHECKING, Dict, Optional, Tuple
-
 import gradio as gr
+from typing import TYPE_CHECKING, Dict, Optional, Tuple
 
 if TYPE_CHECKING:
     from gradio.blocks import Block
     from gradio.components import Component
-    from llmtuner.webui.chat import WebChatModel
+    from llmtuner.webui.engine import Engine
 
 
 def create_chat_box(
-    chat_model: "WebChatModel",
+    engine: "Engine",
     visible: Optional[bool] = False
 ) -> Tuple["Block", "Component", "Component", Dict[str, "Component"]]:
     with gr.Box(visible=visible) as chat_box:
         chatbot = gr.Chatbot()
-
+        history = gr.State([])
         with gr.Row():
             with gr.Column(scale=4):
                 system = gr.Textbox(show_label=False)
@@ -23,14 +22,13 @@ def create_chat_box(
 
             with gr.Column(scale=1):
                 clear_btn = gr.Button()
-                max_new_tokens = gr.Slider(10, 2048, value=chat_model.generating_args.max_new_tokens, step=1)
-                top_p = gr.Slider(0.01, 1, value=chat_model.generating_args.top_p, step=0.01)
-                temperature = gr.Slider(0.01, 1.5, value=chat_model.generating_args.temperature, step=0.01)
-
-    history = gr.State([])
+                gen_kwargs = engine.chatter.generating_args
+                max_new_tokens = gr.Slider(10, 2048, value=gen_kwargs.max_new_tokens, step=1)
+                top_p = gr.Slider(0.01, 1, value=gen_kwargs.top_p, step=0.01)
+                temperature = gr.Slider(0.01, 1.5, value=gen_kwargs.temperature, step=0.01)
 
     submit_btn.click(
-        chat_model.predict,
+        engine.chatter.predict,
         [chatbot, query, history, system, max_new_tokens, top_p, temperature],
         [chatbot, history],
         show_progress=True
