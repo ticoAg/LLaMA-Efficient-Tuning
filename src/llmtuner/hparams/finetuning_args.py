@@ -118,9 +118,9 @@ class RLHFArguments:
         default=None,
         metadata={"help": "The number of bits to quantize the reward model."}
     )
-    reward_model_type: Optional[Literal["lora", "full"]] = field(
+    reward_model_type: Optional[Literal["lora", "full", "api"]] = field(
         default="lora",
-        metadata={"help": "The checkpoint type of the reward model. The lora type only supports lora training."}
+        metadata={"help": "The type of the reward model in PPO training. Lora model only supports lora training."}
     )
 
 
@@ -149,6 +149,10 @@ class FinetuningArguments(FreezeArguments, LoraArguments, RLHFArguments):
         default=None,
         metadata={"help": "Path to the directory to save the exported model."}
     )
+    export_size: Optional[int] = field(
+        default=1,
+        metadata={"help": "The file shard size (in GB) of the exported model."}
+    )
     plot_loss: Optional[bool] = field(
         default=False,
         metadata={"help": "Whether to plot the training loss after fine-tuning or not."}
@@ -175,7 +179,7 @@ class FinetuningArguments(FreezeArguments, LoraArguments, RLHFArguments):
             raise ValueError("Reward model is necessary for PPO training.")
 
         if self.stage == "ppo" and self.reward_model_type == "lora" and self.finetuning_type != "lora":
-            raise ValueError("Lora reward model only supports lora training.")
+            raise ValueError("Freeze/Full PPO training needs `reward_model_type=full`.")
 
     def save_to_json(self, json_path: str):
         r"""Saves the content of this instance in JSON format inside `json_path`."""
