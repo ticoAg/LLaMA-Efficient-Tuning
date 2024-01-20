@@ -2,14 +2,14 @@ import gradio as gr
 from gradio.components import Component # cannot use TYPE_CHECKING here
 from typing import TYPE_CHECKING, Any, Dict, Generator, List, Optional, Tuple
 
-from llmtuner.chat import ChatModel
-from llmtuner.extras.misc import torch_gc
-from llmtuner.hparams import GeneratingArguments
-from llmtuner.webui.common import get_save_dir
-from llmtuner.webui.locales import ALERTS
+from ..chat import ChatModel
+from ..extras.misc import torch_gc
+from ..hparams import GeneratingArguments
+from .common import get_save_dir
+from .locales import ALERTS
 
 if TYPE_CHECKING:
-    from llmtuner.webui.manager import Manager
+    from .manager import Manager
 
 
 class WebChatModel(ChatModel):
@@ -63,22 +63,22 @@ class WebChatModel(ChatModel):
             yield error
             return
 
-        if get("top.checkpoints"):
-            checkpoint_dir = ",".join([
-                get_save_dir(get("top.model_name"), get("top.finetuning_type"), ckpt) for ckpt in get("top.checkpoints")
-            ])
+        if get("top.adapter_path"):
+            adapter_name_or_path = ",".join([
+                get_save_dir(get("top.model_name"), get("top.finetuning_type"), adapter)
+            for adapter in get("top.adapter_path")])
         else:
-            checkpoint_dir = None
+            adapter_name_or_path = None
 
         yield ALERTS["info_loading"][lang]
         args = dict(
             model_name_or_path=get("top.model_path"),
-            checkpoint_dir=checkpoint_dir,
+            adapter_name_or_path=adapter_name_or_path,
             finetuning_type=get("top.finetuning_type"),
             quantization_bit=int(get("top.quantization_bit")) if get("top.quantization_bit") in ["8", "4"] else None,
             template=get("top.template"),
-            flash_attn=get("top.flash_attn"),
-            shift_attn=get("top.shift_attn"),
+            flash_attn=(get("top.booster") == "flash_attn"),
+            use_unsloth=(get("top.booster") == "unsloth"),
             rope_scaling=get("top.rope_scaling") if get("top.rope_scaling") in ["linear", "dynamic"] else None
         )
         super().__init__(args)
@@ -105,6 +105,7 @@ class WebChatModel(ChatModel):
         query: str,
         history: List[Tuple[str, str]],
         system: str,
+        tools: str,
         max_new_tokens: int,
         top_p: float,
         temperature: float
@@ -112,7 +113,7 @@ class WebChatModel(ChatModel):
         chatbot.append([query, ""])
         response = ""
         for new_text in self.stream_chat(
-            query, history, system, max_new_tokens=max_new_tokens, top_p=top_p, temperature=temperature
+            query, history, system, tools, max_new_tokens=max_new_tokens, top_p=top_p, temperature=temperature
         ):
             response += new_text
             new_history = history + [(query, response)]

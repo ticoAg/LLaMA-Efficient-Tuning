@@ -4,12 +4,12 @@ import gradio as gr
 from typing import TYPE_CHECKING, Any, Dict
 from datetime import datetime
 
-from llmtuner.extras.packages import is_matplotlib_available
-from llmtuner.extras.ploting import smooth
-from llmtuner.webui.common import get_save_dir
+from ..extras.packages import is_matplotlib_available
+from ..extras.ploting import smooth
+from .common import get_save_dir
 
 if TYPE_CHECKING:
-    from llmtuner.extras.callbacks import LogCallback
+    from ..extras.callbacks import LogCallback
 
 if is_matplotlib_available():
     import matplotlib.figure
@@ -41,13 +41,20 @@ def can_quantize(finetuning_type: str) -> Dict[str, Any]:
         return gr.update(interactive=True)
 
 
+def check_json_schema(text: str) -> None:
+    try:
+        json.loads(text)
+    except json.JSONDecodeError:
+        gr.Warning("Invalid JSON schema")
+
+
 def gen_cmd(args: Dict[str, Any]) -> str:
     args.pop("disable_tqdm", None)
     args["plot_loss"] = args.get("do_train", None)
     current_devices = os.environ.get("CUDA_VISIBLE_DEVICES", "0")
     cmd_lines = ["CUDA_VISIBLE_DEVICES={} python src/train_bash.py ".format(current_devices)]
     for k, v in args.items():
-        if v is not None and v != "":
+        if v is not None and v is not False and v != "":
             cmd_lines.append("    --{} {} ".format(k, str(v)))
     cmd_text = "\\\n".join(cmd_lines)
     cmd_text = "```bash\n{}\n```".format(cmd_text)

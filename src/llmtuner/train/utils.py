@@ -1,15 +1,15 @@
 import torch
 from typing import TYPE_CHECKING, Optional, Union
 
-from llmtuner.extras.logging import get_logger
-from llmtuner.hparams import ModelArguments, FinetuningArguments
-from llmtuner.model import get_modelcard_args, load_model_and_tokenizer, load_valuehead_params
+from ..extras.logging import get_logger
+from ..hparams import ModelArguments, FinetuningArguments
+from ..model import get_modelcard_args, load_model_and_tokenizer, load_valuehead_params
 
 if TYPE_CHECKING:
     from transformers import Seq2SeqTrainingArguments, Trainer
     from transformers.modeling_utils import PreTrainedModel
     from trl import AutoModelForCausalLMWithValueHead
-    from llmtuner.hparams import DataArguments
+    from ..hparams import DataArguments
 
 
 logger = get_logger(__name__)
@@ -46,7 +46,7 @@ def create_ref_model(
         ref_model_args_dict = model_args.to_dict()
         ref_model_args_dict.update(dict(
             model_name_or_path=finetuning_args.ref_model,
-            checkpoint_dir=finetuning_args.ref_model_checkpoint,
+            adapter_name_or_path=finetuning_args.ref_model_adapters,
             quantization_bit=finetuning_args.ref_model_quantization_bit
         ))
         ref_model_args = ModelArguments(**ref_model_args_dict)
@@ -96,7 +96,7 @@ def create_reward_model(
         reward_model_args_dict = model_args.to_dict()
         reward_model_args_dict.update(dict(
             model_name_or_path=finetuning_args.reward_model,
-            checkpoint_dir=finetuning_args.reward_model_checkpoint,
+            adapter_name_or_path=finetuning_args.reward_model_adapters,
             quantization_bit=finetuning_args.reward_model_quantization_bit
         ))
         reward_model_args = ModelArguments(**reward_model_args_dict)

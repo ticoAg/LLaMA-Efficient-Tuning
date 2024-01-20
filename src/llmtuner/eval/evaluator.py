@@ -3,19 +3,19 @@
 import os
 import json
 import torch
-import inspect
-import tiktoken
 import numpy as np
+import inspect
 from tqdm import tqdm, trange
 from typing import Any, Dict, List, Optional
 
 from datasets import load_dataset
 from transformers.utils import cached_file
 
-from llmtuner.data.template import get_template_and_fix_tokenizer
-from llmtuner.eval.template import get_eval_template
-from llmtuner.extras.constants import CHOICES, SUBJECTS
-from llmtuner.model import dispatch_model, get_eval_args, load_model_and_tokenizer
+from ..data import get_template_and_fix_tokenizer
+from .template import get_eval_template
+from ..extras.constants import CHOICES, SUBJECTS
+from ..hparams import get_eval_args
+from ..model import dispatch_model, load_model_and_tokenizer
 
 
 class Evaluator:
@@ -27,15 +27,9 @@ class Evaluator:
         self.model = dispatch_model(self.model)
         self.template = get_template_and_fix_tokenizer(self.data_args.template, self.tokenizer)
         self.eval_template = get_eval_template(self.eval_args.lang)
-        self.choice_inputs = self._encode_choices()
-
-    def _encode_choices(self) -> List[int]:
-        if isinstance(getattr(self.tokenizer, "tokenizer", None), tiktoken.Encoding): # for tiktoken tokenizer (Qwen)
-            kwargs = dict(allowed_special="all")
-        else:
-            kwargs = dict(add_special_tokens=False)
-
-        return [self.tokenizer.encode(self.eval_template.prefix + ch, **kwargs)[-1] for ch in CHOICES]
+        self.choice_inputs = [self.tokenizer.encode(
+            self.eval_template.prefix + ch, add_special_tokens=False
+        )[-1] for ch in CHOICES]
 
     @torch.inference_mode()
     def batch_inference(self, batch_input: Dict[str, torch.Tensor]) -> List[str]:
@@ -46,16 +40,11 @@ class Evaluator:
         return [chr(ord("A") + offset.item()) for offset in torch.argmax(choice_probs, dim=-1)]
 
     def eval(self) -> None:
-        if "token" in inspect.signature(cached_file).parameters:
-            kwargs = {"token": self.model_args.hf_hub_token}
-        elif "use_auth_token" in inspect.signature(cached_file).parameters: # for transformers==4.31.0
-            kwargs = {"use_auth_token": self.model_args.hf_hub_token}
-
         mapping = cached_file(
             path_or_repo_id = os.path.join(self.eval_args.task_dir, self.eval_args.task),
             filename="mapping.json",
             cache_dir=self.model_args.cache_dir,
-            **kwargs
+            token=self.model_args.hf_hub_token
         )
 
         with open(mapping, "r", encoding="utf-8") as f:
@@ -65,28 +54,34 @@ class Evaluator:
         pbar = tqdm(categorys.keys(), desc="Processing subjects", position=0)
         results = {}
         for subject in pbar:
+            if "trust_remote_code" in inspect.signature(load_dataset).parameters: # for datasets==2.16.0
+                kwargs = {"trust_remote_code": True}
+            else:
+                kwargs = {}
+
             dataset = load_dataset(
                 path=os.path.join(self.eval_args.task_dir, self.eval_args.task),
                 name=subject,
                 cache_dir=self.model_args.cache_dir,
                 download_mode=self.eval_args.download_mode,
-                token=self.model_args.hf_hub_token
+                token=self.model_args.hf_hub_token,
+                **kwargs
             )
             pbar.set_postfix_str(categorys[subject]["name"])
             inputs, outputs, labels = [], [], []
             for i in trange(len(dataset[self.data_args.split]), desc="Formatting batches", position=1, leave=False):
                 support_set = dataset["train"].shuffle().select(range(min(self.eval_args.n_shot, len(dataset["train"]))))
-                query, resp, history = self.eval_template.format_example(
+                messages = self.eval_template.format_example(
                     target_data=dataset[self.data_args.split][i],
                     support_set=support_set,
-                    subject_name=categorys[subject]["name"],
-                    use_history=self.template.use_history
+                    subject_name=categorys[subject]["name"]
                 )
+
                 input_ids, _ = self.template.encode_oneturn(
-                    tokenizer=self.tokenizer, query=query, resp=resp, history=history
+                    tokenizer=self.tokenizer, messages=messages
                 )
                 inputs.append({"input_ids": input_ids, "attention_mask": [1] * len(input_ids)})
-                labels.append(resp)
+                labels.append(messages[-1]["content"])
 
             for i in trange(0, len(inputs), self.eval_args.batch_size, desc="Predicting batches", position=1, leave=False):
                 batch_input = self.tokenizer.pad(

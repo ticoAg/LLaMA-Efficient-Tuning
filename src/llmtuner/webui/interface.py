@@ -2,7 +2,7 @@ import gradio as gr
 from typing import Optional
 from transformers.utils.versions import require_version
 
-from llmtuner.webui.components import (
+from .components import (
     create_top,
     create_train_tab,
     create_eval_tab,
@@ -10,9 +10,9 @@ from llmtuner.webui.components import (
     create_export_tab,
     create_chat_box
 )
-from llmtuner.webui.common import save_config
-from llmtuner.webui.css import CSS
-from llmtuner.webui.engine import Engine
+from .common import save_config
+from .css import CSS
+from .engine import Engine
 
 
 require_version("gradio>=3.38.0,<4.0.0", "To fix: pip install \"gradio>=3.38.0,<4.0.0\"")
@@ -75,4 +75,4 @@ def create_web_demo() -> gr.Blocks:
 if __name__ == "__main__":
     demo = create_ui()
     demo.queue()
-    demo.launch(server_name="0.0.0.0", server_port=7860, share=False, inbrowser=True)
+    demo.launch(server_name="0.0.0.0", share=False, inbrowser=True)

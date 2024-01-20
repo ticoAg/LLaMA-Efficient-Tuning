@@ -141,6 +141,9 @@
   "nectar_sft": {
     "hf_hub_url": "mlinmg/SFT-Nectar"
   },
+  "deepctrl": {
+    "ms_hub_url": "deepctrl/deepctrl-sft-data"
+  },
   "adgen": {
     "hf_hub_url": "HasturOfficial/adgen",
     "ms_hub_url": "AI-ModelScope/adgen",
@@ -162,9 +165,13 @@
     "hf_hub_url": "HuggingFaceH4/ultrachat_200k",
     "ms_hub_url": "AI-ModelScope/ultrachat_200k",
     "columns": {
-      "messages": "messages",
-      "role": "role",
-      "content": "content"
+      "messages": "messages"
+    },
+    "tags": {
+      "role_tag": "role",
+      "content_tag": "content",
+      "user_tag": "human",
+      "assistant_tag": "assistant"
     },
     "formatting": "sharegpt"
   },
@@ -177,15 +184,27 @@
     "hf_hub_url": "lmsys/lmsys-chat-1m",
     "ms_hub_url": "AI-ModelScope/lmsys-chat-1m",
     "columns": {
-      "messages": "conversation",
-      "role": "role",
-      "content": "content"
+      "messages": "conversation"
+    },
+    "tags": {
+      "role_tag": "role",
+      "content_tag": "content",
+      "user_tag": "human",
+      "assistant_tag": "assistant"
     },
     "formatting": "sharegpt"
   },
   "evol_instruct": {
     "hf_hub_url": "WizardLM/WizardLM_evol_instruct_V2_196k",
     "formatting": "sharegpt"
+  },
+  "glaive_toolcall": {
+    "file_name": "glaive_toolcall_10k.json",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools"
+    }
   },
   "hh_rlhf_en": {
     "script_url": "hh_rlhf_en",
@@ -235,6 +254,13 @@
   "wiki_demo": {
     "file_name": "wiki_demo.txt",
     "file_sha1": "e70375e28eda542a90c68213640cc371898ce181",
+    "columns": {
+      "prompt": "text"
+    }
+  },
+  "c4_demo": {
+    "file_name": "c4_demo.json",
+    "file_sha1": "a5a0c86759732f9a5238e447fecd74f28a66cca8",
     "columns": {
       "prompt": "text"
     }

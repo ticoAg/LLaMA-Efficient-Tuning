@@ -1,8 +1,10 @@
-import tiktoken
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Tuple, Union
 
-from llmtuner.extras.logging import get_logger
+from ..extras.logging import get_logger
+from .utils import Role
+from .formatter import StringFormatter, FunctionFormatter, ToolFormatter
+
 
 if TYPE_CHECKING:
     from transformers import PreTrainedTokenizer
@@ -14,139 +16,123 @@ logger = get_logger(__name__)
 @dataclass
 class Template:
 
-    prefix: List[Union[str, Dict[str, str]]]
-    prompt: List[Union[str, Dict[str, str]]]
+    format_user: Callable
+    format_assistant: Callable
+    format_system: Callable
+    format_tool: Callable
+    format_observation: Callable
+    format_function: Callable
     system: str
-    sep: List[Union[str, Dict[str, str]]]
+    separator: List[Union[str, Dict[str, str]]]
     stop_words: List[str]
-    use_history: bool
     efficient_eos: bool
+    replace_eos: bool
 
     def encode_oneturn(
         self,
         tokenizer: "PreTrainedTokenizer",
-        query: str,
-        resp: str,
-        history: Optional[List[Tuple[str, str]]] = None,
-        system: Optional[str] = None
+        messages: List[Dict[str, str]],
+        system: Optional[str] = None,
+        tools: Optional[str] = None,
+        cutoff_len: Optional[int] = 1_000_000
     ) -> Tuple[List[int], List[int]]:
         r"""
         Returns a single pair of token ids representing prompt and response respectively.
         """
-        system, history = self._format(query, resp, history, system)
-        encoded_pairs = self._encode(tokenizer, system, history)
+        encoded_pairs = self._encode(tokenizer, messages, system, tools, cutoff_len)
         prompt_ids = []
         for query_ids, resp_ids in encoded_pairs[:-1]:
             prompt_ids = prompt_ids + query_ids + resp_ids
-        prompt_ids, answer_ids = prompt_ids + encoded_pairs[-1][0], encoded_pairs[-1][1]
+        prompt_ids = prompt_ids + encoded_pairs[-1][0]
+        answer_ids = encoded_pairs[-1][1]
         return prompt_ids, answer_ids
 
     def encode_multiturn(
         self,
         tokenizer: "PreTrainedTokenizer",
-        query: str,
-        resp: str,
-        history: Optional[List[Tuple[str, str]]] = None,
-        system: Optional[str] = None
+        messages: List[Dict[str, str]],
+        system: str,
+        tools: str,
+        cutoff_len: Optional[int] = 1_000_000
     ) -> List[Tuple[List[int], List[int]]]:
         r"""
         Returns multiple pairs of token ids representing prompts and responses respectively.
         """
-        system, history = self._format(query, resp, history, system)
-        encoded_pairs = self._encode(tokenizer, system, history)
+        encoded_pairs = self._encode(tokenizer, messages, system, tools, cutoff_len)
         return encoded_pairs
-
-    def _format(
-        self,
-        query: str,
-        resp: str,
-        history: Optional[List[Tuple[str, str]]] = None,
-        system: Optional[str] = None
-    ) -> Tuple[str, List[Tuple[str, str]]]:
-        r"""
-        Aligns inputs to the standard format.
-        """
-        system = system or self.system # use system if provided
-        history = history if (history and self.use_history) else []
-        history = history + [(query, resp)]
-        return system, history
-
-    def _get_special_ids(
-        self,
-        tokenizer: "PreTrainedTokenizer"
-    ) -> Tuple[List[int], List[int]]:
-        if tokenizer.bos_token_id is not None and getattr(tokenizer, "add_bos_token", True):
-            bos_ids = [tokenizer.bos_token_id]
-        else: # baichuan, qwen and gpt2 models have no bos token
-            bos_ids = []
-
-        if tokenizer.eos_token_id is None:
-            raise ValueError("EOS token is required.")
-
-        if self.efficient_eos: # used in baichuan, qwen, chatglm, etc.
-            eos_ids = []
-        else:
-            eos_ids = [tokenizer.eos_token_id]
-
-        return bos_ids, eos_ids
 
     def _encode(
         self,
         tokenizer: "PreTrainedTokenizer",
+        messages: List[Dict[str, str]],
         system: str,
-        history: List[Tuple[str, str]]
+        tools: str,
+        cutoff_len: int
     ) -> List[Tuple[List[int], List[int]]]:
         r"""
         Encodes formatted inputs to pairs of token ids.
-        Turn 0: bos + prefix + sep + query    resp + eos
-        Turn t: sep + bos + query             resp + eos
+        Turn 0: system + query        resp + eos
+        Turn t: sep + query           resp + eos
         """
-        bos_ids, eos_ids = self._get_special_ids(tokenizer)
-        sep_ids = self._convert_inputs_to_ids(tokenizer, context=self.sep)
-        encoded_pairs = []
-        for turn_idx, (query, resp) in enumerate(history):
-            if turn_idx == 0:
-                prefix_ids = self._convert_inputs_to_ids(tokenizer, context=self.prefix, system=system)
-                if len(prefix_ids) != 0: # has prefix
-                    prefix_ids = bos_ids + prefix_ids + sep_ids
-                else:
-                    prefix_ids = bos_ids
-            else:
-                prefix_ids = sep_ids + bos_ids
+        system = system or self.system
+        encoded_messages = []
+        for i, message in enumerate(messages):
+            elements = []
+            if i == 0 and (system or tools):
+                tool_text = self.format_tool(content=tools)[0] if tools else ""
+                elements += self.format_system(content=(system + tool_text))
+            elif i > 0 and i % 2 == 0:
+                elements += self.separator
 
-            query_ids = self._convert_inputs_to_ids(tokenizer, context=self.prompt, query=query, idx=str(turn_idx+1))
-            resp_ids = self._convert_inputs_to_ids(tokenizer, context=[resp])
-            encoded_pairs.append((prefix_ids + query_ids, resp_ids + eos_ids))
+            if message["role"] == Role.USER:
+                elements += self.format_user(content=message["content"], idx=str(i // 2))
+            elif message["role"] == Role.ASSISTANT:
+                elements += self.format_assistant(content=message["content"])
+            elif message["role"] == Role.OBSERVATION:
+                elements += self.format_observation(content=message["content"])
+            elif message["role"] == Role.FUNCTION:
+                elements += self.format_function(content=message["content"])
+
+            encoded_messages.append(self._convert_elements_to_ids(tokenizer, elements))
+
+        # TODO: need to improve
+        encoded_pairs = []
+        total_length = 0
+        for i in range(0, len(encoded_messages), 2):
+            if total_length >= cutoff_len:
+                break
+
+            encoded_messages[i] = encoded_messages[i][:cutoff_len-total_length]
+            total_length += len(encoded_messages[i])
+
+            encoded_messages[i+1] = encoded_messages[i+1][:max(1, cutoff_len-total_length)]
+            total_length += len(encoded_messages[i+1])
+            encoded_pairs.append((encoded_messages[i], encoded_messages[i+1]))
+
         return encoded_pairs
 
-    def _convert_inputs_to_ids(
+    def _convert_elements_to_ids(
         self,
         tokenizer: "PreTrainedTokenizer",
-        context: List[Union[str, Dict[str, str]]],
-        system: Optional[str] = None,
-        query: Optional[str] = None,
-        idx: Optional[str] = None
+        elements: List[Union[str, Dict[str, str]]]
     ) -> List[int]:
         r"""
-        Converts context to token ids.
+        Converts elements to token ids.
         """
-        if isinstance(getattr(tokenizer, "tokenizer", None), tiktoken.Encoding): # for tiktoken tokenizer (Qwen)
-            kwargs = dict(allowed_special="all")
-        else:
-            kwargs = dict(add_special_tokens=False)
-
         token_ids = []
-        for elem in context:
+        for elem in elements:
             if isinstance(elem, str):
-                elem = elem.replace("{{system}}", system, 1) if system is not None else elem
-                elem = elem.replace("{{query}}", query, 1) if query is not None else elem
-                elem = elem.replace("{{idx}}", idx, 1) if idx is not None else elem
                 if len(elem) != 0:
-                    token_ids = token_ids + tokenizer.encode(elem, **kwargs)
+                    token_ids = token_ids + tokenizer.encode(elem, add_special_tokens=False)
             elif isinstance(elem, dict):
                 token_ids = token_ids + [tokenizer.convert_tokens_to_ids(elem.get("token"))]
+            elif isinstance(elem, set):
+                if "bos_token" in elem and tokenizer.bos_token_id:
+                    token_ids = token_ids + [tokenizer.bos_token_id]
+                elif "eos_token" in elem and tokenizer.eos_token_id:
+                    token_ids = token_ids + [tokenizer.eos_token_id]
             else:
-                raise ValueError("Input must be string or dict[str, str], got {}".format(type(elem)))
+                raise ValueError("Input must be string, set[str] or dict[str, str], got {}".format(type(elem)))
 
         return token_ids
 
@@ -157,22 +143,52 @@ class Llama2Template(Template):
     def _encode(
         self,
         tokenizer: "PreTrainedTokenizer",
+        messages: List[Dict[str, str]],
         system: str,
-        history: List[Tuple[str, str]]
+        tools: str,
+        cutoff_len: int
     ) -> List[Tuple[List[int], List[int]]]:
         r"""
         Encodes formatted inputs to pairs of token ids.
-        Turn 0: bos + prefix + query    resp + eos
-        Turn t: bos + query             resp + eos
+        Turn 0: system + query        resp + eos
+        Turn t: sep + query           resp + eos
         """
-        bos_ids, eos_ids = self._get_special_ids(tokenizer)
+        system = system or self.system
+        encoded_messages = []
+        for i, message in enumerate(messages):
+            elements = []
+            system_text = ""
+            if i == 0 and (system or tools):
+                tool_text = self.format_tool(content=tools)[0] if tools else ""
+                system_text = self.format_system(content=(system + tool_text))[0]
+            elif i > 0 and i % 2 == 0:
+                elements += self.separator
+
+            if message["role"] == Role.USER:
+                elements += self.format_user(content=system_text + message["content"], idx=str(i // 2))
+            elif message["role"] == Role.ASSISTANT:
+                elements += self.format_assistant(content=message["content"])
+            elif message["role"] == Role.OBSERVATION:
+                elements += self.format_observation(content=message["content"])
+            elif message["role"] == Role.FUNCTION:
+                elements += self.format_function(content=message["content"])
+
+            encoded_messages.append(self._convert_elements_to_ids(tokenizer, elements))
+
+        # TODO: need to improve
         encoded_pairs = []
-        for turn_idx, (query, resp) in enumerate(history):
-            if turn_idx == 0: # llama2 template has no sep_ids
-                query = self.prefix[0].replace("{{system}}", system) + query
-            query_ids = self._convert_inputs_to_ids(tokenizer, context=self.prompt, query=query)
-            resp_ids = self._convert_inputs_to_ids(tokenizer, context=[resp])
-            encoded_pairs.append((bos_ids + query_ids, resp_ids + eos_ids))
+        total_length = 0
+        for i in range(0, len(encoded_messages), 2):
+            if total_length >= cutoff_len:
+                break
+
+            encoded_messages[i] = encoded_messages[i][:cutoff_len-total_length]
+            total_length += len(encoded_messages[i])
+
+            encoded_messages[i+1] = encoded_messages[i+1][:max(1, cutoff_len-total_length)]
+            total_length += len(encoded_messages[i+1])
+            encoded_pairs.append((encoded_messages[i], encoded_messages[i+1]))
+
         return encoded_pairs
 
 
@@ -181,23 +197,35 @@ templates: Dict[str, Template] = {}
 
 def register_template(
     name: str,
-    prefix: List[Union[str, Dict[str, str]]],
-    prompt: List[Union[str, Dict[str, str]]],
-    system: str,
-    sep: List[Union[str, Dict[str, str]]],
+    format_user: Optional[Callable] = None,
+    format_assistant: Optional[Callable] = None,
+    format_system: Optional[Callable] = None,
+    format_tool: Optional[Callable] = None,
+    format_observation: Optional[Callable] = None,
+    format_function: Optional[Callable] = None,
+    system: Optional[str] = "",
+    separator: Optional[List[Union[str, Dict[str, str]]]] = "",
     stop_words: Optional[List[str]] = [],
-    use_history: Optional[bool] = True,
-    efficient_eos: Optional[bool] = False
+    efficient_eos: Optional[bool] = False,
+    replace_eos: Optional[bool] = False
 ) -> None:
-    template_class = Llama2Template if "llama2" in name else Template
+    template_class = Llama2Template if name.startswith("llama2") else Template
     templates[name] = template_class(
-        prefix=prefix,
-        prompt=prompt,
+        format_user=format_user or StringFormatter(container=["{{content}}"]),
+        format_assistant=format_assistant or StringFormatter(container=[
+            "{{content}}", {"eos_token"}
+        ]),
+        format_system=format_system or StringFormatter(container=["{{content}}"]),
+        format_tool=format_tool or ToolFormatter(type="default"),
+        format_observation=format_observation or format_user,
+        format_function=format_function or FunctionFormatter(container=[
+            "Action: {{name}}\nAction Input: {{arguments}}", {"eos_token"}
+        ]),
         system=system,
-        sep=sep,
+        separator=separator,
         stop_words=stop_words,
-        use_history=use_history,
-        efficient_eos=efficient_eos
+        efficient_eos=efficient_eos,
+        replace_eos=replace_eos
     )
 
 
@@ -213,31 +241,41 @@ def get_template_and_fix_tokenizer(
         tokenizer.pad_token = tokenizer.eos_token
         logger.info("Add pad token: {}".format(tokenizer.pad_token))
 
-    if name is None:
+    if name is None: # for pre-training
         return None
 
     template = templates.get(name, None)
     assert template is not None, "Template {} does not exist.".format(name)
-    tokenizer.add_special_tokens(
-        dict(additional_special_tokens=template.stop_words),
-        replace_additional_special_tokens=False
-    )
+
+    stop_words = template.stop_words
+    if template.replace_eos:
+        if not stop_words:
+            raise ValueError("Stop words are required to replace the EOS token.")
+
+        tokenizer.eos_token = stop_words[0]
+        stop_words = stop_words[1:]
+        logger.info("Replace eos token: {}".format(tokenizer.eos_token))
+
+    if stop_words:
+        tokenizer.add_special_tokens(
+            dict(additional_special_tokens=stop_words),
+            replace_additional_special_tokens=False
+        )
+        logger.info("Add {} to stop words.".format(",".join(stop_words)))
+
     return template
 
 
 register_template(
     name="alpaca",
-    prefix=[
-        "{{system}}"
-    ],
-    prompt=[
-        "### Instruction:\n{{query}}\n\n### Response:\n"
-    ],
+    format_user=StringFormatter(container=[
+        "### Instruction:\n{{content}}\n\n### Response:\n"
+    ]),
     system=(
         "Below is an instruction that describes a task. "
         "Write a response that appropriately completes the request."
     ),
-    sep=[
+    separator=[
         "\n\n"
     ]
 )
@@ -245,17 +283,17 @@ register_template(
 
 register_template(
     name="aquila",
-    prefix=[
-        "{{system}}"
-    ],
-    prompt=[
-        "Human: {{query}}###Assistant:"
-    ],
+    format_user=StringFormatter(container=[
+        "Human: {{content}}###Assistant:"
+    ]),
+    format_assistant=StringFormatter(container=[
+        "{{content}}"
+    ]),
     system=(
         "A chat between a curious human and an artificial intelligence assistant. "
         "The assistant gives helpful, detailed, and polite answers to the human's questions."
     ),
-    sep=[
+    separator=[
         "###"
     ],
     stop_words=[
@@ -267,46 +305,38 @@ register_template(
 
 register_template(
     name="baichuan",
-    prefix=[
-        "{{system}}"
-    ],
-    prompt=[
-        {"token": "<reserved_102>"}, # user token
-        "{{query}}",
-        {"token": "<reserved_103>"}  # assistant token
-    ],
-    system="",
-    sep=[],
+    format_user=StringFormatter(container=[
+        {"token": "<reserved_102>"},
+        "{{content}}",
+        {"token": "<reserved_103>"}
+    ]),
+    format_assistant=StringFormatter(container=[
+        "{{content}}"
+    ]),
     efficient_eos=True
 )
 
 
 register_template(
     name="baichuan2",
-    prefix=[
-        "{{system}}"
-    ],
-    prompt=[
-        {"token": "<reserved_106>"}, # user token
-        "{{query}}",
-        {"token": "<reserved_107>"}  # assistant token
-    ],
-    system="",
-    sep=[],
+    format_user=StringFormatter(container=[
+        {"token": "<reserved_106>"},
+        "{{content}}",
+        {"token": "<reserved_107>"}
+    ]),
+    format_assistant=StringFormatter(container=[
+        "{{content}}"
+    ]),
     efficient_eos=True
 )
 
 
 register_template(
     name="belle",
-    prefix=[
-        "{{system}}"
-    ],
-    prompt=[
-        "Human: {{query}}\n\nBelle: "
-    ],
-    system="",
-    sep=[
+    format_user=StringFormatter(container=[
+        "Human: {{content}}\n\nBelle: "
+    ]),
+    separator=[
         "\n\n"
     ]
 )
@@ -314,31 +344,28 @@ register_template(
 
 register_template(
     name="bluelm",
-    prefix=[
-        "{{system}}"
-    ],
-    prompt=[
+    format_user=StringFormatter(container=[
         {"token": "[|Human|]:"},
-        "{{query}}",
+        "{{content}}",
         {"token": "[|AI|]:"}
-    ],
-    system="",
-    sep=[]
+    ])
 )
 
 
 register_template(
     name="chatglm2",
-    prefix=[
+    format_user=StringFormatter(container=[
+        "[Round {{idx}}]\n\n问：{{content}}\n\n答："
+    ]),
+    format_assistant=StringFormatter(container=[
+        "{{content}}"
+    ]),
+    format_system=StringFormatter(container=[
         {"token": "[gMASK]"},
         {"token": "sop"},
-        "{{system}}"
-    ],
-    prompt=[
-        "[Round {{idx}}]\n\n问：{{query}}\n\n答："
-    ],
-    system="",
-    sep=[
+        "{{content}}"
+    ]),
+    separator=[
         "\n\n"
     ],
     efficient_eos=True
@@ -347,25 +374,35 @@ register_template(
 
 register_template(
     name="chatglm3",
-    prefix=[
+    format_user=StringFormatter(container=[
+        {"token": "<|user|>"},
+        "\n",
+        "{{content}}",
+        {"token": "<|assistant|>"}
+    ]),
+    format_assistant=StringFormatter(container=[
+        "\n"
+        "{{content}}"
+    ]),
+    format_system=StringFormatter(container=[
         {"token": "[gMASK]"},
         {"token": "sop"},
         {"token": "<|system|>"},
         "\n",
-        "{{system}}"
-    ],
-    prompt=[
-        {"token": "<|user|>"},
+        "{{content}}"
+    ]),
+    format_observation=StringFormatter(container=[
+        {"token": "<|observation|>"},
         "\n",
-        "{{query}}",
-        {"token": "<|assistant|>"},
-        "\n" # add an extra newline to avoid error in ChatGLM's process_response method
-    ],
+        "{{content}}"
+    ]),
+    format_function=FunctionFormatter(container=[
+        "{{name}}\n{{arguments}}"
+    ]),
     system=(
         "You are ChatGLM3, a large language model trained by Zhipu.AI. "
         "Follow the user's instructions carefully. Respond using markdown."
     ),
-    sep=[],
     stop_words=[
         "<|user|>",
         "<|observation|>"
@@ -375,61 +412,38 @@ register_template(
 
 
 register_template(
-    name="chatglm3_raw", # the raw template for tool tuning
-    prefix=[
+    name="codegeex2",
+    format_system=StringFormatter(container=[
         {"token": "[gMASK]"},
         {"token": "sop"},
-        {"token": "<|system|>"},
-        "\n",
-        "{{system}}"
-    ],
-    prompt=[
-        {"token": "<|user|>"},
-        "\n",
-        "{{query}}",
-        {"token": "<|assistant|>"}
-    ],
-    system=(
-        "You are ChatGLM3, a large language model trained by Zhipu.AI. "
-        "Follow the user's instructions carefully. Respond using markdown."
-    ),
-    sep=[],
-    stop_words=[
-        "<|user|>",
-        "<|observation|>"
-    ],
-    efficient_eos=True
+        "{{content}}"
+    ])
 )
 
 
 register_template(
     name="deepseek",
-    prefix=[
-        "{{system}}"
-    ],
-    prompt=[
-        "User: {{query}}\n\nAssistant:"
-    ],
-    system="",
-    sep=[]
+    format_user=StringFormatter(container=[
+        "User: {{content}}\n\nAssistant:"
+    ])
 )
 
 
 register_template(
     name="deepseekcoder",
-    prefix=[
-        "{{system}}"
-    ],
-    prompt=[
-        "### Instruction:\n{{query}}\n### Response:\n"
-    ],
+    format_user=StringFormatter(container=[
+        "### Instruction:\n{{content}}\n### Response:\n"
+    ]),
+    format_assistant=StringFormatter(container=[
+        "{{content}}"
+    ]),
     system=(
         "You are an AI programming assistant, utilizing the Deepseek Coder model, "
         "developed by Deepseek Company, and you only answer questions related to computer science. "
         "For politically sensitive questions, security and privacy issues, "
         "and other non-computer science questions, you will refuse to answer\n"
     ),
-    sep=[
+    separator=[
         "\n",
         {"token": "<|EOT|>"},
         "\n"
@@ -443,17 +457,14 @@ register_template(
 
 register_template(
     name="default",
-    prefix=[
-        "{{system}}"
-    ],
-    prompt=[
-        "Human: {{query}}\nAssistant:"
-    ],
+    format_user=StringFormatter(container=[
+        "Human: {{content}}\nAssistant: "
+    ]),
     system=(
         "A chat between a curious user and an artificial intelligence assistant. "
-        "The assistant gives helpful, detailed, and polite answers to the user's questions."
+        "The assistant gives helpful, detailed, and polite answers to the user's questions.\n"
     ),
-    sep=[
+    separator=[
         "\n"
     ]
 )
@@ -461,14 +472,13 @@ register_template(
 
 register_template(
     name="falcon",
-    prefix=[
-        "{{system}}"
-    ],
-    prompt=[
-        "User: {{query}}\nFalcon:"
-    ],
-    system="",
-    sep=[
+    format_user=StringFormatter(container=[
+        "User: {{content}}\nFalcon:"
+    ]),
+    format_assistant=StringFormatter(container=[
+        "{{content}}"
+    ]),
+    separator=[
         "\n"
     ],
     efficient_eos=True
@@ -477,16 +487,15 @@ register_template(
 
 register_template(
     name="intern",
-    prefix=[
-        "{{system}}"
-    ],
-    prompt=[
-        "<|User|>:{{query}}",
+    format_user=StringFormatter(container=[
+        "<|User|>:{{content}}",
         {"token": "<eoh>"},
         "\n<|Bot|>:"
-    ],
-    system="",
-    sep=[
+    ]),
+    format_assistant=StringFormatter(container=[
+        "{{content}}"
+    ]),
+    separator=[
         {"token": "<eoa>"},
         "\n"
     ],
@@ -498,13 +507,46 @@ register_template(
 
 
 register_template(
+    name="intern2",
+    format_user=StringFormatter(container=[
+        {"token": "[UNUSED_TOKEN_146]"},
+        "user\n{{content}}",
+        {"token": "[UNUSED_TOKEN_145]"},
+        "\n",
+        {"token": "[UNUSED_TOKEN_146]"},
+        "assistant\n"
+    ]),
+    format_assistant=StringFormatter(container=[
+        "{{content}}"
+    ]),
+    format_system=StringFormatter(container=[
+        {"token": "[UNUSED_TOKEN_146]"},
+        "system\n{{content}}",
+        {"token": "[UNUSED_TOKEN_145]"},
+        "\n"
+    ]),
+    system=(
+        "You are an AI assistant whose name is InternLM (书生·浦语).\n"
+        "- InternLM (书生·浦语) is a conversational language model that is developed "
+        "by Shanghai AI Laboratory (上海人工智能实验室). It is designed to be helpful, honest, and harmless.\n"
+        "- InternLM (书生·浦语) can understand and communicate fluently in the language chosen "
+        "by the user such as English and 中文."
+    ),
+    separator=[
+        {"token": "[UNUSED_TOKEN_145]"},
+        "\n"
+    ],
+    stop_words=[
+        "[UNUSED_TOKEN_145]"
+    ],
+    efficient_eos=True
+)
+
+
+register_template(
     name="llama2",
-    prefix=[
-        "<<SYS>>\n{{system}}\n<</SYS>>\n\n"
-    ],
-    prompt=[
-        "[INST] {{query}} [/INST]"
-    ],
+    format_user=StringFormatter(container=["[INST] {{content}} [/INST]"]),
+    format_system=StringFormatter(container=["<<SYS>>\n{{content}}\n<</SYS>>\n\n"]),
     system=(
         "You are a helpful, respectful and honest assistant. "
         "Always answer as helpfully as possible, while being safe. "
@@ -514,49 +556,35 @@ register_template(
         "If a question does not make any sense, or is not factually coherent, "
         "explain why instead of answering something not correct. "
         "If you don't know the answer to a question, please don't share false information."
-    ),
-    sep=[]
+    )
 )
 
 
 register_template(
     name="llama2_zh",
-    prefix=[
-        "<<SYS>>\n{{system}}\n<</SYS>>\n\n"
-    ],
-    prompt=[
-        "[INST] {{query}} [/INST]"
-    ],
-    system="You are a helpful assistant. 你是一个乐于助人的助手。",
-    sep=[]
+    format_user=StringFormatter(container=["[INST] {{content}} [/INST]"]),
+    format_system=StringFormatter(container=["<<SYS>>\n{{content}}\n<</SYS>>\n\n"]),
+    system="You are a helpful assistant. 你是一个乐于助人的助手。"
 )
 
 
 register_template(
     name="mistral",
-    prefix=[
-        "{{system}}"
-    ],
-    prompt=[
-        "[INST] {{query}} [/INST]"
-    ],
-    system="",
-    sep=[]
+    format_user=StringFormatter(container=["[INST] {{content}} [/INST]"])
 )
 
 
 register_template(
     name="openchat",
-    prefix=[
-        "{{system}}"
-    ],
-    prompt=[
-        "GPT4 Correct User: {{query}}",
+    format_user=StringFormatter(container=[
+        "GPT4 Correct User: {{content}}",
         {"token": "<|end_of_turn|>"},
         "GPT4 Correct Assistant:"
-    ],
-    system="",
-    sep=[
+    ]),
+    format_assistant=StringFormatter(container=[
+        "{{content}}"
+    ]),
+    separator=[
         {"token": "<|end_of_turn|>"}
     ],
     stop_words=[
@@ -568,45 +596,50 @@ register_template(
 
 register_template(
     name="qwen",
-    prefix=[
-        {"token": "<|im_start|>"},
-        "system\n{{system}}"
-    ],
-    prompt=[
-        {"token": "<|im_start|>"},
-        "user\n{{query}}",
-        {"token": "<|im_end|>"},
-        "\n",
-        {"token": "<|im_start|>"},
-        "assistant\n"
-    ],
+    format_user=StringFormatter(container=[
+        "<|im_start|>user\n{{content}}<|im_end|>\n<|im_start|>assistant\n"
+    ]),
+    format_system=StringFormatter(container=[
+        "<|im_start|>system\n{{content}}<|im_end|>\n"
+    ]),
     system="You are a helpful assistant.",
-    sep=[
-        {"token": "<|im_end|>"},
+    separator=[
         "\n"
     ],
     stop_words=[
         "<|im_end|>"
     ],
-    efficient_eos=True
+    replace_eos=True
+)
+
+
+register_template(
+    name="solar",
+    format_user=StringFormatter(container=[
+        "### User:\n{{content}}\n\n### Assistant:\n"
+    ])
 )
 
 
 register_template(
     name="starchat",
-    prefix=[
-        {"token": "<|system|>"},
-        "\n{{system}}",
-    ],
-    prompt=[
+    format_user=StringFormatter(container=[
         {"token": "<|user|>"},
-        "\n{{query}}",
+        "\n{{content}}",
         {"token": "<|end|>"},
         "\n",
         {"token": "<|assistant|>"}
-    ],
-    system="",
-    sep=[
+    ]),
+    format_assistant=StringFormatter(container=[
+        "{{content}}"
+    ]),
+    format_system=StringFormatter(container=[
+        {"token": "<|system|>"},
+        "\n{{content}}",
+        {"token": "<|end|>"},
+        "\n"
+    ]),
+    separator=[
         {"token": "<|end|>"},
         "\n"
     ],
@@ -617,79 +650,56 @@ register_template(
 )
 
 
-r"""
-Supports language model inference without histories.
-"""
 register_template(
-    name="vanilla",
-    prefix=[],
-    prompt=[
-        "{{query}}"
-    ],
-    system="",
-    sep=[],
-    use_history=False
+    name="vanilla"
 )
 
 
 register_template(
     name="vicuna",
-    prefix=[
-        "{{system}}"
-    ],
-    prompt=[
-        "USER: {{query}} ASSISTANT:"
-    ],
+    format_user=StringFormatter(container=[
+        "USER: {{content}} ASSISTANT:"
+    ]),
     system=(
         "A chat between a curious user and an artificial intelligence assistant. "
         "The assistant gives helpful, detailed, and polite answers to the user's questions."
-    ),
-    sep=[]
+    )
 )
 
 
 register_template(
     name="xuanyuan",
-    prefix=[
-        "{{system}}"
-    ],
-    prompt=[
-        "Human: {{query}} Assistant:"
-    ],
+    format_user=StringFormatter(container=[
+        "Human: {{content}} Assistant:"
+    ]),
     system=(
         "以下是用户和人工智能助手之间的对话。用户以Human开头，人工智能助手以Assistant开头，"
         "会对人类提出的问题给出有帮助、高质量、详细和礼貌的回答，并且总是拒绝参与与不道德、"
         "不安全、有争议、政治敏感等相关的话题、问题和指示。\n"
-    ),
-    sep=[]
+    )
 )
 
 
 register_template(
     name="xverse",
-    prefix=[
-        "{{system}}"
-    ],
-    prompt=[
-        "Human: {{query}}\n\nAssistant: "
-    ],
-    system="",
-    sep=[]
+    format_user=StringFormatter(container=[
+        "Human: {{content}}\n\nAssistant: "
+    ])
 )
 
 
 register_template(
     name="yayi",
-    prefix=[
-        {"token": "<|System|>"},
-        ":\n{{system}}"
-    ],
-    prompt=[
+    format_user=StringFormatter(container=[
         {"token": "<|Human|>"},
-        ":\n{{query}}\n\n",
+        ":\n{{content}}\n\n",
         {"token": "<|YaYi|>"},
         ":"
-    ],
+    ]),
+    format_system=StringFormatter(container=[
+        {"token": "<|System|>"},
+        ":\n{{content}}\n\n"
+    ]),
     system=(
         "You are a helpful, respectful and honest assistant named YaYi "
         "developed by Beijing Wenge Technology Co.,Ltd. "
@@ -701,7 +711,7 @@ register_template(
         "explain why instead of answering something not correct. "
         "If you don't know the answer to a question, please don't share false information."
     ),
-    sep=[
+    separator=[
         "\n\n"
     ],
     stop_words=[
@@ -712,54 +722,56 @@ register_template(
 
 register_template(
     name="yi",
-    prefix=[
-        "{{system}}"
-    ],
-    prompt=[
-        "<|im_start|>user\n{{query}}<|im_end|>\n<|im_start|>assistant\n"
-    ],
-    system="",
-    sep=[
-        "<|im_end|>\n"
+    format_user=StringFormatter(container=[
+        "<|im_start|>user\n{{content}}<|im_end|>\n<|im_start|>assistant\n"
+    ]),
+    separator=[
+        "\n"
     ],
     stop_words=[
         "<|im_end|>"
     ],
-    efficient_eos=True
+    replace_eos=True
+)
+
+
+register_template(
+    name="yuan",
+    format_user=StringFormatter(container=[
+        "{{content}}",
+        {"token": "<sep>"}
+    ]),
+    separator=[
+        "\n"
+    ],
+    stop_words=[
+        "<eod>"
+    ],
+    replace_eos=True
 )
 
 
 register_template(
     name="zephyr",
-    prefix=[
-        {"token": "<|system|>"},
-        "\n{{system}}",
-        {"token": "</s>"}
-    ],
-    prompt=[
-        {"token": "<|user|>"},
-        "\n{{query}}",
-        {"token": "</s>"},
-        {"token": "<|assistant|>"}
-    ],
-    system="You are a friendly chatbot who always responds in the style of a pirate",
-    sep=[]
+    format_user=StringFormatter(container=[
+        "<|user|>\n{{content}}</s><|assistant|>"
+    ]),
+    format_system=StringFormatter(container=[
+        "<|system|>\n{{content}}</s>",
+    ]),
+    system="You are a friendly chatbot who always responds in the style of a pirate"
 )
 
 
 register_template(
     name="ziya",
-    prefix=[
-        "{{system}}"
-    ],
-    prompt=[
+    format_user=StringFormatter(container=[
         {"token": "<human>"},
-        ":{{query}}\n",
+        ":{{content}}\n",
         {"token": "<bot>"},
         ":"
-    ],
-    system="",
-    sep=[
+    ]),
+    separator=[
         "\n"
     ]
 )

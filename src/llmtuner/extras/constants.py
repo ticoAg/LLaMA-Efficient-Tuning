@@ -5,9 +5,20 @@ from typing import Dict, Optional
 
 CHOICES = ["A", "B", "C", "D"]
 
+DATA_CONFIG = "dataset_info.json"
+
 DEFAULT_MODULE = defaultdict(str)
 
 DEFAULT_TEMPLATE = defaultdict(str)
+
+FILEEXT2TYPE = {
+    "arrow": "arrow",
+    "csv": "csv",
+    "json": "json",
+    "jsonl": "json",
+    "parquet": "parquet",
+    "txt": "text"
+}
 
 IGNORE_INDEX = -100
 
@@ -16,6 +27,8 @@ LAYERNORM_NAMES = {"norm", "ln"}
 LOG_FILE_NAME = "trainer_log.jsonl"
 
 METHODS = ["full", "freeze", "lora"]
+
+PEFT_METHODS = ["lora"]
 
 SUBJECTS = ["Average", "STEM", "Social Sciences", "Humanities", "Other"]
 
@@ -28,6 +41,10 @@ TRAINING_STAGES = {
     "DPO": "dpo",
     "Pre-Training": "pt"
 }
+
+V_HEAD_WEIGHTS_NAME = "value_head.bin"
+
+V_HEAD_SAFE_WEIGHTS_NAME = "value_head.safetensors"
 
 class DownloadSource(str, Enum):
     DEFAULT = "hf"
@@ -210,19 +227,19 @@ register_model_group(
 
 register_model_group(
     models={
-        "DeepseekLLM-7B-Base": {
+        "DeepSeekLLM-7B-Base": {
             DownloadSource.DEFAULT: "deepseek-ai/deepseek-llm-7b-base",
             DownloadSource.MODELSCOPE: "deepseek-ai/deepseek-llm-7b-base"
         },
-        "DeepseekLLM-67B-Base": {
+        "DeepSeekLLM-67B-Base": {
             DownloadSource.DEFAULT: "deepseek-ai/deepseek-llm-67b-base",
             DownloadSource.MODELSCOPE: "deepseek-ai/deepseek-llm-67b-base"
         },
-        "DeepseekLLM-7B-Chat": {
+        "DeepSeekLLM-7B-Chat": {
             DownloadSource.DEFAULT: "deepseek-ai/deepseek-llm-7b-chat",
             DownloadSource.MODELSCOPE: "deepseek-ai/deepseek-llm-7b-chat"
         },
-        "DeepseekLLM-67B-Chat": {
+        "DeepSeekLLM-67B-Chat": {
             DownloadSource.DEFAULT: "deepseek-ai/deepseek-llm-67b-chat",
             DownloadSource.MODELSCOPE: "deepseek-ai/deepseek-llm-67b-chat"
         }
@@ -233,24 +250,39 @@ register_model_group(
 
 register_model_group(
     models={
-        "DeepseekCoder-6.7B-Base": {
+        "DeepSeekCoder-6.7B-Base": {
             DownloadSource.DEFAULT: "deepseek-ai/deepseek-coder-6.7b-base",
             DownloadSource.MODELSCOPE: "deepseek-ai/deepseek-coder-6.7b-base"
         },
-        "DeepseekCoder-33B-Base": {
+        "DeepSeekCoder-33B-Base": {
             DownloadSource.DEFAULT: "deepseek-ai/deepseek-coder-33b-base",
             DownloadSource.MODELSCOPE: "deepseek-ai/deepseek-coder-33b-base"
         },
-        "DeepseekCoder-6.7B-Chat": {
+        "DeepSeekCoder-6.7B-Chat": {
             DownloadSource.DEFAULT: "deepseek-ai/deepseek-coder-6.7b-instruct",
             DownloadSource.MODELSCOPE: "deepseek-ai/deepseek-coder-6.7b-instruct"
         },
-        "DeepseekCoder-33B-Chat": {
+        "DeepSeekCoder-33B-Chat": {
             DownloadSource.DEFAULT: "deepseek-ai/deepseek-coder-33b-instruct",
             DownloadSource.MODELSCOPE: "deepseek-ai/deepseek-coder-33b-instruct"
         }
     },
     template="deepseekcoder"
+)
+
+
+register_model_group(
+    models={
+        "DeepSeekMoE-16B-Base": {
+            DownloadSource.DEFAULT: "deepseek-ai/deepseek-moe-16b-base",
+            DownloadSource.MODELSCOPE: "deepseek-ai/deepseek-moe-16b-base"
+        },
+        "DeepSeekMoE-16B-Chat": {
+            DownloadSource.DEFAULT: "deepseek-ai/deepseek-moe-16b-chat",
+            DownloadSource.MODELSCOPE: "deepseek-ai/deepseek-moe-16b-chat"
+        }
+    },
+    template="deepseek"
 )
 
 
@@ -306,6 +338,30 @@ register_model_group(
         }
     },
     template="intern"
+)
+
+
+register_model_group(
+    models={
+        "InternLM2-7B": {
+            DownloadSource.DEFAULT: "internlm/internlm2-7b",
+            DownloadSource.MODELSCOPE: "Shanghai_AI_Laboratory/internlm2-7b"
+        },
+        "InternLM2-20B": {
+            DownloadSource.DEFAULT: "internlm/internlm2-20b",
+            DownloadSource.MODELSCOPE: "Shanghai_AI_Laboratory/internlm2-20b"
+        },
+        "InternLM2-7B-Chat": {
+            DownloadSource.DEFAULT: "internlm/internlm2-chat-7b",
+            DownloadSource.MODELSCOPE: "Shanghai_AI_Laboratory/internlm2-chat-7b"
+        },
+        "InternLM2-20B-Chat": {
+            DownloadSource.DEFAULT: "internlm/internlm2-chat-20b",
+            DownloadSource.MODELSCOPE: "Shanghai_AI_Laboratory/internlm2-chat-20b"
+        }
+    },
+    module="wqkv",
+    template="intern2"
 )
 
 
@@ -399,7 +455,8 @@ register_model_group(
             DownloadSource.MODELSCOPE: "AI-ModelScope/Mixtral-8x7B-v0.1"
         },
         "Mixtral-8x7B-Chat": {
-            DownloadSource.DEFAULT: "mistralai/Mixtral-8x7B-Instruct-v0.1"
+            DownloadSource.DEFAULT: "mistralai/Mixtral-8x7B-Instruct-v0.1",
+            DownloadSource.MODELSCOPE: "AI-ModelScope/Mixtral-8x7B-Instruct-v0.1"
         }
     },
     template="mistral"
@@ -419,12 +476,15 @@ register_model_group(
 
 register_model_group(
     models={
-        "Phi1.5-1.3B": {
+        "Phi-1.5-1.3B": {
             DownloadSource.DEFAULT: "microsoft/phi-1_5",
             DownloadSource.MODELSCOPE: "allspace/PHI_1-5"
+        },
+        "Phi-2-2.7B": {
+            DownloadSource.DEFAULT: "microsoft/phi-2",
+            DownloadSource.MODELSCOPE: "AI-ModelScope/phi-2"
         }
-    },
-    module="Wqkv"
+    }
 )
 
 
@@ -502,6 +562,20 @@ register_model_group(
 
 register_model_group(
     models={
+        "SOLAR-10.7B": {
+            DownloadSource.DEFAULT: "upstage/SOLAR-10.7B-v1.0"
+        },
+        "SOLAR-10.7B-Chat": {
+            DownloadSource.DEFAULT: "upstage/SOLAR-10.7B-Instruct-v1.0",
+            DownloadSource.MODELSCOPE: "AI-ModelScope/SOLAR-10.7B-Instruct-v1.0"
+        }
+    },
+    template="solar"
+)
+
+
+register_model_group(
+    models={
         "Skywork-13B-Base": {
             DownloadSource.DEFAULT: "Skywork/Skywork-13B-base",
             DownloadSource.MODELSCOPE: "skywork/Skywork-13B-base"
@@ -558,6 +632,10 @@ register_model_group(
             DownloadSource.DEFAULT: "xverse/XVERSE-65B",
             DownloadSource.MODELSCOPE: "xverse/XVERSE-65B"
         },
+        "XVERSE-65B-2": {
+            DownloadSource.DEFAULT: "xverse/XVERSE-65B-2",
+            DownloadSource.MODELSCOPE: "xverse/XVERSE-65B-2"
+        },
         "XVERSE-7B-Chat": {
             DownloadSource.DEFAULT: "xverse/XVERSE-7B-Chat",
             DownloadSource.MODELSCOPE: "xverse/XVERSE-7B-Chat"
@@ -565,6 +643,10 @@ register_model_group(
         "XVERSE-13B-Chat": {
             DownloadSource.DEFAULT: "xverse/XVERSE-13B-Chat",
             DownloadSource.MODELSCOPE: "xverse/XVERSE-13B-Chat"
+        },
+        "XVERSE-65B-Chat": {
+            DownloadSource.DEFAULT: "xverse/XVERSE-65B-Chat",
+            DownloadSource.MODELSCOPE: "xverse/XVERSE-65B-Chat"
         }
     },
     template="xverse"
@@ -614,6 +696,25 @@ register_model_group(
         }
     },
     template="yi"
+)
+
+
+register_model_group(
+    models={
+        "Yuan2-2B-Chat": {
+            DownloadSource.DEFAULT: "IEITYuan/Yuan2-2B-hf",
+            DownloadSource.MODELSCOPE: "YuanLLM/Yuan2.0-2B-hf"
+        },
+        "Yuan2-51B-Chat": {
+            DownloadSource.DEFAULT: "IEITYuan/Yuan2-51B-hf",
+            DownloadSource.MODELSCOPE: "YuanLLM/Yuan2.0-51B-hf"
+        },
+        "Yuan2-102B-Chat": {
+            DownloadSource.DEFAULT: "IEITYuan/Yuan2-102B-hf",
+            DownloadSource.MODELSCOPE: "YuanLLM/Yuan2.0-102B-hf"
+        }
+    },
+    template="yuan"
 )
 
 

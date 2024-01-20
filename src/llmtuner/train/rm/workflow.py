@@ -3,18 +3,19 @@
 from typing import TYPE_CHECKING, Optional, List
 from transformers import Seq2SeqTrainingArguments
 
-from llmtuner.data import get_dataset, preprocess_dataset, split_dataset
-from llmtuner.extras.callbacks import SavePeftModelCallback
-from llmtuner.extras.ploting import plot_loss
-from llmtuner.model import load_model_and_tokenizer
-from llmtuner.train.rm.collator import PairwiseDataCollatorWithPadding
-from llmtuner.train.rm.metric import compute_accuracy
-from llmtuner.train.rm.trainer import PairwiseTrainer
-from llmtuner.train.utils import create_modelcard_and_push
+from ...data import get_dataset, split_dataset
+from ...extras.callbacks import FixValueHeadModelCallback
+from ...extras.misc import fix_valuehead_checkpoint
+from ...extras.ploting import plot_loss
+from ...model import load_model_and_tokenizer
+from ...train.rm.collator import PairwiseDataCollatorWithPadding
+from ...train.rm.metric import compute_accuracy
+from ...train.rm.trainer import PairwiseTrainer
+from ...train.utils import create_modelcard_and_push
 
 if TYPE_CHECKING:
     from transformers import TrainerCallback
-    from llmtuner.hparams import ModelArguments, DataArguments, FinetuningArguments
+    from ...hparams import ModelArguments, DataArguments, FinetuningArguments
 
 
 def run_rm(
@@ -24,9 +25,8 @@ def run_rm(
     finetuning_args: "FinetuningArguments",
     callbacks: Optional[List["TrainerCallback"]] = None
 ):
-    dataset = get_dataset(model_args, data_args)
     model, tokenizer = load_model_and_tokenizer(model_args, finetuning_args, training_args.do_train, add_valuehead=True)
-    dataset = preprocess_dataset(dataset, tokenizer, data_args, training_args, stage="rm")
+    dataset = get_dataset(model_args, data_args, tokenizer, training_args, stage="rm")
     data_collator = PairwiseDataCollatorWithPadding(tokenizer, pad_to_multiple_of=8)
 
     # Update arguments
@@ -40,7 +40,7 @@ def run_rm(
         args=training_args,
         tokenizer=tokenizer,
         data_collator=data_collator,
-        callbacks=callbacks + [SavePeftModelCallback()],
+        callbacks=callbacks + [FixValueHeadModelCallback()],
         compute_metrics=compute_accuracy,
         **split_dataset(dataset, data_args, training_args)
     )
@@ -49,6 +49,8 @@ def run_rm(
     if training_args.do_train:
         train_result = trainer.train(resume_from_checkpoint=training_args.resume_from_checkpoint)
         trainer.save_model()
+        if training_args.should_save:
+            fix_valuehead_checkpoint(model, training_args.output_dir, training_args.save_safetensors)
         trainer.log_metrics("train", train_result.metrics)
         trainer.save_metrics("train", train_result.metrics)
         trainer.save_state()

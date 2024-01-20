@@ -7,16 +7,17 @@ from typing import TYPE_CHECKING, Optional, List
 from transformers import DataCollatorWithPadding
 from transformers.optimization import get_scheduler
 
-from llmtuner.data import get_dataset, preprocess_dataset
-from llmtuner.extras.callbacks import SavePeftModelCallback
-from llmtuner.extras.ploting import plot_loss
-from llmtuner.model import load_model_and_tokenizer
-from llmtuner.train.utils import create_ref_model, create_reward_model
-from llmtuner.train.ppo.trainer import CustomPPOTrainer
+from ...data import get_dataset
+from ...extras.callbacks import FixValueHeadModelCallback
+from ...extras.misc import fix_valuehead_checkpoint
+from ...extras.ploting import plot_loss
+from ...model import load_model_and_tokenizer
+from ...train.utils import create_ref_model, create_reward_model
+from ...train.ppo.trainer import CustomPPOTrainer
 
 if TYPE_CHECKING:
     from transformers import Seq2SeqTrainingArguments, TrainerCallback
-    from llmtuner.hparams import ModelArguments, DataArguments, FinetuningArguments, GeneratingArguments
+    from ...hparams import ModelArguments, DataArguments, FinetuningArguments, GeneratingArguments
 
 
 def run_ppo(
@@ -27,9 +28,8 @@ def run_ppo(
     generating_args: "GeneratingArguments",
     callbacks: Optional[List["TrainerCallback"]] = None
 ):
-    dataset = get_dataset(model_args, data_args)
     model, tokenizer = load_model_and_tokenizer(model_args, finetuning_args, training_args.do_train, add_valuehead=True)
-    dataset = preprocess_dataset(dataset, tokenizer, data_args, training_args, stage="ppo")
+    dataset = get_dataset(model_args, data_args, tokenizer, training_args, stage="ppo")
 
     tokenizer.padding_side = "left" # use left-padding in generation while using right-padding in training
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
@@ -79,7 +79,7 @@ def run_ppo(
         training_args=training_args,
         finetuning_args=finetuning_args,
         generating_args=generating_args,
-        callbacks=callbacks + [SavePeftModelCallback()],
+        callbacks=callbacks + [FixValueHeadModelCallback()],
         reward_model=reward_model,
         config=ppo_config,
         model=model,
@@ -95,6 +95,8 @@ def run_ppo(
     if training_args.do_train:
         ppo_trainer.ppo_train(resume_from_checkpoint=training_args.resume_from_checkpoint)
         ppo_trainer.save_model()
+        if training_args.should_save:
+            fix_valuehead_checkpoint(model, training_args.output_dir, training_args.save_safetensors)
         ppo_trainer.save_state() # must be called after save_model to have a folder
         if ppo_trainer.is_world_process_zero() and finetuning_args.plot_loss:
             plot_loss(training_args.output_dir, keys=["loss", "reward"])
