@@ -1,29 +1,30 @@
+import logging
 import os
 import time
-import logging
-import gradio as gr
 from threading import Thread
-from gradio.components import Component # cannot use TYPE_CHECKING here
 from typing import TYPE_CHECKING, Any, Dict, Generator, Optional, Tuple
 
+import gradio as gr
 import transformers
+from gradio.components import Component  # cannot use TYPE_CHECKING here
 from transformers.trainer import TRAINING_ARGS_NAME
+from transformers.utils import is_torch_cuda_available
 
-from llmtuner.extras.callbacks import LogCallback
-from llmtuner.extras.constants import TRAINING_STAGES
-from llmtuner.extras.logging import LoggerHandler
-from llmtuner.extras.misc import torch_gc
-from llmtuner.train import run_exp
-from llmtuner.webui.common import get_module, get_save_dir, load_config
-from llmtuner.webui.locales import ALERTS
-from llmtuner.webui.utils import gen_cmd, get_eval_results, update_process_bar
+from ..extras.callbacks import LogCallback
+from ..extras.constants import TRAINING_STAGES
+from ..extras.logging import LoggerHandler
+from ..extras.misc import get_device_count, torch_gc
+from ..train import run_exp
+from .common import get_module, get_save_dir, load_config
+from .locales import ALERTS
+from .utils import gen_cmd, get_eval_results, update_process_bar
+
 
 if TYPE_CHECKING:
-    from llmtuner.webui.manager import Manager
+    from .manager import Manager
 
 
 class Runner:
-
     def __init__(self, manager: "Manager", demo_mode: Optional[bool] = False) -> None:
         self.manager = manager
         self.demo_mode = demo_mode
@@ -64,8 +65,14 @@ class Runner:
         if len(dataset) == 0:
             return ALERTS["err_no_dataset"][lang]
 
-        if self.demo_mode and (not from_preview):
+        if not from_preview and self.demo_mode:
             return ALERTS["err_demo"][lang]
+
+        if not from_preview and get_device_count() > 1:
+            return ALERTS["err_device_count"][lang]
+
+        if not from_preview and not is_torch_cuda_available():
+            gr.Warning(ALERTS["warn_no_cuda"][lang])
 
         self.aborted = False
         self.logger_handler.reset()
@@ -86,26 +93,28 @@ class Runner:
         get = lambda name: data[self.manager.get_elem_by_name(name)]
         user_config = load_config()
 
-        if get("top.checkpoints"):
-            checkpoint_dir = ",".join([get_save_dir(
-                get("top.model_name"), get("top.finetuning_type"), ckpt
-            ) for ckpt in get("top.checkpoints")])
+        if get("top.adapter_path"):
+            adapter_name_or_path = ",".join(
+                [
+                    get_save_dir(get("top.model_name"), get("top.finetuning_type"), adapter)
+                    for adapter in get("top.adapter_path")
+                ]
+            )
         else:
-            checkpoint_dir = None
+            adapter_name_or_path = None
 
         args = dict(
             stage=TRAINING_STAGES[get("train.training_stage")],
-            model_name_or_path=get("top.model_path"),
             do_train=True,
+            model_name_or_path=get("top.model_path"),
+            adapter_name_or_path=adapter_name_or_path,
             cache_dir=user_config.get("cache_dir", None),
-            checkpoint_dir=checkpoint_dir,
             finetuning_type=get("top.finetuning_type"),
             quantization_bit=int(get("top.quantization_bit")) if get("top.quantization_bit") in ["8", "4"] else None,
             template=get("top.template"),
-            system_prompt=get("top.system_prompt"),
-            flash_attn=get("top.flash_attn"),
-            shift_attn=get("top.shift_attn"),
             rope_scaling=get("top.rope_scaling") if get("top.rope_scaling") in ["linear", "dynamic"] else None,
+            flash_attn=(get("top.booster") == "flash_attn"),
+            use_unsloth=(get("top.booster") == "unsloth"),
             dataset_dir=get("train.dataset_dir"),
             dataset=",".join(get("train.dataset")),
             cutoff_len=get("train.cutoff_len"),
@@ -119,39 +128,52 @@ class Runner:
             logging_steps=get("train.logging_steps"),
             save_steps=get("train.save_steps"),
             warmup_steps=get("train.warmup_steps"),
-            neft_alpha=get("train.neft_alpha"),
-            train_on_prompt=get("train.train_on_prompt"),
+            neftune_noise_alpha=get("train.neftune_alpha") or None,
+            resize_vocab=get("train.resize_vocab"),
+            sft_packing=get("train.sft_packing"),
             upcast_layernorm=get("train.upcast_layernorm"),
-            lora_rank=get("train.lora_rank"),
-            lora_dropout=get("train.lora_dropout"),
-            lora_target=get("train.lora_target") or get_module(get("top.model_name")),
-            additional_target=get("train.additional_target") if get("train.additional_target") else None,
-            resume_lora_training=get("train.resume_lora_training"),
-            output_dir=get_save_dir(get("top.model_name"), get("top.finetuning_type"), get("train.output_dir"))
+            use_llama_pro=get("train.use_llama_pro"),
+            output_dir=get_save_dir(get("top.model_name"), get("top.finetuning_type"), get("train.output_dir")),
+            fp16=(get("train.compute_type") == "fp16"),
+            bf16=(get("train.compute_type") == "bf16"),
         )
-        args[get("train.compute_type")] = True
         args["disable_tqdm"] = True
 
-        if TRAINING_STAGES[get("train.training_stage")] in ["rm", "ppo", "dpo"]:
-            args["resume_lora_training"] = (args["quantization_bit"] is not None)
+        if args["finetuning_type"] == "freeze":
+            args["num_layer_trainable"] = int(get("train.num_layer_trainable"))
+            args["name_module_trainable"] = get("train.name_module_trainable")
+        elif args["finetuning_type"] == "lora":
+            args["lora_rank"] = int(get("train.lora_rank"))
+            args["lora_alpha"] = float(get("train.lora_alpha"))
+            args["lora_dropout"] = float(get("train.lora_dropout"))
+            args["lora_target"] = get("train.lora_target") or get_module(get("top.model_name"))
+            args["use_rslora"] = get("train.use_rslora")
+            args["use_dora"] = get("train.use_dora")
+            args["additional_target"] = get("train.additional_target") or None
+            if args["stage"] in ["rm", "ppo", "dpo"]:
+                args["create_new_adapter"] = args["quantization_bit"] is None
+            else:
+                args["create_new_adapter"] = get("train.create_new_adapter")
 
-        if args["quantization_bit"] is not None:
-            args["upcast_layernorm"] = True
+            if args["use_llama_pro"]:
+                args["num_layer_trainable"] = int(get("train.num_layer_trainable"))
 
         if args["stage"] == "ppo":
             args["reward_model"] = get_save_dir(
                 get("top.model_name"), get("top.finetuning_type"), get("train.reward_model")
             )
-            args["reward_model_type"] = "lora" if get("top.finetuning_type") == "lora" else "full"
+            args["reward_model_type"] = "lora" if args["finetuning_type"] == "lora" else "full"
 
         if args["stage"] == "dpo":
             args["dpo_beta"] = get("train.dpo_beta")
+            args["dpo_ftx"] = get("train.dpo_ftx")
 
         if get("train.val_size") > 1e-6 and args["stage"] != "ppo":
             args["val_size"] = get("train.val_size")
             args["evaluation_strategy"] = "steps"
-            args["eval_steps"] = get("train.save_steps")
-            args["load_best_model_at_end"] = True
+            args["eval_steps"] = args["save_steps"]
+            args["per_device_eval_batch_size"] = args["per_device_train_batch_size"]
+            args["load_best_model_at_end"] = args["stage"] not in ["rm", "ppo"]
 
         return args
 
@@ -159,49 +181,49 @@ class Runner:
         get = lambda name: data[self.manager.get_elem_by_name(name)]
         user_config = load_config()
 
-        if get("top.checkpoints"):
-            checkpoint_dir = ",".join([get_save_dir(
-                get("top.model_name"), get("top.finetuning_type"), ckpt
-            ) for ckpt in get("top.checkpoints")])
-            output_dir = get_save_dir(
-                get("top.model_name"), get("top.finetuning_type"), "eval_" + "_".join(get("top.checkpoints"))
+        if get("top.adapter_path"):
+            adapter_name_or_path = ",".join(
+                [
+                    get_save_dir(get("top.model_name"), get("top.finetuning_type"), adapter)
+                    for adapter in get("top.adapter_path")
+                ]
             )
         else:
-            checkpoint_dir = None
-            output_dir = get_save_dir(get("top.model_name"), get("top.finetuning_type"), "eval_base")
+            adapter_name_or_path = None
 
         args = dict(
             stage="sft",
             model_name_or_path=get("top.model_path"),
-            do_eval=True,
-            predict_with_generate=True,
+            adapter_name_or_path=adapter_name_or_path,
             cache_dir=user_config.get("cache_dir", None),
-            checkpoint_dir=checkpoint_dir,
             finetuning_type=get("top.finetuning_type"),
             quantization_bit=int(get("top.quantization_bit")) if get("top.quantization_bit") in ["8", "4"] else None,
             template=get("top.template"),
-            system_prompt=get("top.system_prompt"),
-            flash_attn=get("top.flash_attn"),
-            shift_attn=get("top.shift_attn"),
             rope_scaling=get("top.rope_scaling") if get("top.rope_scaling") in ["linear", "dynamic"] else None,
+            flash_attn=(get("top.booster") == "flash_attn"),
+            use_unsloth=(get("top.booster") == "unsloth"),
             dataset_dir=get("eval.dataset_dir"),
             dataset=",".join(get("eval.dataset")),
             cutoff_len=get("eval.cutoff_len"),
             max_samples=int(get("eval.max_samples")),
             per_device_eval_batch_size=get("eval.batch_size"),
+            predict_with_generate=True,
             max_new_tokens=get("eval.max_new_tokens"),
             top_p=get("eval.top_p"),
             temperature=get("eval.temperature"),
-            output_dir=output_dir
+            output_dir=get_save_dir(get("top.model_name"), get("top.finetuning_type"), get("eval.output_dir")),
         )
 
         if get("eval.predict"):
-            args.pop("do_eval", None)
             args["do_predict"] = True
+        else:
+            args["do_eval"] = True
 
         return args
 
-    def _preview(self, data: Dict[Component, Any], do_train: bool) -> Generator[Tuple[str, Dict[str, Any]], None, None]:
+    def _preview(
+        self, data: Dict[Component, Any], do_train: bool
+    ) -> Generator[Tuple[str, Dict[str, Any]], None, None]:
         error = self._initialize(data, do_train, from_preview=True)
         if error:
             gr.Warning(error)
@@ -239,9 +261,12 @@ class Runner:
         get = lambda name: self.running_data[self.manager.get_elem_by_name(name)]
         self.running = True
         lang = get("top.lang")
-        output_dir = get_save_dir(get("top.model_name"), get("top.finetuning_type"), get(
-            "{}.output_dir".format("train" if self.do_train else "eval")
-        ))
+        output_dir = get_save_dir(
+            get("top.model_name"),
+            get("top.finetuning_type"),
+            get("{}.output_dir".format("train" if self.do_train else "eval")),
+        )
+
         while self.thread.is_alive():
             time.sleep(2)
             if self.aborted:
