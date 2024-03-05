@@ -5,6 +5,7 @@ __pycache__/
 wandb/
 # C extensions
 *.so
+.vscode
 
 # Distribution / packaging
 .Python
