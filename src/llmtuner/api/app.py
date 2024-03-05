@@ -74,6 +74,13 @@ def create_app(chat_model: "ChatModel") -> "FastAPI":
     )
 
     semaphore = asyncio.Semaphore(int(os.environ.get("MAX_CONCURRENT", 1)))
+    role_mapping = {
+        Role.USER: DataRole.USER.value,
+        Role.ASSISTANT: DataRole.ASSISTANT.value,
+        Role.SYSTEM: DataRole.SYSTEM.value,
+        Role.FUNCTION: DataRole.FUNCTION.value,
+        Role.TOOL: DataRole.OBSERVATION.value,
+    }
 
     @app.get("/v1/models", response_model=ModelList)
     async def list_models():
@@ -85,30 +92,30 @@ def create_app(chat_model: "ChatModel") -> "FastAPI":
         if not chat_model.can_generate:
             raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail="Not allowed")
 
-        if len(request.messages) == 0 or request.messages[-1].role not in [Role.USER, Role.TOOL]:
+        if len(request.messages) == 0:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid length")
 
-        messages = [dictify(message) for message in request.messages]
-        if len(messages) and messages[0]["role"] == Role.SYSTEM:
-            system = messages.pop(0)["content"]
+        if request.messages[0].role == Role.SYSTEM:
+            system = request.messages.pop(0).content
         else:
-            system = None
+            system = ""
 
-        if len(messages) % 2 == 0:
+        if len(request.messages) % 2 == 0:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only supports u/a/u/a/u...")
 
-        for i in range(len(messages)):
-            if i % 2 == 0 and messages[i]["role"] not in [Role.USER, Role.TOOL]:
+        input_messages = []
+        for i, message in enumerate(request.messages):
+            if i % 2 == 0 and message.role not in [Role.USER, Role.TOOL]:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid role")
-            elif i % 2 == 1 and messages[i]["role"] not in [Role.ASSISTANT, Role.FUNCTION]:
+            elif i % 2 == 1 and message.role not in [Role.ASSISTANT, Role.FUNCTION]:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid role")
-            elif messages[i]["role"] == Role.TOOL:
-                messages[i]["role"] = DataRole.OBSERVATION
+
+            input_messages.append({"role": role_mapping[message.role], "content": message.content})
 
         tool_list = request.tools
-        if len(tool_list):
+        if isinstance(tool_list, list) and len(tool_list):
             try:
-                tools = json.dumps([tool_list[0]["function"]], ensure_ascii=False)
+                tools = json.dumps([tool["function"] for tool in tool_list], ensure_ascii=False)
             except Exception:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid tools")
         else:
@@ -116,10 +123,13 @@ def create_app(chat_model: "ChatModel") -> "FastAPI":
 
         async with semaphore:
             loop = asyncio.get_running_loop()
-            return await loop.run_in_executor(None, chat_completion, messages, system, tools, request)
+            return await loop.run_in_executor(None, chat_completion, input_messages, system, tools, request)
 
     def chat_completion(messages: Sequence[Dict[str, str]], system: str, tools: str, request: ChatCompletionRequest):
         if request.stream:
+            if tools:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot stream function calls.")
+
             generate = stream_chat_completion(messages, system, tools, request)
             return EventSourceResponse(generate, media_type="text/event-stream")
 

@@ -1,12 +1,11 @@
-import inspect
 from typing import TYPE_CHECKING
 
 import torch
-from peft import LoraConfig, PeftModel, TaskType, get_peft_model
+from peft import LoraConfig, LoraModel, PeftModel, TaskType, get_peft_model
 from transformers.integrations import is_deepspeed_zero3_enabled
 
 from ..extras.logging import get_logger
-from .utils import find_all_linear_modules
+from .utils import find_all_linear_modules, find_expanded_modules
 
 
 if TYPE_CHECKING:
@@ -47,24 +46,46 @@ def init_adapter(
         if not num_layers:
             raise ValueError("Current model does not support freeze tuning.")
 
-        if finetuning_args.num_layer_trainable > 0:  # fine-tuning the last n layers if num_layer_trainable > 0
-            trainable_layer_ids = [num_layers - k - 1 for k in range(finetuning_args.num_layer_trainable)]
+        if finetuning_args.use_llama_pro:
+            if num_layers % finetuning_args.num_layer_trainable != 0:
+                raise ValueError(
+                    "`num_layers` {} should be divisible by `num_layer_trainable` {}.".format(
+                        num_layers, finetuning_args.num_layer_trainable
+                    )
+                )
+
+            stride = num_layers // finetuning_args.num_layer_trainable
+            trainable_layer_ids = range(stride - 1, num_layers + stride - 1, stride)
+        elif finetuning_args.num_layer_trainable > 0:  # fine-tuning the last n layers if num_layer_trainable > 0
+            trainable_layer_ids = range(num_layers - finetuning_args.num_layer_trainable, num_layers)
         else:  # fine-tuning the first n layers if num_layer_trainable < 0
-            trainable_layer_ids = [k for k in range(-finetuning_args.num_layer_trainable)]  # noqa: C416
+            trainable_layer_ids = range(-finetuning_args.num_layer_trainable)
+
+        freeze_modules = {"all"}
+        for name, _ in model.named_modules():
+            if ".0." in name:
+                freeze_modules.add(name.split(".0.")[-1].split(".")[0])
 
         trainable_layers = []
         for module_name in finetuning_args.name_module_trainable:
+            if module_name not in freeze_modules:
+                raise ValueError(
+                    "Module {} is not found, please choose from {}".format(module_name, ", ".join(freeze_modules))
+                )
+
             for idx in trainable_layer_ids:
-                trainable_layers.append("{:d}.{}".format(idx, module_name))
+                trainable_layers.append(".{:d}.{}".format(idx, module_name if module_name != "all" else ""))
 
         for name, param in model.named_parameters():
-            if not any(trainable_layer in name for trainable_layer in trainable_layers):
-                param.requires_grad_(False)
-            else:
+            if any(trainable_layer in name for trainable_layer in trainable_layers):
                 param.data = param.data.to(torch.float32)
+            else:
+                param.requires_grad_(False)
+
+        logger.info("Set trainable layers: {}".format(",".join(map(str, trainable_layer_ids))))
 
     if finetuning_args.finetuning_type == "lora":
-        logger.info("Fine-tuning method: LoRA")
+        logger.info("Fine-tuning method: {}".format("DoRA" if finetuning_args.use_dora else "LoRA"))
         adapter_to_resume = None
 
         if model_args.adapter_name_or_path is not None:
@@ -84,7 +105,7 @@ def init_adapter(
                 adapter_to_merge = model_args.adapter_name_or_path
 
             for adapter in adapter_to_merge:
-                model = PeftModel.from_pretrained(model, adapter)
+                model: "LoraModel" = PeftModel.from_pretrained(model, adapter)
                 model = model.merge_and_unload()
 
             if len(adapter_to_merge) > 0:
@@ -99,32 +120,32 @@ def init_adapter(
             else:
                 target_modules = finetuning_args.lora_target
 
+            if finetuning_args.use_llama_pro:
+                target_modules = find_expanded_modules(model, target_modules, finetuning_args.num_layer_trainable)
+
+            if finetuning_args.use_dora:
+                if getattr(model, "quantization_method", None):
+                    raise ValueError("DoRA is currently not compatible with quantized models.")
+
             peft_kwargs = {
                 "r": finetuning_args.lora_rank,
                 "target_modules": target_modules,
                 "lora_alpha": finetuning_args.lora_alpha,
                 "lora_dropout": finetuning_args.lora_dropout,
+                "use_rslora": finetuning_args.use_rslora,
             }
 
             if model_args.use_unsloth:
-                from unsloth import FastLlamaModel, FastMistralModel  # type: ignore
+                from unsloth import FastLanguageModel  # type: ignore
 
                 unsloth_peft_kwargs = {"model": model, "max_seq_length": model_args.model_max_length}
-                if "loftq_config" in inspect.signature(FastLlamaModel.get_peft_model).parameters:
-                    unsloth_peft_kwargs["loftq_config"] = {}
-
-                if getattr(model.config, "model_type", None) == "llama":
-                    model = FastLlamaModel.get_peft_model(**peft_kwargs, **unsloth_peft_kwargs)
-                elif getattr(model.config, "model_type", None) == "mistral":
-                    model = FastMistralModel.get_peft_model(**peft_kwargs, **unsloth_peft_kwargs)
-                else:
-                    raise NotImplementedError
-
+                model = FastLanguageModel.get_peft_model(**peft_kwargs, **unsloth_peft_kwargs)
             else:
                 lora_config = LoraConfig(
                     task_type=TaskType.CAUSAL_LM,
                     inference_mode=False,
                     modules_to_save=finetuning_args.additional_target,
+                    use_dora=finetuning_args.use_dora,
                     **peft_kwargs,
                 )
                 model = get_peft_model(model, lora_config)
@@ -132,7 +153,7 @@ def init_adapter(
         for param in filter(lambda p: p.requires_grad, model.parameters()):
             param.data = param.data.to(torch.bfloat16 if finetuning_args.lora_bf16_mode else torch.float32)
 
-    if model_args.adapter_name_or_path is not None:
-        logger.info("Loaded adapter(s): {}".format(",".join(model_args.adapter_name_or_path)))
+        if model_args.adapter_name_or_path is not None:
+            logger.info("Loaded adapter(s): {}".format(",".join(model_args.adapter_name_or_path)))
 
     return model

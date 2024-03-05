@@ -1,5 +1,5 @@
 import inspect
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import TYPE_CHECKING, Dict, List
 
 import torch
 from transformers import PreTrainedModel
@@ -13,7 +13,7 @@ from ..extras.misc import get_current_device
 if TYPE_CHECKING:
     from transformers import PretrainedConfig, PreTrainedTokenizer
 
-    from ..hparams import DataArguments, FinetuningArguments, ModelArguments
+    from ..hparams import ModelArguments
 
 
 logger = get_logger(__name__)
@@ -41,7 +41,7 @@ def dispatch_model(model: "PreTrainedModel") -> "PreTrainedModel":
         # Make sure tied weights are tied before creating the device map.
         model.tie_weights()
         device_map = infer_auto_device_map(model, max_memory=max_memory, **kwargs)
-        device_map_kwargs = {"device_map": device_map}
+        device_map_kwargs = {"device_map": device_map, "offload_dir": "offload"}
         if "skip_keys" in inspect.signature(dispatch_model).parameters:
             device_map_kwargs["skip_keys"] = model._skip_keys_device_placement
         return dispatch_model(model, **device_map_kwargs)
@@ -76,16 +76,31 @@ def find_all_linear_modules(model: "PreTrainedModel") -> List[str]:
     return list(module_names)
 
 
-def get_modelcard_args(
-    model_args: "ModelArguments", data_args: "DataArguments", finetuning_args: "FinetuningArguments"
-) -> Dict[str, Any]:
-    return {
-        "tasks": "text-generation",
-        "license": "other",
-        "finetuned_from": model_args.model_name_or_path,
-        "dataset": [dataset.strip() for dataset in data_args.dataset.split(",")],
-        "tags": ["llama-factory"] + (["lora"] if finetuning_args.finetuning_type == "lora" else []),
-    }
+def find_expanded_modules(model: "PreTrainedModel", target_modules: List[str], num_layer_trainable: int) -> List[str]:
+    r"""
+    Finds the modules in the expanded blocks to apply lora.
+    """
+    num_layers = getattr(model.config, "num_hidden_layers", None)
+    if not num_layers:
+        raise ValueError("Model was not supported.")
+
+    if num_layers % num_layer_trainable != 0:
+        raise ValueError(
+            "`num_layers` {} should be divisible by `num_layer_trainable` {}.".format(num_layers, num_layer_trainable)
+        )
+
+    stride = num_layers // num_layer_trainable
+    trainable_layer_ids = range(stride - 1, num_layers + stride - 1, stride)
+    trainable_layers = [".{:d}.".format(idx) for idx in trainable_layer_ids]
+    module_names = []
+    for name, _ in model.named_modules():
+        if any(target_module in name for target_module in target_modules) and any(
+            trainable_layer in name for trainable_layer in trainable_layers
+        ):
+            module_names.append(name)
+
+    logger.info("Apply lora to layers: {}".format(",".join(map(str, trainable_layer_ids))))
+    return module_names
 
 
 def load_valuehead_params(path_or_repo_id: str, model_args: "ModelArguments") -> Dict[str, torch.Tensor]:
