@@ -3,9 +3,8 @@ wandb
 .cache
 .vscode
 .github
-data/TigerResearch
 __pycache__/
-
+scripts/dpo_exp/qwen1.5-0.5/sft_ckpt/
 
 .ipyn# Byte-compiled / optimized / DLL files
 
