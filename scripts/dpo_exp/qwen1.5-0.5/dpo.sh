@@ -7,11 +7,13 @@ export https_proxy=http://127.0.0.1:7890
 export HTTPS_PROXY=http://127.0.0.1:7890
 export all_proxy=http://127.0.0.1:7890
 export ALL_PROXY=http://127.0.0.1:7890
-export CUDA_VISIBLE_DEVICES=4,5,6,7
+# export CUDA_VISIBLE_DEVICES=4,5,6,7
+
+batch_size=4
 
 
-# CUDA_VISIBLE_DEVICES=5 python /data/songhaoyang/LLaMA-Efficient-Tuning/src/train_bash.py \
-accelerate launch --config_file scripts/dpo_exp/qwen1.5-0.5/config.yaml src/train_bash.py \
+# accelerate launch --config_file scripts/dpo_exp/qwen1.5-0.5/config.yaml src/train_bash.py \
+CUDA_VISIBLE_DEVICES=6 python src/train_bash.py \
     --stage dpo \
     --do_train \
     --model_name_or_path scripts/dpo_exp/qwen1.5-0.5/sft_ckpt/qwen1.5-0.5B-SFT \
@@ -26,15 +28,15 @@ accelerate launch --config_file scripts/dpo_exp/qwen1.5-0.5/config.yaml src/trai
     --use_fast_tokenizer \
     --cutoff_len 4096 \
     --preprocessing_num_workers 8 \
-    --per_device_train_batch_size 4 \
-    --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps 32 \
+    --per_device_train_batch_size $batch_size \
+    --per_device_eval_batch_size $batch_size \
+    --gradient_accumulation_steps 16 \
     --lr_scheduler_type cosine \
     --logging_steps 1 \
-    --save_steps 100 \
-    --eval_steps 30 \
+    --save_steps 400 \
+    --eval_steps 400 \
     --evaluation_strategy steps \
-    --learning_rate 1e-5 \
+    --learning_rate 5e-5 \
     --lr_scheduler_type cosine \
     --num_train_epochs 1.0 \
     --warmup_ratio 0.1 \
@@ -42,7 +44,7 @@ accelerate launch --config_file scripts/dpo_exp/qwen1.5-0.5/config.yaml src/trai
     --dpo_ftx 1.0 \
     --fp16 \
     --report_to wandb \
-    --run_name qwen1.5-0.5B-sft-dpo-nectar-comparison-oaast-rlhfzh \
+    --run_name qwen1.5-0.5B-sft-dpo-bn$batch_size-nectar-comparison-oaast-rlhfzh \
     --ddp_find_unused_parameters False
 
 # --max_samples 1000 \
