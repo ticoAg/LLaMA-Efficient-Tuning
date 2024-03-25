@@ -4,8 +4,7 @@ wandb
 .vscode
 .github
 __pycache__/
-scripts/dpo_exp/qwen1.5-0.5/sft_ckpt/
-scripts/dpo_exp/qwen1.5-0.5/dpo/
+
 
 .ipyn# Byte-compiled / optimized / DLL files
 
