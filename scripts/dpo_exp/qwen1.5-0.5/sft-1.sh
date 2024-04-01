@@ -9,27 +9,29 @@ export https_proxy=http://127.0.0.1:7890
 export HTTPS_PROXY=http://127.0.0.1:7890
 export all_proxy=http://127.0.0.1:7890
 export ALL_PROXY=http://127.0.0.1:7890
-# export CUDA_VISIBLE_DEVICES=1,2,3,4
+
+export WANDB_MODE=offline
 
 dataset=lmsys_chat,evol_instruct,glaive_toolcall_100k,tigerbot_sft_zh,firefly,belle_2m
 
-deepspeed --num_gpus 5 src/train_bash.py \
-    --deepspeed scripts/dpo_exp/qwen1.5-14/ds_z3_config.json \
+# deepspeed --num_gpus 5 src/train_bash.py \
+#     --deepspeed scripts/dpo_exp/qwen1.5-14/ds_z3_config.json \
+accelerate launch --config_file scripts/dpo_exp/qwen1.5-0.5/config.yaml src/train_bash.py \
     --stage sft \
     --do_train \
-    --model_name_or_path qwen/Qwen1.5-14B \
+    --model_name_or_path qwen/Qwen1.5-0.5B \
     --dataset $dataset \
     --dataset_dir ./data \
-    --cache_path .cache/ds/qwen1.5-14B-sft-v1 \
+    --cache_path .cache/ds/sft-zh \
     --template qwen \
     --finetuning_type full \
-    --output_dir .cache/Align-Exp/qwen1.5-14B-sft-v1 \
+    --output_dir .cache/Align-Exp/qwen1.5-0.5B-sft-v1 \
     --use_fast_tokenizer \
     --overwrite_output_dir \
-    --cutoff_len 4096 \
+    --cutoff_len 32768 \
     --preprocessing_num_workers 64 \
-    --per_device_train_batch_size 2 \
-    --per_device_eval_batch_size 2 \
+    --per_device_train_batch_size 8 \
+    --per_device_eval_batch_size 8 \
     --gradient_accumulation_steps 32 \
     --lr_scheduler_type cosine \
     --logging_steps 5 \
@@ -45,4 +47,4 @@ deepspeed --num_gpus 5 src/train_bash.py \
     --save_total_limit 5 \
     --bf16 \
     --report_to wandb \
-    --run_name qwen1.5-14B-sft-v1
+    --run_name qwen1.5-0.5B-sft-v1
