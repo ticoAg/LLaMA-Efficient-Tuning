@@ -64,8 +64,9 @@ def check_dependencies() -> None:
         require_version("transformers>=4.37.2", "To fix: pip install transformers>=4.37.2")
         require_version("datasets>=2.14.3", "To fix: pip install datasets>=2.14.3")
         require_version("accelerate>=0.27.2", "To fix: pip install accelerate>=0.27.2")
-        require_version("peft>=0.9.0", "To fix: pip install peft>=0.9.0")
+        require_version("peft>=0.10.0", "To fix: pip install peft>=0.10.0")
         require_version("trl>=0.8.1", "To fix: pip install trl>=0.8.1")
+        require_version("gradio>4.0.0,<=4.21.0", "To fix: pip install gradio==4.21.0")
 
 
 def count_parameters(model: torch.nn.Module) -> Tuple[int, int]:
@@ -81,7 +82,11 @@ def count_parameters(model: torch.nn.Module) -> Tuple[int, int]:
 
         # Due to the design of 4bit linear layers from bitsandbytes, multiply the number of parameters by 2
         if param.__class__.__name__ == "Params4bit":
-            num_bytes = param.quant_storage.itemsize if hasattr(param, "quant_storage") else 1
+            if hasattr(param, "quant_storage") and hasattr(param.quant_storage, "itemsize"):
+                num_bytes = param.quant_storage.itemsize
+            else:
+                num_bytes = 1
+
             num_params = num_params * 2 * num_bytes
 
         all_param += num_params

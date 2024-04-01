@@ -173,7 +173,7 @@ def _configure_quantization(
     """
     if getattr(config, "quantization_config", None):  # ptq
         if is_deepspeed_zero3_enabled():
-            raise ValueError("DeepSpeed ZeRO-3 is incompatible with quantization.")
+            raise ValueError("DeepSpeed ZeRO-3 is incompatible with quantized models.")
 
         init_kwargs["device_map"] = {"": get_current_device()}
         quantization_config: Dict[str, Any] = getattr(config, "quantization_config", None)
@@ -183,9 +183,7 @@ def _configure_quantization(
             quantization_config["use_exllama"] = False  # disable exllama
 
         if quant_method == QuantizationMethod.AQLM:
-            require_version(
-                "transformers>=4.39.0.dev0", "To fix: pip install git+https://github.com/huggingface/transformers.git"
-            )
+            require_version("transformers>=4.39.0", "To fix: pip install transformers>=4.39.0")
             require_version("aqlm>=1.1.0", "To fix: pip install aqlm[gpu]>=1.1.0")
             quantization_config["bits"] = 2
 
@@ -210,6 +208,11 @@ def _configure_quantization(
         logger.info("Quantizing model to {} bit.".format(model_args.export_quantization_bit))
 
     elif model_args.quantization_bit is not None:  # bnb
+        if is_deepspeed_zero3_enabled():
+            require_version("transformers>=4.39.0", "To fix: pip install transformers>=4.39.0")
+            require_version("accelerate>=0.28.0", "To fix: pip install accelerate>=0.28.0")
+            require_version("bitsandbytes>=0.43.0", "To fix: pip install bitsandbytes>=0.43.0")
+
         if model_args.quantization_bit == 8:
             require_version("bitsandbytes>=0.37.0", "To fix: pip install bitsandbytes>=0.37.0")
             init_kwargs["quantization_config"] = BitsAndBytesConfig(load_in_8bit=True)
@@ -315,6 +318,14 @@ def patch_model(
     if getattr(model.config, "model_type", None) == "chatglm":
         setattr(model, "lm_head", model.transformer.output_layer)
         setattr(model, "_keys_to_ignore_on_save", ["lm_head.weight"])
+
+    gen_config = model.generation_config  # check and fix generation config
+    if not gen_config.do_sample and (
+        (gen_config.temperature is not None and gen_config.temperature != 1.0)
+        or (gen_config.top_p is not None and gen_config.top_p != 1.0)
+        or (gen_config.typical_p is not None and gen_config.typical_p != 1.0)
+    ):
+        gen_config.do_sample = True
 
     if model_args.resize_vocab:
         _resize_embedding_layer(model, tokenizer)
