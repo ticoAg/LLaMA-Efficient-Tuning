@@ -309,6 +309,11 @@ class CustomDPOTrainer(DPOTrainer):
                 ),
                 0,
             )
+        elif self.loss_type == "positive":
+            # ref: https://github.com/abacusai/smaug/issues/2#issuecomment-2019468927
+            losses = -F.logsigmoid(self.beta * logits) - self.dpo_positive_lambda * torch.clamp(
+                reference_chosen_logps - policy_chosen_logps, min=0
+            )
         else:
             raise ValueError(
                 f"Unknown loss type: {self.loss_type}. Should be one of ['sigmoid', 'hinge', 'ipo', 'kto_pair']"

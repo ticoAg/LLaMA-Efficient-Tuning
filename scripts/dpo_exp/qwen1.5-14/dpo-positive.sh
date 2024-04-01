@@ -13,12 +13,13 @@ EXPDIR=.cache/Align-Exp/
 # deepspeed --num_gpus 4 src/train_bash.py \
     # --deepspeed scripts/dpo_exp/qwen1.5-14/ds_z3_config.json \
 # python3 src/train_bash.py
-# CUDA_VISIBLE_DEVICES=0,1 accelerate launch \
+# CUDA_VISIBLE_DEVICES=2,3 accelerate launch \
 #     --config_file scripts/dpo_exp/qwen1.5-14/config.yaml \
-CUDA_VISIBLE_DEVICES=1 python3 src/train_bash.py \
+CUDA_VISIBLE_DEVICES=3 python3 src/train_bash.py \
     --stage dpo \
     --do_train \
-    --dpo_loss sigmoid \
+    --dpo_loss positive \
+    --dpo_positive_lambda 0.9 \
     --model_name_or_path $EXPDIR/qwen1.5-14B-sft-full-ckpt \
     --dataset comparison_gpt4_zh,comparison_gpt4_en,rlhf_zh \
     --dataset_dir data \
@@ -26,7 +27,7 @@ CUDA_VISIBLE_DEVICES=1 python3 src/train_bash.py \
     --template qwen \
     --finetuning_type lora \
     --lora_target q_proj,v_proj \
-    --output_dir $EXPDIR/qwen1.5-14B-dpo-lora-sigmoid \
+    --output_dir $EXPDIR/qwen1.5-14B-dpo-lora-positive \
     --overwrite_output_dir \
     --use_fast_tokenizer \
     --cutoff_len 4096 \
@@ -46,7 +47,7 @@ CUDA_VISIBLE_DEVICES=1 python3 src/train_bash.py \
     --dpo_ftx 1.0 \
     --fp16 \
     --report_to wandb \
-    --run_name qwen1.5-14B-dpo-lora-sigmoid
+    --run_name qwen1.5-14B-dpo-lora-positive0.9
 
 # CUDA_VISIBLE_DEVICES=0 python src/cli_demo.py \
 #     --model_name_or_path path_to_llama_model \
