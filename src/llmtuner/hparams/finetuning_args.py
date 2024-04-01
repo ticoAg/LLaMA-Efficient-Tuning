@@ -98,7 +98,7 @@ class RLHFArguments:
         default=0.1,
         metadata={"help": "The beta parameter for the DPO loss."},
     )
-    dpo_loss: Literal["sigmoid", "hinge", "ipo", "kto_pair"] = field(
+    dpo_loss: Literal["sigmoid", "hinge", "ipo", "kto_pair", "positive"] = field(
         default="sigmoid",
         metadata={"help": "The type of DPO loss to use."},
     )
@@ -109,6 +109,12 @@ class RLHFArguments:
     dpo_ftx: float = field(
         default=0.0,
         metadata={"help": "The supervised fine-tuning loss coefficient in DPO training."},
+    )
+    dpo_positive_lambda: float = field(
+        default=0.0,
+        metadata={
+            "help": "The lambda parameter in DPO-Positive for -λ*max(0, ref_chosen_logps - policy_chosen_logps) should be between 0 and 1."
+        },
     )
     orpo_beta: float = field(
         default=0.1,
