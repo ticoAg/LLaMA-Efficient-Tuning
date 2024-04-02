@@ -174,6 +174,13 @@ class CustomDPOTrainer(DPOTrainer):
             losses = -F.logsigmoid(self.beta * logits) - self.dpo_positive_lambda * torch.clamp(
                 reference_chosen_logps - policy_chosen_logps, min=0
             )
+        elif self.loss_type == "peremptory":
+            # 双向抑制 只允许policy在chosen正向优化, 在rejected负向优化
+            losses = (
+                -F.logsigmoid(self.beta * logits)
+                - self.dpo_positive_lambda * torch.clamp(reference_chosen_logps - policy_chosen_logps, min=0)
+                + self.dpo_positive_lambda * torch.clamp(policy_rejected_logps - reference_rejected_logps, min=0)
+            )
         else:
             raise ValueError(
                 f"Unknown loss type: {self.loss_type}. Should be one of ['sigmoid', 'hinge', 'ipo', 'kto_pair']"
