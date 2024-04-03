@@ -11,12 +11,6 @@ export ALL_PROXY=http://127.0.0.1:7890
 EXPDIR=.cache/Align-Exp/
 dpo_beta=0.3
 
-# deepspeed --num_gpus 4 src/train_bash.py \
-    # --deepspeed scripts/dpo_exp/qwen1.5-14/ds_z3_config.json \
-
-
-# CUDA_VISIBLE_DEVICES=1 python3 src/train_bash.py \
-
 CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch \
     --config_file scripts/dpo_exp/qwen1.5-14/config.yaml \
     src/train_bash.py \
@@ -31,7 +25,8 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch \
     --template qwen \
     --finetuning_type lora \
     --lora_target q_proj,v_proj \
-    --output_dir $EXPDIR/qwen1.5-14B-dpo-lora-sigmoid \
+    --lora_rank 256 \
+    --output_dir $EXPDIR/qwen1.5-14B-dpo-lora-sigmoid-dpo_beta$dpo_beta \
     --overwrite_output_dir \
     --use_fast_tokenizer \
     --cutoff_len 4096 \
@@ -49,6 +44,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch \
     --warmup_ratio 0.1 \
     --val_size 0.01 \
     --dpo_ftx 1.0 \
+    --save_total_limit 5 \
     --fp16 \
     --report_to wandb \
     --run_name qwen1.5-14B-dpo-lora-sigmoid-dpo_beta$dpo_beta

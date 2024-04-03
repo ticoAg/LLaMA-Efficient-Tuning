@@ -12,6 +12,8 @@ EXPDIR=.cache/Align-Exp/
 
 dpo_positive_lambda=50
 dpo_beta=0.3
+# dpo_loss=positive_subtract
+dpo_loss=positive_add
 
 # deepspeed --num_gpus 4 src/train_bash.py \
     # --deepspeed scripts/dpo_exp/qwen1.5-14/ds_z3_config.json \
@@ -22,7 +24,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch \
     src/train_bash.py \
     --stage dpo \
     --do_train \
-    --dpo_loss positive \
+    --dpo_loss $dpo_loss \
     --dpo_beta 0.3 \
     --dpo_positive_lambda $dpo_positive_lambda \
     --model_name_or_path $EXPDIR/qwen1.5-14B-sft-full-ckpt \
@@ -32,7 +34,8 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch \
     --template qwen \
     --finetuning_type lora \
     --lora_target q_proj,v_proj \
-    --output_dir $EXPDIR/qwen1.5-14B-dpo-lora-positive \
+    --lora_rank 256 \
+    --output_dir $EXPDIR/qwen1.5-14B-dpo-lora-dpo_loss$dpo_loss-dpo_beta$dpo_beta-positive$dpo_positive_lambda \
     --overwrite_output_dir \
     --use_fast_tokenizer \
     --cutoff_len 4096 \
@@ -50,9 +53,10 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch \
     --warmup_ratio 0.1 \
     --val_size 0.01 \
     --dpo_ftx 1.0 \
+    --save_total_limit 5 \
     --fp16 \
     --report_to wandb \
-    --run_name qwen1.5-14B-dpo-lora-positive$dpo_positive_lambda-dpo_beta$dpo_beta
+    --run_name qwen1.5-14B-dpo-lora-dpo_loss$dpo_loss-positive$dpo_positive_lambda-dpo_beta$dpo_beta
 
 # CUDA_VISIBLE_DEVICES=0 python src/cli_demo.py \
 #     --model_name_or_path path_to_llama_model \
