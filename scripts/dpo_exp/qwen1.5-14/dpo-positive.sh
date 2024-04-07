@@ -29,7 +29,7 @@ CUDA_VISIBLE_DEVICES=1,2,3,4 accelerate launch \
     --model_name_or_path $EXPDIR/qwen1.5-14B-sft-full-ckpt \
     --dataset comparison_gpt4_zh,comparison_gpt4_en,rlhf_zh \
     --dataset_dir data \
-    --cache_path .cache/ds/qwen1.5-14B-dpo \
+    --tokenized_path .cache/ds/qwen1.5-14B-dpo \
     --template qwen \
     --finetuning_type lora \
     --lora_target q_proj,v_proj \

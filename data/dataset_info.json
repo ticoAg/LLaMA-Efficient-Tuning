@@ -71,6 +71,16 @@
     "hf_hub_url": "JosephusCheung/GuanacoDataset",
     "ms_hub_url": "AI-ModelScope/GuanacoDataset"
   },
+  "belle_3.5m": {
+    "hf_hub_url": "BelleGroup/train_3.5M_CN",
+    "formatting": "sharegpt",
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "assistant"
+    }
+  },
   "belle_2m": {
     "hf_hub_url": "BelleGroup/train_2M_CN",
     "ms_hub_url": "AI-ModelScope/train_2M_CN"
@@ -203,21 +213,19 @@
   },
   "lmsys_chat": {
     "hf_hub_url": "lmsys/lmsys-chat-1m",
-    "ms_hub_url": "AI-ModelScope/lmsys-chat-1m",
     "columns": {
       "messages": "conversation"
     },
     "tags": {
       "role_tag": "role",
       "content_tag": "content",
-      "user_tag": "human",
+      "user_tag": "user",
       "assistant_tag": "assistant"
     },
     "formatting": "sharegpt"
   },
   "evol_instruct": {
     "hf_hub_url": "WizardLM/WizardLM_evol_instruct_V2_196k",
-    "ms_hub_url": "AI-ModelScope/WizardLM_evol_instruct_V2_196k",
     "formatting": "sharegpt"
   },
   "glaive_toolcall_100k": {
@@ -402,5 +410,13 @@
       "prompt": "content"
     },
     "folder": "python"
+  },
+  "tiger_sft_zh": {
+    "hf_hub_url": "ticoAg/tiger-sft-zh",
+    "columns": {
+      "prompt": "instruction",
+      "query": "input",
+      "response": "output"
+    }
   }
 }

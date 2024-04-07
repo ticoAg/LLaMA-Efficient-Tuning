@@ -22,7 +22,7 @@ accelerate launch --config_file scripts/dpo_exp/qwen1.5-0.5/config.yaml src/trai
     --model_name_or_path qwen/Qwen1.5-0.5B \
     --dataset $dataset \
     --dataset_dir ./data \
-    --cache_path .cache/ds/sft-zh \
+    --tokenized_path .cache/ds/sft-zh \
     --template qwen \
     --finetuning_type full \
     --output_dir .cache/Align-Exp/qwen1.5-0.5B-sft-v1 \
