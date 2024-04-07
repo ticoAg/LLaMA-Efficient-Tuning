@@ -316,13 +316,7 @@ class CustomDPOTrainer(DPOTrainer):
                 ),
                 0,
             )
-        elif self.loss_type == "positive_subtraction":
-            # ref: https://github.com/abacusai/smaug/issues/2#issuecomment-2019468927
-            losses = -F.logsigmoid(self.beta * logits) - self.dpo_positive_lambda * torch.clamp(
-                reference_chosen_logps - policy_chosen_logps, min=0
-            )
-        elif self.loss_type == "positive_add":
-            # ref: https://github.com/abacusai/smaug/issues/2#issuecomment-2019468927
+        elif self.loss_type == "positive":
             losses = (
                 -F.logsigmoid(self.beta * logits) * (1 - self.label_smoothing)
                 - F.logsigmoid(-self.beta * logits) * self.label_smoothing
@@ -332,7 +326,7 @@ class CustomDPOTrainer(DPOTrainer):
             losses = (
                 -F.logsigmoid(self.beta * logits) * (1 - self.label_smoothing)
                 - F.logsigmoid(-self.beta * logits) * self.label_smoothing
-                - self.dpo_positive_lambda * torch.clamp(reference_chosen_logps - policy_chosen_logps, min=0)
+                + self.dpo_positive_lambda * torch.clamp(reference_chosen_logps - policy_chosen_logps, min=0)
                 + self.dpo_positive_lambda * torch.clamp(policy_rejected_logps - reference_rejected_logps, min=0)
             )
         else:

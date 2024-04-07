@@ -10,16 +10,15 @@ export ALL_PROXY=http://127.0.0.1:7890
 
 EXPDIR=.cache/Align-Exp/
 
-dpo_positive_lambda=50
+dpo_positive_lambda=100
 dpo_beta=0.3
-# dpo_loss=positive_subtract
-dpo_loss=positive_add
+dpo_loss=peremptory
 
 # deepspeed --num_gpus 4 src/train_bash.py \
     # --deepspeed scripts/dpo_exp/qwen1.5-14/ds_z3_config.json \
 # python3 src/train_bash.py
 
-CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch \
+CUDA_VISIBLE_DEVICES=1,2,3,4 accelerate launch \
     --config_file scripts/dpo_exp/qwen1.5-14/config.yaml \
     src/train_bash.py \
     --stage dpo \
@@ -59,7 +58,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch \
     --run_name qwen1.5-14B-dpo-lora-dpo_loss$dpo_loss-positive$dpo_positive_lambda-dpo_beta$dpo_beta
 
 # CUDA_VISIBLE_DEVICES=0 python src/cli_demo.py \
-#     --model_name_or_path path_to_llama_model \
-#     --adapter_name_or_path path_to_checkpoint \
-#     --template default \
+#     --model_name_or_path .cache/Align-Exp/qwen1.5-14B-sft-full-ckpt \
+#     --adapter_name_or_path .cache/Align-Exp/qwen1.5-14B-dpo-lora-dpo_lossperemptory-dpo_beta0.3-positive50 \
+#     --template qwen \
 #     --finetuning_type lora
