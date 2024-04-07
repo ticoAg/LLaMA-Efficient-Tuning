@@ -5,7 +5,7 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/hiyouga/LLaMA-Factory)](https://github.com/hiyouga/LLaMA-Factory/commits/main)
 [![PyPI](https://img.shields.io/pypi/v/llmtuner)](https://pypi.org/project/llmtuner/)
 [![Downloads](https://static.pepy.tech/badge/llmtuner)](https://pypi.org/project/llmtuner/)
-[![Citation](https://img.shields.io/badge/citation-27-green)](#projects-using-llama-factory)
+[![Citation](https://img.shields.io/badge/citation-28-green)](#projects-using-llama-factory)
 [![GitHub pull request](https://img.shields.io/badge/PRs-welcome-blue)](https://github.com/hiyouga/LLaMA-Factory/pulls)
 [![Discord](https://dcbadge.vercel.app/api/server/rKfvV9r9FK?compact=true&style=flat)](https://discord.gg/rKfvV9r9FK)
 [![Twitter](https://img.shields.io/twitter/follow/llamafactory_ai)](https://twitter.com/llamafactory_ai)
@@ -53,7 +53,7 @@ Choose your path:
 
 ## Benchmark
 
-Compared to ChatGLM's [P-Tuning](https://github.com/THUDM/ChatGLM2-6B/tree/main/ptuning), LLaMA-Factory's LoRA tuning offers up to **3.7 times faster** training speed with a better Rouge score on the advertising text generation task. By leveraging 4-bit quantization technique, LLaMA-Factory's QLoRA further improves the efficiency regarding the GPU memory.
+Compared to ChatGLM's [P-Tuning](https://github.com/THUDM/ChatGLM2-6B/tree/main/ptuning), LLaMA Factory's LoRA tuning offers up to **3.7 times faster** training speed with a better Rouge score on the advertising text generation task. By leveraging 4-bit quantization technique, LLaMA Factory's QLoRA further improves the efficiency regarding the GPU memory.
 
 ![benchmark](assets/benchmark.svg)
 
@@ -62,7 +62,7 @@ Compared to ChatGLM's [P-Tuning](https://github.com/THUDM/ChatGLM2-6B/tree/main/
 - **Training Speed**: the number of training samples processed per second during the training. (bs=4, cutoff_len=1024)
 - **Rouge Score**: Rouge-2 score on the development set of the [advertising text generation](https://aclanthology.org/D19-1321.pdf) task. (bs=4, cutoff_len=1024)
 - **GPU Memory**: Peak GPU memory usage in 4-bit quantized training. (bs=1, cutoff_len=1024)
-- We adopt `pre_seq_len=128` for ChatGLM's P-Tuning and `lora_rank=32` for LLaMA-Factory's LoRA tuning.
+- We adopt `pre_seq_len=128` for ChatGLM's P-Tuning and `lora_rank=32` for LLaMA Factory's LoRA tuning.
 
 </details>
 
@@ -72,7 +72,7 @@ Compared to ChatGLM's [P-Tuning](https://github.com/THUDM/ChatGLM2-6B/tree/main/
 
 [24/03/21] Our paper "[LlamaFactory: Unified Efficient Fine-Tuning of 100+ Language Models](https://arxiv.org/abs/2403.13372)" is available at arXiv!
 
-[24/03/20] We supported **FSDP+QLoRA** that fine-tunes a 70B model on 2x24GB GPUs. See `examples/fsdp_qlora` for usage.
+[24/03/20] We supported **FSDP+QLoRA** that fine-tunes a 70B model on 2x24GB GPUs. See `examples/extras/fsdp_qlora` for usage.
 
 <details><summary>Full Changelog</summary>
 
@@ -138,12 +138,11 @@ Compared to ChatGLM's [P-Tuning](https://github.com/THUDM/ChatGLM2-6B/tree/main/
 | [InternLM2](https://huggingface.co/internlm)             | 7B/20B                      | wqkv              | intern2   |
 | [LLaMA](https://github.com/facebookresearch/llama)       | 7B/13B/33B/65B              | q_proj,v_proj     | -         |
 | [LLaMA-2](https://huggingface.co/meta-llama)             | 7B/13B/70B                  | q_proj,v_proj     | llama2    |
-| [Mistral](https://huggingface.co/mistralai)              | 7B                          | q_proj,v_proj     | mistral   |
-| [Mixtral](https://huggingface.co/mistralai)              | 8x7B                        | q_proj,v_proj     | mistral   |
+| [Mistral/Mixtral](https://huggingface.co/mistralai)      | 7B/8x7B                     | q_proj,v_proj     | mistral   |
 | [OLMo](https://huggingface.co/allenai)                   | 1B/7B                       | att_proj          | olmo      |
 | [Phi-1.5/2](https://huggingface.co/microsoft)            | 1.3B/2.7B                   | q_proj,v_proj     | -         |
 | [Qwen](https://huggingface.co/Qwen)                      | 1.8B/7B/14B/72B             | c_attn            | qwen      |
-| [Qwen1.5](https://huggingface.co/Qwen)                   | 0.5B/1.8B/4B/7B/14B/72B     | q_proj,v_proj     | qwen      |
+| [Qwen1.5 (MoE)](https://huggingface.co/Qwen)             | 0.5B/1.8B/4B/7B/14B/32B/72B | q_proj,v_proj     | qwen      |
 | [StarCoder2](https://huggingface.co/bigcode)             | 3B/7B/15B                   | q_proj,v_proj     | -         |
 | [XVERSE](https://huggingface.co/xverse)                  | 7B/13B/65B                  | q_proj,v_proj     | xverse    |
 | [Yi](https://huggingface.co/01-ai)                       | 6B/9B/34B                   | q_proj,v_proj     | yi        |
@@ -168,9 +167,6 @@ You also can add a custom chat template to [template.py](src/llmtuner/data/templ
 | PPO Training           | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | DPO Training           | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | ORPO Training          | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-
-> [!NOTE]
-> Use `--quantization_bit 4` argument to enable QLoRA.
 
 ## Provided Datasets
 
@@ -249,8 +245,6 @@ You also can add a custom chat template to [template.py](src/llmtuner/data/templ
 
 </details>
 
-Please refer to [data/README.md](data/README.md) for details.
-
 Some datasets require confirmation before using them, so we recommend logging in with your Hugging Face account using these commands.
 
 ```bash
@@ -264,8 +258,8 @@ huggingface-cli login
 | ------------ | ------- | --------- |
 | python       | 3.8     | 3.10      |
 | torch        | 1.13.1  | 2.2.0     |
-| transformers | 4.37.2  | 4.39.1    |
-| datasets     | 2.14.3  | 2.17.1    |
+| transformers | 4.37.2  | 4.39.3    |
+| datasets     | 2.14.3  | 2.18.0    |
 | accelerate   | 0.27.2  | 0.28.0    |
 | peft         | 0.9.0   | 0.10.0    |
 | trl          | 0.8.1   | 0.8.1     |
@@ -294,22 +288,26 @@ huggingface-cli login
 
 ## Getting Started
 
-### Data Preparation (optional)
+### Data Preparation
 
-Please refer to [data/README.md](data/README.md) for checking the details about the format of dataset files. You can either use a single `.json` file or a [dataset loading script](https://huggingface.co/docs/datasets/dataset_script) with multiple files to create a custom dataset.
+Please refer to [data/README.md](data/README.md) for checking the details about the format of dataset files. You can either use datasets on HuggingFace / ModelScope hub or load the dataset in local disk.
 
 > [!NOTE]
-> Please update `data/dataset_info.json` to use your custom dataset. About the format of this file, please refer to `data/README.md`.
+> Please update `data/dataset_info.json` to use your custom dataset.
 
-### Dependence Installation (optional)
+### Dependence Installation
 
 ```bash
 git clone https://github.com/hiyouga/LLaMA-Factory.git
 conda create -n llama_factory python=3.10
 conda activate llama_factory
 cd LLaMA-Factory
-pip install -r requirements.txt
+pip install -e .[metrics]
 ```
+
+Extra dependencies available: deepspeed, metrics, unsloth, galore, vllm, bitsandbytes, gptq, awq, aqlm, qwen, quality
+
+<details><summary>For Windows users</summary>
 
 If you want to enable the quantized LoRA (QLoRA) on the Windows platform, you will be required to install a pre-built version of `bitsandbytes` library, which supports CUDA 11.1 to 12.2, please select the appropriate [release version](https://github.com/jllllll/bitsandbytes-windows-webui/releases/tag/wheels) based on your CUDA version.
 
@@ -319,35 +317,14 @@ pip install https://github.com/jllllll/bitsandbytes-windows-webui/releases/downl
 
 To enable FlashAttention-2 on the Windows platform, you need to install the precompiled `flash-attn` library, which supports CUDA 12.1 to 12.2. Please download the corresponding version from [flash-attention](https://github.com/bdashore3/flash-attention/releases) based on your requirements.
 
-### Use ModelScope Hub (optional)
+</details>
 
-If you have trouble with downloading models and datasets from Hugging Face, you can use LLaMA-Factory together with ModelScope in the following manner.
-
-```bash
-export USE_MODELSCOPE_HUB=1 # `set USE_MODELSCOPE_HUB=1` for Windows
-```
-
-Then you can train the corresponding model by specifying a model ID of the ModelScope Hub. (find a full list of model IDs at [ModelScope Hub](https://modelscope.cn/models))
-
-```bash
-CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
-    --model_name_or_path modelscope/Llama-2-7b-ms \
-    ... # arguments (same as below)
-```
-
-LLaMA Board also supports using the models and datasets on the ModelScope Hub.
-
-```bash
-CUDA_VISIBLE_DEVICES=0 USE_MODELSCOPE_HUB=1 python src/train_web.py
-```
-
-### Train on a single GPU
+### LLaMA Board GUI
 
 > [!IMPORTANT]
-> If you want to train models on multiple GPUs, please refer to [Distributed Training](#distributed-training).
+> LLaMA Board GUI only supports training on a single GPU, please use [CLI](#command-line-interface) for distributed training.
 
-
-#### LLaMA Board GUI
+#### Use local environment
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python src/train_web.py
@@ -656,20 +633,6 @@ CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
     --predict_with_generate \
     --fp16
 ```
-### Merge vocab model
-
-> [sentencepiece 根据文本文件训练词表sp_model](https://github.com/google/sentencepiece/blob/master/python/README.md#model-training)
-
-### 裁剪模型
-
-refer: [LLMPruner：大语言模型裁剪工具](https://github.com/yangjianxin1/LLMPruner)
-注意: 仅当新词表为原词表子集时生效，获得新词表中每个token_id到原词表的token_id的映射，对于新词表中的每个token，取出其对应的权重，复制到新模型中
-```sh
-sh scripts/prune_llm.sh
-```
-## Todo List
-
-- [x] 以对bloomz-7b1-mt裁剪词表后的[[YeungNLP/bloomz-6b4-mt-zh]](https://huggingface.co/YeungNLP/bloomz-6b4-mt-zh)模型作为base, 基于医疗开源数据[shibing624/medical](https://huggingface.co/datasets/shibing624/medical),对原项目LLaMA Efficient Tuning做了数据集和模型适配. 使用lora策略进行pretrain.
 
 > [!WARNING]
 > Use `--per_device_train_batch_size=1` for LLaMA-2 models in fp16 predict.
@@ -683,7 +646,6 @@ sh scripts/prune_llm.sh
 
 ```bash
 docker build -f ./Dockerfile -t llama-factory:latest .
-
 docker run --gpus=all \
     -v ./hf_cache:/root/.cache/huggingface/ \
     -v ./data:/app/data \
@@ -701,13 +663,45 @@ docker run --gpus=all \
 docker compose -f ./docker-compose.yml up -d
 ```
 
-> [!TIP]
-> Details about volume:
-> * hf_cache: Utilize Hugging Face cache on the host machine. Reassignable if a cache already exists in a different directory.
-> * data: Place datasets on this dir of the host machine so that they can be selected on LLaMA Board GUI.
-> * output: Set export dir to this location so that the merged result can be accessed directly on the host machine.
+<details><summary>Details about volume</summary>
+
+- hf_cache: Utilize Hugging Face cache on the host machine. Reassignable if a cache already exists in a different directory.
+- data: Place datasets on this dir of the host machine so that they can be selected on LLaMA Board GUI.
+- output: Set export dir to this location so that the merged result can be accessed directly on the host machine.
+
+</details>
+
+### Command Line Interface
+
+See [examples/README.md](examples/README.md) for usage.
+
+Use `python src/train_bash.py -h` to display arguments description.
+
+### Deploy with OpenAI-style API and vLLM
+
+```bash
+CUDA_VISIBLE_DEVICES=0,1 API_PORT=8000 python src/api_demo.py \
+    --model_name_or_path mistralai/Mistral-7B-Instruct-v0.2 \
+    --template mistral \
+    --infer_backend vllm \
+    --vllm_enforce_eager
+```
+
+### Use ModelScope Hub
+
+If you have trouble with downloading models and datasets from Hugging Face, you can use ModelScope.
+
+```bash
+export USE_MODELSCOPE_HUB=1 # `set USE_MODELSCOPE_HUB=1` for Windows
+```
+
+Train the model by specifying a model ID of the ModelScope Hub as the `--model_name_or_path`. You can find a full list of model IDs at [ModelScope Hub](https://modelscope.cn/models), e.g., `modelscope/Llama-2-7b-ms`.
 
 ## Projects using LLaMA Factory
+
+If you have a project that should be incorporated, please contact via email or create a pull request.
+
+<details><summary>Click to show</summary>
 
 1. Wang et al. ESRL: Efficient Sampling-based Reinforcement Learning for Sequence Generation. 2023. [[arxiv]](https://arxiv.org/abs/2308.02223)
 1. Yu et al. Open, Closed, or Small Language Models for Text Classification? 2023. [[arxiv]](https://arxiv.org/abs/2308.10092)
@@ -730,6 +724,7 @@ docker compose -f ./docker-compose.yml up -d
 1. Huang et al. Key-Point-Driven Data Synthesis with its Enhancement on Mathematical Reasoning. 2024. [[arxiv]](https://arxiv.org/abs/2403.02333)
 1. Duan et al. Negating Negatives: Alignment without Human Positive Samples via Distributional Dispreference Optimization. 2024. [[arxiv]](https://arxiv.org/abs/2403.03419)
 1. Xie and Schwertfeger. Empowering Robotics with Large Language Models: osmAG Map Comprehension with LLMs. 2024. [[arxiv]](https://arxiv.org/abs/2403.08228)
+1. Weller et al. FollowIR: Evaluating and Teaching Information Retrieval Models to Follow Instructions. 2024. [[arxiv]](https://arxiv.org/abs/2403.15246)
 1. Hongbin Na. CBT-LLM: A Chinese Large Language Model for Cognitive Behavioral Therapy-based Mental Health Question Answering. 2024. [[arxiv]](https://arxiv.org/abs/2403.16008)
 1. **[StarWhisper](https://github.com/Yu-Yang-Li/StarWhisper)**: A large language model for Astronomy, based on ChatGLM2-6B and Qwen-14B.
 1. **[DISC-LawLLM](https://github.com/FudanDISC/DISC-LawLLM)**: A large language model specialized in Chinese legal domain, based on Baichuan-13B, is capable of retrieving and reasoning on legal knowledge.
@@ -737,8 +732,7 @@ docker compose -f ./docker-compose.yml up -d
 1. **[CareGPT](https://github.com/WangRongsheng/CareGPT)**: A series of large language models for Chinese medical domain, based on LLaMA2-7B and Baichuan-13B.
 1. **[MachineMindset](https://github.com/PKU-YuanGroup/Machine-Mindset/)**: A series of MBTI Personality large language models, capable of giving any LLM 16 different personality types based on different datasets and training methods.
 
-> [!TIP]
-> If you have a project that should be incorporated, please contact via email or create a pull request.
+</details>
 
 ## License
 
@@ -752,7 +746,7 @@ If this work is helpful, please kindly cite as:
 
 ```bibtex
 @article{zheng2024llamafactory,
-  title={LlamaFactory: Unified Efficient Fine-Tuning of 100+ Language Models}, 
+  title={LlamaFactory: Unified Efficient Fine-Tuning of 100+ Language Models},
   author={Yaowei Zheng and Richong Zhang and Junhao Zhang and Yanhan Ye and Zheyan Luo and Yongqiang Ma},
   journal={arXiv preprint arXiv:2403.13372},
   year={2024},
@@ -762,7 +756,7 @@ If this work is helpful, please kindly cite as:
 
 ## Acknowledgement
 
-This repo benefits from [PEFT](https://github.com/huggingface/peft), [QLoRA](https://github.com/artidoro/qlora) and [FastChat](https://github.com/lm-sys/FastChat). Thanks for their wonderful works.
+This repo benefits from [PEFT](https://github.com/huggingface/peft), [TRL](https://github.com/huggingface/trl), [QLoRA](https://github.com/artidoro/qlora) and [FastChat](https://github.com/lm-sys/FastChat). Thanks for their wonderful works.
 
 ## Star History
 
