@@ -8,7 +8,7 @@ export HTTPS_PROXY=http://127.0.0.1:7890
 export all_proxy=http://127.0.0.1:7890
 export ALL_PROXY=http://127.0.0.1:7890
 
-EXPDIR=.cache/Align-Exp/
+EXPDIR=.cache/Align/
 
 CUDA_VISIBLE_DEVICES=1 python src/cli_demo.py \
     --model_name_or_path $EXPDIR/qwen1.5-14B-sft-full-ckpt \

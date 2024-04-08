@@ -8,7 +8,7 @@ export HTTPS_PROXY=http://127.0.0.1:7890
 export all_proxy=http://127.0.0.1:7890
 export ALL_PROXY=http://127.0.0.1:7890
 
-EXPDIR=.cache/Align-Exp/
+EXPDIR=.cache/Align/
 dpo_beta=0.3
 
 CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch \

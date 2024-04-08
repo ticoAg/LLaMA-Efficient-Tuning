@@ -418,5 +418,62 @@
       "query": "input",
       "response": "output"
     }
+  },
+  "huatuo_knowledge_graph_qa": {
+    "script_url": "/data/datasets/huatuo_knowledge_graph_qa/data",
+    "formatting": "sharegpt"
+  },
+  "coig-cqia_chinese_traditional": {
+    "hf_hub_url": "m-a-p/COIG-CQIA",
+    "subset": "chinese_traditional"
+  },
+  "coig-cqia_coig_pc": {
+    "hf_hub_url": "m-a-p/COIG-CQIA",
+    "subset": "coig_pc"
+  },
+  "coig-cqia_exam": {
+    "hf_hub_url": "m-a-p/COIG-CQIA",
+    "subset": "exam"
+  },
+  "coig-cqia_finance": {
+    "hf_hub_url": "m-a-p/COIG-CQIA",
+    "subset": "finance"
+  },
+  "coig-cqia_douban": {
+    "hf_hub_url": "m-a-p/COIG-CQIA",
+    "subset": "douban"
+  },
+  "coig-cqia_human_value": {
+    "hf_hub_url": "m-a-p/COIG-CQIA",
+    "subset": "human_value"
+  },
+  "coig-cqia_logi_qa": {
+    "hf_hub_url": "m-a-p/COIG-CQIA",
+    "subset": "logi_qa"
+  },
+  "coig-cqia_ruozhiba": {
+    "hf_hub_url": "m-a-p/COIG-CQIA",
+    "subset": "ruozhiba"
+  },
+  "coig-cqia_segmentfault": {
+    "hf_hub_url": "m-a-p/COIG-CQIA",
+    "subset": "segmentfault"
+  },
+  "coig-cqia_wiki": {
+    "hf_hub_url": "m-a-p/COIG-CQIA",
+    "subset": "wiki"
+  },
+  "coig-cqia_wikihow": {
+    "hf_hub_url": "m-a-p/COIG-CQIA",
+    "subset": "wikihow"
+  },
+  "coig-cqia_xhs": {
+    "hf_hub_url": "m-a-p/COIG-CQIA",
+    "subset": "xhs"
+  },
+  "coig-cqia_zhihu": {
+    "hf_hub_url": "m-a-p/COIG-CQIA",
+    "subset": "zhihu"
   }
 }
+

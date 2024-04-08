@@ -17,7 +17,7 @@ deepspeed --num_gpus 5 src/train_bash.py \
     --dataset_dir ./data \
     --template qwen \
     --finetuning_type full \
-    --output_dir .cache/Align-Exp/qwen1.5-14B-sft-full-ckpt \
+    --output_dir .cache/Align/qwen1.5-14B-sft-full-ckpt \
     --use_fast_tokenizer \
     --overwrite_output_dir \
     --cutoff_len 4096 \

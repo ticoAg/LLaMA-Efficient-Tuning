@@ -8,7 +8,7 @@ export HTTPS_PROXY=http://127.0.0.1:7890
 export all_proxy=http://127.0.0.1:7890
 export ALL_PROXY=http://127.0.0.1:7890
 
-EXPDIR=.cache/Align-Exp/
+EXPDIR=.cache/Align/
 
 dpo_positive_lambda=100
 dpo_beta=0.3
@@ -56,9 +56,3 @@ CUDA_VISIBLE_DEVICES=1,2,3,4 accelerate launch \
     --fp16 \
     --report_to wandb \
     --run_name qwen1.5-14B-dpo-lora-dpo_loss$dpo_loss-positive$dpo_positive_lambda-dpo_beta$dpo_beta
-
-# CUDA_VISIBLE_DEVICES=0 python src/cli_demo.py \
-#     --model_name_or_path .cache/Align-Exp/qwen1.5-14B-sft-full-ckpt \
-#     --adapter_name_or_path .cache/Align-Exp/qwen1.5-14B-dpo-lora-dpo_lossperemptory-dpo_beta0.3-positive50 \
-#     --template qwen \
-#     --finetuning_type lora

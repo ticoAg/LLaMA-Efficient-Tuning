@@ -8,7 +8,7 @@ export HTTPS_PROXY=http://127.0.0.1:7890
 export all_proxy=http://127.0.0.1:7890
 export ALL_PROXY=http://127.0.0.1:7890
 
-save_path=.cache/Align-Exp/qwen1.5-0.5B-sft-full-ckpt
+save_path=.cache/Align/qwen1.5-0.5B-sft-full-ckpt
 
 # CUDA_VISIBLE_DEVICES=5,6,7 python /data/songhaoyang/LLaMA-Efficient-Tuning/src/train_bash.py \
 accelerate launch --config_file scripts/dpo_exp/qwen1.5-0.5/config.yaml src/train_bash.py \
@@ -43,7 +43,7 @@ accelerate launch --config_file scripts/dpo_exp/qwen1.5-0.5/config.yaml src/trai
     --run_name qwen1.5-0.5B-sft-full-alpacagpt4
 
 CUDA_VISIBLE_DEVICES=0 python -m vllm.entrypoints.openai.api_server \
-    --model .cache/Align-Exp/qwen1.5-0.5B-sft-full-ckpt \
+    --model .cache/Align/qwen1.5-0.5B-sft-full-ckpt \
     --served-model-name Qwen1.5-0.5B-SFT-FULL \
     --port 26926 \
     --max-model-len 4096 \

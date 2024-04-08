@@ -8,7 +8,7 @@ export HTTPS_PROXY=http://127.0.0.1:7890
 export all_proxy=http://127.0.0.1:7890
 export ALL_PROXY=http://127.0.0.1:7890
 
-EXPDIR=.cache/Align-Exp
+EXPDIR=.cache/Align
 
 accelerate launch --config_file scripts/dpo_exp/qwen1.5-0.5/config.yaml src/train_bash.py \
     --stage dpo \
