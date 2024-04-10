@@ -1,0 +1,24 @@
+accelerate launch src/train_bash.py \
+    --stage pt \
+    --model_name_or_path gpt2 \
+    --do_train \
+    --dataset wikipedia_zh \
+    --finetuning_type full \
+    --output_dir .cache/ds_test/ \
+    --use_fast_tokenizer \
+    --per_device_train_batch_size 16 \
+    --gradient_accumulation_steps 16 \
+    --per_device_eval_batch_size 4 \
+    --lr_scheduler_type cosine \
+    --logging_steps 10 \
+    --save_steps 1000 \
+    --eval_steps 500 \
+    --learning_rate 5e-5 \
+    --num_train_epochs 3.0 \
+    --val_size 300 \
+    --evaluation_strategy steps \
+    --load_best_model_at_end \
+    --plot_loss \
+    --fp16 \
+    --template ziya \
+    --deepspeed train_scripts/enn/ds_config.json

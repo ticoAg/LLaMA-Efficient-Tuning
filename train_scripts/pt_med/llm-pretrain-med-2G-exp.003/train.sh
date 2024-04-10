@@ -1,0 +1,30 @@
+deepspeed --include localhost:0,1,2,3,4,5,6,7 \
+    src/train_bash.py \
+    --stage pt \
+    --do_train \
+    --finetuning_type full \
+    --model_name_or_path baichuan-inc/Baichuan-13B-Base \
+    --output_dir .cache/llm-pretrain-med-2G-exp.003 \
+        --template baichuan \
+        --dataset pretrain_med_v0.1_book_wiki_qaConcat \
+        --cutoff_len 4096 \
+        --per_device_train_batch_size 2 \
+        --per_device_eval_batch_size 2 \
+        --gradient_accumulation_steps 8 \
+        --preprocessing_num_workers 64 \
+        --use_fast_tokenizer True \
+        --num_train_epochs 2.0 \
+    --save_steps 100 \
+    --save_total_limit 10 \
+    --eval_steps 100 \
+    --load_best_model_at_end \
+    --val_size 0.001 \
+    --warmup_ratio 0.1 \
+    --evaluation_strategy steps \
+        --learning_rate 5e-5 \
+        --lr_scheduler_type cosine \
+        --max_grad_norm 0.5 \
+    --logging_steps 1 \
+    --plot_loss \
+    --bf16 \
+    --deepspeed train_scripts/ds_config/ds_stage3.json
