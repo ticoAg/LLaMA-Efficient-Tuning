@@ -5,7 +5,7 @@ export HF_ENDPOINT=https://hf-mirror.com
 export HF_TOKEN=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
 
 dataset=ruozhiba_4.5k
-run_name=Qwen1.5-0.5B-Chat-RuoZhiBa-V1
+run_name=Qwen1.5-0.5B-Chat-RuoZhiBa-V1-Ckpt
 
 CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
     --stage sft \
