@@ -1,6 +1,6 @@
 export USE_MODELSCOPE_HUB=1
 export WANDB_PROJECT=DPO
-export WANDB_MODE=online
+export WANDB_MODE=offline
 export HF_ENDPOINT=https://hf-mirror.com
 export HF_TOKEN=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
 
@@ -13,14 +13,22 @@ export ALL_PROXY=http://127.0.0.1:7890
 export CUDA_VISIBLE_DEVICES=1,2,3,4
 
 dataset=huatuo_knowledge_graph_qa,coig-cqia_chinese_traditional,coig-cqia_coig_pc,coig-cqia_exam,coig-cqia_finance,coig-cqia_douban,coig-cqia_human_value,coig-cqia_logi_qa,coig-cqia_ruozhiba,coig-cqia_segmentfault,coig-cqia_wiki,coig-cqia_wikihow,coig-cqia_xhs,coig-cqia_zhihu
-revision=sft.2.1
 finetuning_type=lora
 cutoff_len=8192
 exp_name=qwen1.5-14B-sft.2.1
 
-CUDA_VISIBLE_DEVICES=1,2,3,4 accelerate launch \
-    --config_file scripts/dpo_exp/qwen1.5-14/config.yaml \
+ds_head="deepspeed --include localhost:1,2,3,4 \
     src/train_bash.py \
+    --deepspeed scripts/deepspeed/ds_z2_config.json"
+
+accelerate_head="CUDA_VISIBLE_DEVICES=0,1,2,3,4 accelerate launch \
+    --config_file scripts/dpo_exp/qwen1.5-14/config.yaml \
+    src/train_bash.py
+"
+
+launch_head=$ds_head
+
+$launch_head \
     --stage sft \
     --do_train \
     --model_name_or_path qwen/Qwen1.5-14B \
@@ -29,7 +37,7 @@ CUDA_VISIBLE_DEVICES=1,2,3,4 accelerate launch \
     --tokenized_path .cache/ds/huatuo_graph_qa-coig_cqia \
     --template qwen \
     --finetuning_type lora \
-    --lora_rank 128 \
+    --lora_rank 64 \
     --lora_target all \
     --lora_dropout 0.35 \
     --output_dir .cache/Align/$exp_name \
