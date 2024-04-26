@@ -52,7 +52,7 @@ def export_model(args: Optional[Dict[str, Any]] = None):
     if model_args.adapter_name_or_path is not None and model_args.export_quantization_bit is not None:
         raise ValueError("Please merge adapters before quantizing the model.")
 
-    tokenizer = load_tokenizer(model_args)
+    tokenizer = load_tokenizer(model_args)["tokenizer"]
     get_template_and_fix_tokenizer(tokenizer, data_args.template)
     model = load_model(tokenizer, model_args, finetuning_args)  # must after fixing tokenizer to resize vocab
 
@@ -65,8 +65,7 @@ def export_model(args: Optional[Dict[str, Any]] = None):
     if getattr(model, "quantization_method", None) is None:  # cannot convert dtype of a quantized model
         output_dtype = getattr(model.config, "torch_dtype", torch.float16)
         setattr(model.config, "torch_dtype", output_dtype)
-        for param in model.parameters():
-            param.data = param.data.to(output_dtype)
+        model = model.to(output_dtype)
 
     model.save_pretrained(
         save_directory=model_args.export_dir,

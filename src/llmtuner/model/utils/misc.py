@@ -1,47 +1,21 @@
-from enum import Enum, unique
 from typing import TYPE_CHECKING, Dict, List
 
 import torch
 from transformers import PreTrainedModel
-from transformers.integrations import is_deepspeed_zero3_enabled
 from transformers.utils import cached_file
-from transformers.utils.versions import require_version
 
-from ..extras.constants import V_HEAD_SAFE_WEIGHTS_NAME, V_HEAD_WEIGHTS_NAME
-from ..extras.logging import get_logger
+from ...extras.constants import V_HEAD_SAFE_WEIGHTS_NAME, V_HEAD_WEIGHTS_NAME
+from ...extras.logging import get_logger
+from .quantization import QuantizationMethod
 
 
 if TYPE_CHECKING:
     from transformers import PretrainedConfig, PreTrainedTokenizer
 
-    from ..hparams import ModelArguments
+    from ...hparams import ModelArguments
 
 
 logger = get_logger(__name__)
-
-
-@unique
-class QuantizationMethod(str, Enum):
-    r"""
-    Borrowed from `transformers.utils.quantization_config.QuantizationMethod`.
-    """
-
-    BITS_AND_BYTES = "bitsandbytes"
-    GPTQ = "gptq"
-    AWQ = "awq"
-    AQLM = "aqlm"
-    QUANTO = "quanto"
-
-
-def add_z3_leaf_module(model: "PreTrainedModel", module: "torch.nn.Module") -> None:
-    r"""
-    Sets module as a leaf module to skip partitioning in deepspeed zero3.
-    """
-    if is_deepspeed_zero3_enabled():
-        require_version("deepspeed>=0.13.0", "To fix: pip install deepspeed>=0.13.0")
-        from deepspeed.utils import set_z3_leaf_modules  # type: ignore
-
-        set_z3_leaf_modules(model, [module])
 
 
 def find_all_linear_modules(model: "PreTrainedModel") -> List[str]:
